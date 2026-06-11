@@ -204,6 +204,15 @@
     return mapUserFromRow(data);
   }
 
+  async function deleteUserProfile(user) {
+    const client = await getClient();
+    if (!client) return;
+
+    const query = client.from("app_users").delete();
+    const { error } = user.id ? await query.eq("id", user.id) : await query.eq("email", user.email);
+    if (error) throw error;
+  }
+
   async function inviteUser(user) {
     const client = await getClient();
     if (!client) throw new Error("Supabase is not configured.");
@@ -332,6 +341,7 @@
     loadCurrentUser,
     loadUsers,
     saveUserProfile,
+    deleteUserProfile,
     inviteUser,
     onAuthStateChange,
     loadBranding,

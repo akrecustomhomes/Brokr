@@ -163,6 +163,15 @@ h1 {
   font-weight: 480;
 }
 
+.menu-item.locked {
+  color: var(--muted);
+  opacity: 0.72;
+}
+
+.menu-item.locked:hover {
+  background: var(--menu-hover);
+}
+
 .menu-item.active::before {
   position: absolute;
   top: 9px;
@@ -247,26 +256,17 @@ h1 {
 }
 
 .auth-toggle {
-  display: grid;
+  display: flex;
   min-height: 36px;
-  grid-template-columns: 28px 1fr;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   border: 1px solid var(--line);
   background: var(--input-bg);
   color: var(--menu-text);
   cursor: pointer;
   padding: 6px 9px;
-  text-align: left;
+  text-align: center;
   font-weight: 480;
-}
-
-.auth-toggle svg {
-  width: 17px;
-  height: 17px;
-  justify-self: center;
-  fill: currentColor;
-  pointer-events: none;
 }
 
 .auth-toggle:hover {
@@ -1156,6 +1156,31 @@ img.agent-avatar,
   gap: 12px;
 }
 
+.agent-file-vault {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  margin: 18px 0 0;
+  padding-top: 18px;
+}
+
+.agent-file-vault h4 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 480;
+}
+
+.agent-file-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.agent-file-tile {
+  min-height: 252px;
+}
+
 .transaction-file-tile {
   display: grid;
   min-height: 318px;
@@ -1468,6 +1493,14 @@ img.agent-avatar,
   gap: 6px;
   color: var(--muted);
   font-size: 0.78rem;
+}
+
+.inbox-date,
+.inbox-detail-date {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .inbox-action {
@@ -2224,6 +2257,32 @@ img.agent-avatar,
   padding: 6px;
 }
 
+.currency-input {
+  display: grid;
+  min-height: 40px;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--input-bg);
+  color: var(--ink);
+}
+
+.currency-input > span {
+  display: grid;
+  min-height: 38px;
+  place-items: center;
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.form-grid .currency-input input[type="number"],
+.form-grid .currency-input input[type="text"] {
+  min-height: 38px;
+  border: 0;
+  background: transparent;
+  padding-left: 10px;
+}
+
 .branding-grid input[type="text"] {
   min-height: 48px;
   padding: 11px 14px;
@@ -2423,6 +2482,10 @@ body.menu-open .sidebar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .agent-file-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .agent-summary {
     grid-template-columns: 1fr;
   }
@@ -2492,6 +2555,10 @@ body.menu-open .sidebar {
   }
 
   .overview-schedule-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-file-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2744,6 +2811,15 @@ h1 {
   font-weight: 480;
 }
 
+.menu-item.locked {
+  color: var(--muted);
+  opacity: 0.72;
+}
+
+.menu-item.locked:hover {
+  background: var(--menu-hover);
+}
+
 .menu-icon {
   display: grid;
   width: 30px;
@@ -2818,26 +2894,17 @@ h1 {
 }
 
 .auth-toggle {
-  display: grid;
+  display: flex;
   min-height: 36px;
-  grid-template-columns: 28px 1fr;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   border: 1px solid var(--line);
   background: var(--input-bg);
   color: var(--menu-text);
   cursor: pointer;
   padding: 6px 9px;
-  text-align: left;
+  text-align: center;
   font-weight: 480;
-}
-
-.auth-toggle svg {
-  width: 17px;
-  height: 17px;
-  justify-self: center;
-  fill: currentColor;
-  pointer-events: none;
 }
 
 .auth-toggle:hover {
@@ -4041,6 +4108,14 @@ img.agent-avatar,
   font-size: 0.78rem;
 }
 
+.inbox-date,
+.inbox-detail-date {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
 .inbox-action {
   display: inline-flex;
   min-height: 32px;
@@ -4994,6 +5069,10 @@ body.menu-open .sidebar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .agent-file-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .agent-summary {
     grid-template-columns: 1fr;
   }
@@ -5063,6 +5142,10 @@ body.menu-open .sidebar {
   }
 
   .overview-schedule-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-file-grid {
     grid-template-columns: 1fr;
   }
 

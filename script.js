@@ -119,6 +119,11 @@ const transactionFields = {
   contractPrice: document.querySelector("#transaction-contract-price"),
   listPriceField: document.querySelector("#transaction-list-price-field"),
   contractPriceField: document.querySelector("#transaction-contract-price-field"),
+  commissionType: document.querySelector("#transaction-commission-type"),
+  commissionRate: document.querySelector("#transaction-commission-rate"),
+  commissionRateField: document.querySelector("#transaction-commission-rate-field"),
+  commissionFlatFee: document.querySelector("#transaction-commission-flat-fee"),
+  commissionFlatField: document.querySelector("#transaction-commission-flat-field"),
   deadlinesField: document.querySelector("#transaction-deadlines-field"),
   deadlines: {
     sellerDisclosure: document.querySelector("#deadline-seller-disclosure"),
@@ -149,6 +154,7 @@ const inboxDetailModal = document.querySelector("#inbox-detail-modal");
 const inboxDetailTitle = document.querySelector("#inbox-detail-title");
 const inboxDetailType = document.querySelector("#inbox-detail-type");
 const inboxDetailStatus = document.querySelector("#inbox-detail-status");
+const inboxDetailDate = document.querySelector("#inbox-detail-date");
 const inboxDetailCopy = document.querySelector("#inbox-detail-copy");
 const inboxDetailAction = document.querySelector("#inbox-detail-action");
 const closeInboxDetailModal = document.querySelector("#close-inbox-detail-modal");
@@ -161,6 +167,7 @@ const userForm = document.querySelector("#user-form");
 const userModalTitle = document.querySelector("#user-modal-title");
 const closeUserModal = document.querySelector("#close-user-modal");
 const cancelUserButton = document.querySelector("#cancel-user-button");
+const deleteUserButton = document.querySelector("#delete-user-button");
 const userEmptyState = document.querySelector("#user-empty-state");
 const userFields = {
   profileImage: document.querySelector("#user-profile-image"),
@@ -196,8 +203,19 @@ const agentFields = {
   zip: document.querySelector("#agent-zip"),
   licenseFile: document.querySelector("#agent-license-file"),
   licenseExpiration: document.querySelector("#agent-license-expiration"),
+  contractFile: document.querySelector("#agent-contract-file"),
+  otherFile: document.querySelector("#agent-other-file"),
 };
 const agentProfilePreview = document.querySelector("#agent-profile-preview");
+const agentLicenseTile = document.querySelector("#agent-license-tile");
+const agentLicenseStatus = document.querySelector("#agent-license-status");
+const agentLicenseFileName = document.querySelector("#agent-license-file-name");
+const agentContractTile = document.querySelector("#agent-contract-tile");
+const agentContractStatus = document.querySelector("#agent-contract-status");
+const agentContractFileName = document.querySelector("#agent-contract-file-name");
+const agentOtherTile = document.querySelector("#agent-other-tile");
+const agentOtherStatus = document.querySelector("#agent-other-status");
+const agentOtherFileName = document.querySelector("#agent-other-file-name");
 let editingAgentId = null;
 let editingTransactionId = null;
 let editingCommissionAgentId = null;
@@ -374,6 +392,7 @@ let calendarView = "month";
 let calendarDate = new Date();
 calendarDate.setHours(0, 0, 0, 0);
 let overviewScheduleStartOffset = 0;
+const overviewScheduleWindowDays = 10;
 let editingUserId = null;
 let companyTasks = [
   {
@@ -450,28 +469,70 @@ function canAccessAdmin() {
   return isSignedIn() && ["Broker", "Admin"].includes(currentUserRole);
 }
 
-function syncAdminAccess() {
+function isAgentUser() {
+  return isSignedIn() && currentUserRole === "Agent";
+}
+
+function getCurrentUserAgent() {
+  if (!currentUser) return null;
+
+  return (
+    agents.find(
+      (agent) =>
+        (currentUser.agentId && String(agent.id) === String(currentUser.agentId)) ||
+        agent.email?.toLowerCase() === currentUser.email?.toLowerCase(),
+    ) || null
+  );
+}
+
+function canSeeTransaction(transaction) {
+  if (!isAgentUser()) return true;
+
+  const agent = getCurrentUserAgent();
+  return Boolean(agent && String(transaction.agentId) === String(agent.id));
+}
+
+function getVisibleTransactions({ includeCancelled = false } = {}) {
+  return transactions.filter(
+    (transaction) => (includeCancelled || transaction.status !== "Cancelled") && canSeeTransaction(transaction),
+  );
+}
+
+function canAccessPage(pageId) {
+  if (pageId === "admin" || pageId === "users") return canAccessAdmin();
+  if (pageId === "agents") return !isAgentUser();
+  return true;
+}
+
+function showLockedNotice(pageId) {
+  const section = pageTitles[pageId] || "This section";
+  window.alert(`${section} is locked for agent users. Ask the broker/admin for access.`);
+}
+
+function syncMenuAccess() {
   const adminMenuItem = document.querySelector('[data-page="admin"]');
   const usersMenuItem = document.querySelector('[data-page="users"]');
-  const hasAccess = canAccessAdmin();
+  const agentsMenuItem = document.querySelector('[data-page="agents"]');
+  const hasAdminAccess = canAccessAdmin();
+  const agentView = isAgentUser();
 
-  adminMenuItem.hidden = !hasAccess;
-  adminMenuItem.setAttribute("aria-disabled", String(!hasAccess));
-  usersMenuItem.hidden = !hasAccess;
-  usersMenuItem.setAttribute("aria-disabled", String(!hasAccess));
+  adminMenuItem.hidden = !isSignedIn();
+  adminMenuItem.classList.toggle("locked", isSignedIn() && !hasAdminAccess);
+  adminMenuItem.setAttribute("aria-disabled", String(!hasAdminAccess));
 
-  if (!hasAccess && document.querySelector("#admin").classList.contains("active")) {
-    activatePage("overview");
-  }
+  usersMenuItem.hidden = !hasAdminAccess;
+  usersMenuItem.setAttribute("aria-disabled", String(!hasAdminAccess));
+  agentsMenuItem.hidden = agentView;
+  agentsMenuItem.setAttribute("aria-disabled", String(agentView));
 
-  if (!hasAccess && document.querySelector("#users").classList.contains("active")) {
+  if (!canAccessPage(document.querySelector(".page.active")?.id)) {
     activatePage("overview");
   }
 }
 
 function activatePage(pageId) {
-  if (pageId === "admin" && !canAccessAdmin()) {
-    activatePage("overview");
+  if (!canAccessPage(pageId)) {
+    showLockedNotice(pageId);
     return;
   }
 
@@ -487,7 +548,7 @@ function activatePage(pageId) {
 
   document.body.classList.toggle("overview-active", pageId === "overview");
   pageTitle.textContent = pageTitles[pageId];
-  topbarNewTransaction.hidden = !["overview", "transactions"].includes(pageId);
+  topbarNewTransaction.hidden = isAgentUser() || !["overview", "transactions"].includes(pageId);
   document.body.classList.remove("menu-open");
 }
 
@@ -547,7 +608,8 @@ function setAuthState(user = null, session = null) {
   authToggle.querySelector("span").textContent = isLoggedIn ? "Logout" : "Login";
   authStatus.textContent = isLoggedIn ? currentUserRole : "Signed out";
   authName.textContent = isLoggedIn ? displayName : "Guest";
-  syncAdminAccess();
+  syncMenuAccess();
+  renderAll();
 }
 
 function setAuthMessage(message, type = "") {
@@ -684,6 +746,7 @@ restoreArchiveSettingsFromBackend();
 Object.values(brokerContactFields).forEach((field) => {
   field.addEventListener("input", syncBrokerContact);
 });
+attachPhoneFormatter(brokerContactFields.phone);
 
 brokerContactForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -742,6 +805,43 @@ function startOfWeek(date) {
 
 function monthLabel(date) {
   return new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(date);
+}
+
+function formatPhoneNumber(value) {
+  const digits = String(value || "").replace(/\D/g, "").slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+function attachPhoneFormatter(field) {
+  field.addEventListener("input", () => {
+    field.value = formatPhoneNumber(field.value);
+  });
+  field.addEventListener("blur", () => {
+    field.value = formatPhoneNumber(field.value);
+  });
+}
+
+function parseCurrencyInput(value) {
+  return Number(String(value || "").replace(/[^0-9.]/g, "")) || 0;
+}
+
+function formatCurrencyInput(value) {
+  const numericValue = parseCurrencyInput(value);
+  if (!numericValue) return "";
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(numericValue);
+}
+
+function attachCurrencyFormatter(field) {
+  field.addEventListener("input", () => {
+    field.value = field.value.replace(/[^0-9.]/g, "");
+  });
+  field.addEventListener("blur", () => {
+    field.value = formatCurrencyInput(field.value);
+  });
 }
 
 function formatCurrency(value) {
@@ -810,7 +910,10 @@ function isUnderContractStatus(status) {
 }
 
 function getEstimatedGrossCommission(transaction) {
-  return (Number(transaction.contractPrice) || 0) * 0.03;
+  if (transaction.commissionType === "flat") return Number(transaction.commissionFlatFee) || 0;
+
+  const commissionRate = Number.isFinite(Number(transaction.commissionRate)) ? Number(transaction.commissionRate) : 3;
+  return (Number(transaction.contractPrice) || 0) * (commissionRate / 100);
 }
 
 function getAgentCommission(transaction) {
@@ -832,6 +935,18 @@ function updateAgentProfilePreview(src = "") {
 
   agentProfilePreview.innerHTML = src ? `<img src="${src}" alt="" />` : getAgentInitials(previewAgent);
   agentProfilePreview.classList.toggle("has-image", Boolean(src));
+}
+
+function updateAgentFileTile(tile, status, name, fileName = "", emptyLabel = "Needed") {
+  tile.classList.toggle("uploaded", Boolean(fileName));
+  status.textContent = fileName ? "Uploaded" : emptyLabel;
+  name.textContent = fileName || "No file uploaded";
+}
+
+function updateAgentFileVault(agent = {}) {
+  updateAgentFileTile(agentLicenseTile, agentLicenseStatus, agentLicenseFileName, agent.licenseFileName || "");
+  updateAgentFileTile(agentContractTile, agentContractStatus, agentContractFileName, agent.contractFileName || "");
+  updateAgentFileTile(agentOtherTile, agentOtherStatus, agentOtherFileName, agent.otherFileName || "", "Optional");
 }
 
 function updateUserProfilePreview(src = "") {
@@ -881,6 +996,8 @@ function renderAgents() {
       <td>
         <div>${agent.licenseFileName || "No license uploaded"}</div>
         <div class="license-detail">Expires ${formatDate(agent.licenseExpiration)}</div>
+        <div class="license-detail">${agent.contractFileName ? `Contract: ${agent.contractFileName}` : "No agent/broker contract"}</div>
+        <div class="license-detail">${agent.otherFileName ? `Other: ${agent.otherFileName}` : "No other files"}</div>
       </td>
       <td><span class="status-pill ${agent.archived ? "archived" : licenseStatus.type}">${agent.archived ? "Archived" : licenseStatus.label}</span></td>
       <td>
@@ -902,6 +1019,10 @@ function getAgentName(agentId) {
   return agent ? `${agent.firstName} ${agent.lastName}` : "Unassigned";
 }
 
+function getUserAgentName(agentId) {
+  return agentId ? getAgentName(agentId) : "No linked agent";
+}
+
 function getAgentCalendarColor(agentId) {
   const agent = agents.find((item) => item.id === Number(agentId));
   return agent?.calendarColor || "#837a6d";
@@ -909,13 +1030,18 @@ function getAgentCalendarColor(agentId) {
 
 function renderAgentOptions() {
   const activeAgents = agents.filter((agent) => !agent.archived);
+  const currentAgent = getCurrentUserAgent();
+  const calendarAgents = isAgentUser() && currentAgent ? [currentAgent] : activeAgents;
   transactionFields.agentId.innerHTML = activeAgents
     .map((agent) => `<option value="${agent.id}">${agent.firstName} ${agent.lastName}</option>`)
     .join("");
-  calendarAgentFilter.innerHTML = [
-    '<option value="all">All agents</option>',
-    ...activeAgents.map((agent) => `<option value="${agent.id}">${agent.firstName} ${agent.lastName}</option>`),
-  ].join("");
+  calendarAgentFilter.innerHTML = isAgentUser()
+    ? calendarAgents.map((agent) => `<option value="${agent.id}">${agent.firstName} ${agent.lastName}</option>`).join("")
+    : [
+        '<option value="all">All agents</option>',
+        ...activeAgents.map((agent) => `<option value="${agent.id}">${agent.firstName} ${agent.lastName}</option>`),
+      ].join("");
+  if (isAgentUser() && currentAgent) calendarAgentFilter.value = String(currentAgent.id);
   userFields.agentId.innerHTML = [
     '<option value="">No linked agent</option>',
     ...activeAgents.map((agent) => `<option value="${agent.id}">${agent.firstName} ${agent.lastName}</option>`),
@@ -976,10 +1102,11 @@ function getTransactionCalendarEvents(sourceTransactions) {
 }
 
 function renderTransactions() {
+  const visibleTransactions = getVisibleTransactions({ includeCancelled: true });
   transactionTableBody.innerHTML = "";
-  transactionEmptyState.classList.toggle("visible", transactions.length === 0);
+  transactionEmptyState.classList.toggle("visible", visibleTransactions.length === 0);
 
-  transactions.forEach((transaction) => {
+  visibleTransactions.forEach((transaction) => {
     const sideLabel = transaction.side === "buyer" ? "Buyer rep" : "Seller rep";
     const fileSummary = getTransactionFileSummary(transaction);
     const row = document.createElement("tr");
@@ -1013,20 +1140,21 @@ function renderTransactions() {
 
 function renderOverviewMetrics() {
   const currentYear = new Date().getFullYear();
-  const activeListings = transactions.filter(
+  const visibleTransactions = getVisibleTransactions({ includeCancelled: true });
+  const activeListings = visibleTransactions.filter(
     (transaction) => transaction.side === "seller" && transaction.status === "New",
   ).length;
-  const pendingDeals = transactions.filter((transaction) => isUnderContractStatus(transaction.status)).length;
-  const ytdTransactions = transactions.filter(
+  const pendingDeals = visibleTransactions.filter((transaction) => isUnderContractStatus(transaction.status)).length;
+  const ytdTransactions = visibleTransactions.filter(
     (transaction) => transaction.status !== "Cancelled" && new Date(transaction.contractDate).getFullYear() === currentYear,
   ).length;
-  const salesVolume = transactions
+  const salesVolume = visibleTransactions
     .filter((transaction) => transaction.status !== "Cancelled" && isUnderContractStatus(transaction.status))
     .reduce((total, transaction) => total + (Number(transaction.contractPrice) || 0), 0);
-  const agentCommission = transactions
+  const agentCommission = visibleTransactions
     .filter((transaction) => transaction.status !== "Cancelled" && isUnderContractStatus(transaction.status))
     .reduce((total, transaction) => total + getAgentCommission(transaction), 0);
-  const brokerageCommission = transactions
+  const brokerageCommission = visibleTransactions
     .filter((transaction) => transaction.status !== "Cancelled" && isUnderContractStatus(transaction.status))
     .reduce((total, transaction) => total + getBrokerageCommission(transaction), 0);
 
@@ -1042,16 +1170,16 @@ function renderOverviewSchedule() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const rangeStart = addDays(today, overviewScheduleStartOffset);
-  const rangeEnd = addDays(rangeStart, 4);
+  const rangeEnd = addDays(rangeStart, overviewScheduleWindowDays - 1);
 
   overviewScheduleRange.textContent = `${formatDate(toDateKey(rangeStart))} - ${formatDate(toDateKey(rangeEnd))}`;
 
-  overviewScheduleGrid.innerHTML = Array.from({ length: 5 }, (_, index) => {
+  overviewScheduleGrid.innerHTML = Array.from({ length: overviewScheduleWindowDays }, (_, index) => {
     const day = addDays(rangeStart, index);
     const dateKey = toDateKey(day);
     const isToday = dateKey === toDateKey(today);
     const dayEvents = getTransactionCalendarEvents(
-      transactions.filter((transaction) => transaction.status !== "Cancelled"),
+      getVisibleTransactions(),
     ).filter((event) => event.date === dateKey);
 
     return `
@@ -1081,9 +1209,23 @@ function renderOverviewSchedule() {
   }).join("");
 }
 
+function getVisibleCompanyTasks() {
+  if (!isAgentUser()) return companyTasks;
+
+  const agent = getCurrentUserAgent();
+  const agentName = agent ? `${agent.firstName} ${agent.lastName}`.toLowerCase() : "";
+  const userEmail = currentUser?.email?.toLowerCase() || "";
+
+  return companyTasks.filter((task) => {
+    const owner = task.owner.toLowerCase();
+    return owner === agentName || owner === userEmail;
+  });
+}
+
 function renderCompanyTasks() {
-  const openTasks = companyTasks.filter((task) => !task.completed);
-  const completedTasks = companyTasks.filter((task) => task.completed);
+  const visibleTasks = getVisibleCompanyTasks();
+  const openTasks = visibleTasks.filter((task) => !task.completed);
+  const completedTasks = visibleTasks.filter((task) => task.completed);
   const taskSection = (label, tasks) => `
     <div class="company-task-section">
       <p class="task-section-label">${label}</p>
@@ -1110,6 +1252,7 @@ function renderCompanyTasks() {
   `;
 
   companyTaskOpenCount.textContent = `${openTasks.length} open`;
+  addCompanyTaskButton.hidden = isAgentUser();
   companyTaskList.innerHTML = `${taskSection("Open company tasks", openTasks)}${taskSection("Completed", completedTasks)}`;
 }
 
@@ -1135,6 +1278,7 @@ function saveBrokerContactToBackend() {
 function syncBrokerContact() {
   if (!brokerContactForm.checkValidity()) return;
 
+  brokerContactFields.phone.value = formatPhoneNumber(brokerContactFields.phone.value);
   brokerContact = {
     name: brokerContactFields.name.value.trim(),
     email: brokerContactFields.email.value.trim(),
@@ -1148,7 +1292,7 @@ function syncBrokerContact() {
 function restoreBrokerContact() {
   const savedContact = JSON.parse(localStorage.getItem("brokr-broker-contact") || "null");
   if (savedContact?.name && savedContact?.email && savedContact?.phone) {
-    brokerContact = savedContact;
+    brokerContact = { ...savedContact, phone: formatPhoneNumber(savedContact.phone) };
   }
 
   brokerContactFields.name.value = brokerContact.name;
@@ -1163,7 +1307,7 @@ async function restoreBrokerContactFromBackend() {
   brokerContact = {
     name: savedContact.broker_name || brokerContact.name,
     email: savedContact.broker_email || brokerContact.email,
-    phone: savedContact.broker_phone || brokerContact.phone,
+    phone: formatPhoneNumber(savedContact.broker_phone || brokerContact.phone),
   };
 
   brokerContactFields.name.value = brokerContact.name;
@@ -1284,28 +1428,6 @@ function approveArchivePackage(transactionId) {
   renderInbox();
 }
 
-function buildDeadlineEmail(agent, transaction, deadlineLabel, deadlineDate) {
-  const subject = `Brokr deadline reminder: ${deadlineLabel} for ${transaction.clientName}`;
-  const body = [
-    `Hi ${getBrokerFirstName()},`,
-    "",
-    `This is a reminder that the ${deadlineLabel} for ${transaction.clientName} is coming up on ${formatDate(deadlineDate)}.`,
-    "",
-    `Agent: ${agent.firstName} ${agent.lastName}`,
-    `Transaction: ${transaction.clientName}`,
-    `Property: ${transaction.propertyAddress || "No property address on file"}`,
-    `Representation: ${transaction.side === "buyer" ? "Buyer" : "Seller"}`,
-    `Deadline: ${formatDate(deadlineDate)}`,
-    "",
-    "Please review the transaction and upload any required file updates in Brokr.",
-    "",
-    "Thank you,",
-    "Lume Real Estate",
-  ].join("\n");
-
-  return `mailto:${brokerContact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-}
-
 function buildDeadlineEmailItems() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -1313,7 +1435,7 @@ function buildDeadlineEmailItems() {
   const cutoffKey = toDateKey(addDays(today, 7));
   const deadlineLabels = new Set(Object.values(transactionDeadlineLabels));
 
-  return getTransactionCalendarEvents(transactions.filter((transaction) => transaction.status !== "Cancelled"))
+  return getTransactionCalendarEvents(getVisibleTransactions())
     .filter((event) => deadlineLabels.has(event.label) && event.date >= todayKey && event.date <= cutoffKey)
     .map((event) => {
       const agent = agents.find((candidate) => candidate.id === event.transaction.agentId);
@@ -1325,33 +1447,13 @@ function buildDeadlineEmailItems() {
         title: `${event.label} approaching`,
         detail: `${brokerContact.name} should review ${event.transaction.clientName} with ${agent.firstName} ${agent.lastName}. Deadline is ${formatDate(event.date)}.`,
         status: "Broker alert",
-        actionLabel: "Email Broker",
-        actionHref: buildDeadlineEmail(agent, event.transaction, event.label, event.date),
+        receivedDate: todayKey,
+        actionLabel: "Review Transaction",
+        actionType: "transaction",
+        transactionId: event.transaction.id,
       };
     })
     .filter(Boolean);
-}
-
-function buildFileUploadEmail(notification) {
-  const subject = `Brokr file upload review: ${notification.documentName} for ${notification.clientName}`;
-  const body = [
-    `Hi ${getBrokerFirstName()},`,
-    "",
-    `${notification.agentName} uploaded a transaction file that needs broker review.`,
-    "",
-    `Transaction: ${notification.clientName}`,
-    `Property: ${notification.propertyAddress || "No property address on file"}`,
-    `Document: ${notification.documentName}`,
-    `File: ${notification.fileName}`,
-    `Uploaded: ${formatDate(notification.date)}`,
-    "",
-    "Please double check the file in Brokr.",
-    "",
-    "Thank you,",
-    "Lume Real Estate",
-  ].join("\n");
-
-  return `mailto:${brokerContact.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function createFileUploadNotifications(transaction, uploads) {
@@ -1375,7 +1477,11 @@ function createFileUploadNotifications(transaction, uploads) {
 }
 
 function buildInboxItems() {
-  const activeAgents = agents.filter((agent) => !agent.archived);
+  const todayKey = toDateKey(new Date());
+  const currentAgent = getCurrentUserAgent();
+  const activeAgents = agents.filter(
+    (agent) => !agent.archived && (!isAgentUser() || String(agent.id) === String(currentAgent?.id)),
+  );
   const licenseItems = activeAgents
     .filter((agent) => getLicenseStatus(agent.licenseExpiration).type === "warning")
     .map((agent) => ({
@@ -1384,9 +1490,13 @@ function buildInboxItems() {
       title: `${agent.firstName} ${agent.lastName} license renewal`,
       detail: `License expires ${formatDate(agent.licenseExpiration)}. Broker follow-up is needed before renewal.`,
       status: getLicenseStatus(agent.licenseExpiration).label,
+      receivedDate: todayKey,
+      actionLabel: canAccessAdmin() ? "Open Agent File" : "",
+      actionType: canAccessAdmin() ? "agent" : "",
+      agentId: agent.id,
     }));
 
-  const reviewItems = transactions
+  const reviewItems = getVisibleTransactions({ includeCancelled: true })
     .filter((transaction) => transaction.status === "Review Needed")
     .map((transaction) => ({
       id: `review-${transaction.id}`,
@@ -1394,9 +1504,13 @@ function buildInboxItems() {
       title: `${transaction.clientName} transaction needs review`,
       detail: `${getAgentName(transaction.agentId)} has a ${transaction.side === "buyer" ? "buyer" : "seller"} file requiring brokerage attention.`,
       status: transaction.status,
+      receivedDate: todayKey,
+      actionLabel: "Review Transaction",
+      actionType: "transaction",
+      transactionId: transaction.id,
     }));
 
-  const fileItems = transactions
+  const fileItems = getVisibleTransactions({ includeCancelled: true })
     .map((transaction) => ({ transaction, summary: getTransactionFileSummary(transaction) }))
     .filter(({ transaction, summary }) => transaction.status !== "Cancelled" && summary.missingCount > 0)
     .map(({ transaction, summary }) => ({
@@ -1405,17 +1519,25 @@ function buildInboxItems() {
       title: `${transaction.clientName} file vault incomplete`,
       detail: `${summary.uploadedCount}/${summary.requiredDocs.length} required files uploaded for contract date ${formatDate(transaction.contractDate)}.`,
       status: "Files due",
+      receivedDate: todayKey,
+      actionLabel: "Open File Vault",
+      actionType: "transaction",
+      transactionId: transaction.id,
     }));
 
-  const uploadItems = fileUploadNotifications.map((notification) => ({
-    id: `upload-${notification.id}`,
-    type: "Upload",
-    title: `${notification.documentName} uploaded`,
-    detail: `${notification.agentName} uploaded ${notification.fileName} for ${notification.clientName}. Broker review is needed.`,
-    status: "Review",
-    actionLabel: "Email Broker",
-    actionHref: buildFileUploadEmail(notification),
-  }));
+  const uploadItems = isAgentUser()
+    ? []
+    : fileUploadNotifications.map((notification) => ({
+        id: `upload-${notification.id}`,
+        type: "Upload",
+        title: `${notification.documentName} uploaded`,
+        detail: `${notification.agentName} uploaded ${notification.fileName} for ${notification.clientName}. Broker review is needed.`,
+        status: "Review",
+        receivedDate: notification.date || todayKey,
+        actionLabel: "Review Transaction",
+        actionType: "transaction",
+        transactionId: notification.transactionId,
+      }));
 
   return [...licenseItems, ...buildDeadlineEmailItems(), ...uploadItems, ...reviewItems, ...fileItems].filter(isInboxItemActive);
 }
@@ -1437,11 +1559,12 @@ function renderInbox() {
         <p>${item.detail}</p>
       </div>
       <div class="inbox-meta">
+        <span class="inbox-date">Received ${formatDate(item.receivedDate || toDateKey(new Date()))}</span>
         <span class="status-pill warning">${item.status}</span>
         <span>${item.type}</span>
         ${
-          item.actionHref
-            ? `<a class="inbox-action" href="${item.actionHref}" aria-label="${item.actionLabel} for ${item.title}">${item.actionLabel}</a>`
+          item.actionType
+            ? `<button class="inbox-action" type="button" data-inbox-action="${item.id}" aria-label="${item.actionLabel} for ${item.title}">${item.actionLabel}</button>`
             : ""
         }
       </div>
@@ -1467,12 +1590,31 @@ function openInboxDetail(itemId) {
   inboxDetailTitle.textContent = item.title;
   inboxDetailType.textContent = item.type;
   inboxDetailStatus.textContent = item.status;
+  inboxDetailDate.textContent = `Received ${formatDate(item.receivedDate || toDateKey(new Date()))}`;
   inboxDetailCopy.textContent = item.detail;
-  inboxDetailAction.hidden = !item.actionHref;
-  inboxDetailAction.textContent = item.actionLabel || "Open Action";
-  inboxDetailAction.href = item.actionHref || "#";
+  inboxDetailAction.hidden = !item.actionType;
+  inboxDetailAction.textContent = item.actionLabel || "Review Item";
+  inboxDetailAction.dataset.inboxAction = item.id;
   inboxDetailModal.hidden = false;
   approveInboxItemButton.focus();
+}
+
+function runInboxAction(itemId) {
+  const item = buildInboxItems().find((candidate) => candidate.id === itemId);
+  if (!item?.actionType) return;
+
+  closeInboxDetail();
+
+  if (item.actionType === "transaction" && item.transactionId) {
+    activatePage("transactions");
+    openTransactionModal(Number(item.transactionId));
+    return;
+  }
+
+  if (item.actionType === "agent" && item.agentId && canAccessAdmin()) {
+    activatePage("agents");
+    openAgentModal(Number(item.agentId));
+  }
 }
 
 function updateInboxItemState(state) {
@@ -1506,7 +1648,7 @@ function renderUsers() {
           </div>
         </div>
       </td>
-      <td>${getAgentName(user.agentId)}</td>
+      <td>${getUserAgentName(user.agentId)}</td>
       <td><span class="status-pill">${user.role}</span></td>
       <td>
         <div>${user.canUpload ? "Can upload files" : "No upload access"}</div>
@@ -1516,6 +1658,7 @@ function renderUsers() {
       <td>
         <div class="table-actions">
           <button class="text-action" type="button" data-user-edit="${user.id}">Edit</button>
+          <button class="text-action danger-action" type="button" data-user-delete="${user.id}">Delete</button>
         </div>
       </td>
     `;
@@ -1542,6 +1685,11 @@ async function saveUserToBackend(user, shouldInvite) {
     userFormNote.textContent = inviteResult.message || "Invite sent. The user can set their password from email.";
   }
   return savedUser;
+}
+
+async function deleteUserFromBackend(user) {
+  if (!window.BrokrBackend?.isConfigured || !window.BrokrBackend.deleteUserProfile) return;
+  await window.BrokrBackend.deleteUserProfile(user);
 }
 
 function getCommissionSplit(agent) {
@@ -1605,8 +1753,8 @@ function getSelectedUserAgentId() {
 
 function getFilteredTransactions() {
   const agentId = calendarAgentFilter.value;
-  return transactions.filter(
-    (transaction) => transaction.status !== "Cancelled" && (agentId === "all" || String(transaction.agentId) === agentId),
+  return getVisibleTransactions().filter(
+    (transaction) => agentId === "all" || String(transaction.agentId) === agentId,
   );
 }
 
@@ -1716,6 +1864,44 @@ function updateTransactionPriceFields() {
   }
 }
 
+function updateTransactionCommissionFields() {
+  const isFlatFee = transactionFields.commissionType.value === "flat";
+  transactionFields.commissionRateField.hidden = isFlatFee;
+  transactionFields.commissionFlatField.hidden = !isFlatFee;
+
+  if (isFlatFee) {
+    transactionFields.commissionRate.value = transactionFields.commissionRate.value || "3";
+  } else {
+    transactionFields.commissionFlatFee.value = "";
+  }
+}
+
+function syncTransactionFormAccess(transaction) {
+  const agentLocked = isAgentUser();
+  const lockedFields = [
+    transactionFields.agentId,
+    transactionFields.side,
+    transactionFields.clientName,
+    transactionFields.clientEmail,
+    transactionFields.clientPhone,
+    transactionFields.contractDate,
+    transactionFields.listPrice,
+    transactionFields.contractPrice,
+    transactionFields.commissionType,
+    transactionFields.commissionRate,
+    transactionFields.commissionFlatFee,
+    transactionFields.status,
+    transactionFields.propertyAddress,
+    ...Object.values(transactionFields.deadlines),
+  ];
+
+  lockedFields.forEach((field) => {
+    field.disabled = agentLocked;
+  });
+
+  cancelCalendarEventButton.hidden = !transaction || agentLocked;
+}
+
 function renderTransactionFileVault(transaction) {
   const requiredDocs = getRequiredTransactionDocs(transactionFields.side.value, transactionFields.status.value);
   const documents = getTransactionDocuments(transaction);
@@ -1780,7 +1966,11 @@ function renderAdditionalDocuments() {
             <p>${document.fileName || "No file uploaded"}${document.relatedDate ? ` | Related date ${formatDate(document.relatedDate)}` : ""}</p>
             ${document.notes ? `<p>${document.notes}</p>` : ""}
           </div>
-          <button class="text-action" type="button" data-remove-additional-document="${document.id}">Remove</button>
+          ${
+            !isAgentUser() || document.notifyOnSave
+              ? `<button class="text-action" type="button" data-remove-additional-document="${document.id}">Remove</button>`
+              : ""
+          }
         </article>
       `,
     )
@@ -1792,6 +1982,10 @@ function openTransactionModal(transactionId = null) {
   renderAgentOptions();
   transactionForm.reset();
   const transaction = transactions.find((item) => item.id === transactionId);
+  if (isAgentUser() && (!transaction || !canSeeTransaction(transaction))) {
+    window.alert("Agents can upload files to assigned transactions only. Ask the broker/admin for transaction changes.");
+    return;
+  }
   additionalDocumentsDraft = (transaction?.additionalDocuments || []).map((document) => ({ ...document }));
 
   document.querySelector("#transaction-modal-title").textContent = transaction ? "Transaction Details" : "Add Transaction";
@@ -1801,19 +1995,23 @@ function openTransactionModal(transactionId = null) {
   transactionFields.clientEmail.value = transaction?.clientEmail || "";
   transactionFields.clientPhone.value = transaction?.clientPhone || "";
   transactionFields.contractDate.value = transaction?.contractDate || toDateKey(new Date());
-  transactionFields.listPrice.value = transaction?.listPrice || "";
-  transactionFields.contractPrice.value = transaction?.contractPrice || "";
+  transactionFields.listPrice.value = formatCurrencyInput(transaction?.listPrice || "");
+  transactionFields.contractPrice.value = formatCurrencyInput(transaction?.contractPrice || "");
+  transactionFields.commissionType.value = transaction?.commissionType || "percent";
+  transactionFields.commissionRate.value = transaction?.commissionRate ?? 3;
+  transactionFields.commissionFlatFee.value = formatCurrencyInput(transaction?.commissionFlatFee || "");
   Object.entries(transactionFields.deadlines).forEach(([key, field]) => {
     field.value = transaction?.deadlines?.[key] || "";
   });
   transactionFields.status.value = transaction?.status || "New";
   transactionFields.propertyAddress.value = transaction?.propertyAddress || "";
-  cancelCalendarEventButton.hidden = !transaction;
   renderTransactionFileVault(transaction);
   resetAdditionalDocumentComposer();
   renderAdditionalDocuments();
   updateTransactionClientLabel();
   updateTransactionPriceFields();
+  updateTransactionCommissionFields();
+  syncTransactionFormAccess(transaction);
   transactionModal.hidden = false;
   transactionFields.agentId.focus();
 }
@@ -1821,7 +2019,7 @@ function openTransactionModal(transactionId = null) {
 function openUserModal(userId = null) {
   editingUserId = userId;
   renderAgentOptions();
-  const user = users.find((item) => item.id === userId);
+  const user = users.find((item) => String(item.id) === String(userId));
 
   userModalTitle.textContent = user ? "Edit User" : "Add User";
   userFormNote.textContent = user
@@ -1834,6 +2032,7 @@ function openUserModal(userId = null) {
   userFields.status.value = user?.status || "Active";
   userFields.canUpload.checked = user?.canUpload ?? true;
   userFields.permissionScope.value = user?.permissionScope || "Own transactions only";
+  deleteUserButton.hidden = !user;
   updateUserProfilePreview(user?.profileImageSrc || "");
   syncUserEmailFromAgent();
   userModal.hidden = false;
@@ -1843,6 +2042,36 @@ function openUserModal(userId = null) {
 function closeUserForm() {
   userModal.hidden = true;
   editingUserId = null;
+}
+
+async function deleteUser(userId) {
+  const user = users.find((item) => String(item.id) === String(userId));
+  if (!user) return false;
+
+  const isCurrentUser =
+    (currentUser?.id && String(currentUser.id) === String(user.id)) ||
+    (currentUser?.email && currentUser.email.toLowerCase() === user.email.toLowerCase());
+
+  if (isCurrentUser) {
+    window.alert("You cannot delete the user profile you are currently signed in with.");
+    return false;
+  }
+
+  if (!window.confirm(`Delete ${user.email} from Brokr users? This removes their app profile and permissions.`)) {
+    return false;
+  }
+
+  try {
+    await deleteUserFromBackend(user);
+  } catch (error) {
+    userFormNote.textContent = error.message || "Unable to delete user.";
+    if (userModal.hidden) window.alert(userFormNote.textContent);
+    return false;
+  }
+
+  users = users.filter((item) => String(item.id) !== String(user.id));
+  renderUsers();
+  return true;
 }
 
 function openCommissionModal(agentId) {
@@ -1891,7 +2120,10 @@ function openAgentModal(agentId = null) {
   agentFields.zip.value = agent?.zip || legacyAddress.zip;
   agentFields.licenseExpiration.value = agent?.licenseExpiration || "";
   agentFields.licenseFile.value = "";
+  agentFields.contractFile.value = "";
+  agentFields.otherFile.value = "";
   updateAgentProfilePreview(agent?.profileImageSrc || "");
+  updateAgentFileVault(agent);
   archiveAgentButton.hidden = !agent;
   deleteAgentButton.hidden = !agent;
   archiveAgentButton.textContent = agent?.archived ? "Restore Agent" : "Archive Agent";
@@ -2011,6 +2243,17 @@ agentFields.profileImage.addEventListener("change", () => {
   readImage(agentFields.profileImage.files[0], updateAgentProfilePreview);
 });
 
+agentFields.licenseFile.addEventListener("change", () => {
+  updateAgentFileTile(agentLicenseTile, agentLicenseStatus, agentLicenseFileName, agentFields.licenseFile.files[0]?.name || "");
+});
+agentFields.contractFile.addEventListener("change", () => {
+  updateAgentFileTile(agentContractTile, agentContractStatus, agentContractFileName, agentFields.contractFile.files[0]?.name || "");
+});
+agentFields.otherFile.addEventListener("change", () => {
+  updateAgentFileTile(agentOtherTile, agentOtherStatus, agentOtherFileName, agentFields.otherFile.files[0]?.name || "", "Optional");
+});
+attachPhoneFormatter(agentFields.phone);
+
 [agentFields.firstName, agentFields.lastName].forEach((field) => {
   field.addEventListener("input", () => {
     if (!agentProfilePreview.classList.contains("has-image")) updateAgentProfilePreview();
@@ -2022,6 +2265,8 @@ agentForm.addEventListener("submit", async (event) => {
 
   const existingAgent = agents.find((agent) => agent.id === editingAgentId);
   const licenseFileName = agentFields.licenseFile.files[0]?.name || existingAgent?.licenseFileName || "";
+  const contractFileName = agentFields.contractFile.files[0]?.name || existingAgent?.contractFileName || "";
+  const otherFileName = agentFields.otherFile.files[0]?.name || existingAgent?.otherFileName || "";
   const profileImageSrc =
     (await readImageDataUrl(agentFields.profileImage.files[0])) || existingAgent?.profileImageSrc || "";
   const agentData = {
@@ -2030,7 +2275,7 @@ agentForm.addEventListener("submit", async (event) => {
     firstName: agentFields.firstName.value.trim(),
     lastName: agentFields.lastName.value.trim(),
     email: agentFields.email.value.trim(),
-    phone: agentFields.phone.value.trim(),
+    phone: formatPhoneNumber(agentFields.phone.value),
     calendarColor: agentFields.calendarColor.value,
     street: agentFields.street.value.trim(),
     city: agentFields.city.value.trim(),
@@ -2038,6 +2283,8 @@ agentForm.addEventListener("submit", async (event) => {
     zip: agentFields.zip.value.trim(),
     commissionSplit: existingAgent?.commissionSplit ?? 70,
     licenseFileName,
+    contractFileName,
+    otherFileName,
     licenseExpiration: agentFields.licenseExpiration.value,
     archived: existingAgent?.archived || false,
   };
@@ -2063,30 +2310,47 @@ agentForm.addEventListener("submit", async (event) => {
   closeModal();
 });
 
-renderAgents();
-renderAgentOptions();
-renderTransactions();
-renderCalendar();
-renderUsers();
-renderCommissionRules();
-renderOverviewMetrics();
-renderOverviewSchedule();
-renderCompanyTasks();
-renderInbox();
-renderArchiveQueue();
+function renderAll() {
+  renderAgents();
+  renderAgentOptions();
+  renderTransactions();
+  renderCalendar();
+  renderUsers();
+  renderCommissionRules();
+  renderOverviewMetrics();
+  renderOverviewSchedule();
+  renderCompanyTasks();
+  renderInbox();
+  renderArchiveQueue();
+}
+
+renderAll();
 initializeAuth();
 
-topbarNewTransaction.addEventListener("click", openTransactionModal);
+topbarNewTransaction.addEventListener("click", () => {
+  if (isAgentUser()) {
+    window.alert("New transactions are created by broker/admin users. Agents can upload files to assigned transactions.");
+    return;
+  }
+
+  openTransactionModal();
+});
 headerInboxButton.addEventListener("click", openInbox);
 closeInboxDetailModal.addEventListener("click", closeInboxDetail);
 dismissInboxItemButton.addEventListener("click", () => updateInboxItemState("dismissed"));
 approveInboxItemButton.addEventListener("click", () => updateInboxItemState("approved"));
 archiveInboxItemButton.addEventListener("click", () => updateInboxItemState("archived"));
+inboxDetailAction.addEventListener("click", () => runInboxAction(inboxDetailAction.dataset.inboxAction));
 inboxDetailModal.addEventListener("click", (event) => {
   if (event.target === inboxDetailModal) closeInboxDetail();
 });
 inboxList.addEventListener("click", (event) => {
-  if (event.target.closest("a")) return;
+  const actionButton = event.target.closest("[data-inbox-action]");
+  if (actionButton) {
+    event.stopPropagation();
+    runInboxAction(actionButton.dataset.inboxAction);
+    return;
+  }
 
   const item = event.target.closest("[data-inbox-item]");
   if (item) openInboxDetail(item.dataset.inboxItem);
@@ -2116,6 +2380,13 @@ transactionFields.status.addEventListener("change", () => {
   updateTransactionPriceFields();
   renderTransactionFileVault(transactions.find((transaction) => transaction.id === editingTransactionId));
 });
+transactionFields.commissionType.addEventListener("change", updateTransactionCommissionFields);
+attachPhoneFormatter(transactionFields.clientPhone);
+[
+  transactionFields.listPrice,
+  transactionFields.contractPrice,
+  transactionFields.commissionFlatFee,
+].forEach(attachCurrencyFormatter);
 transactionFileGrid.addEventListener("change", (event) => {
   const input = event.target.closest("input[type='file']");
   if (!input?.files[0]) return;
@@ -2184,12 +2455,12 @@ overviewScheduleGrid.addEventListener("click", (event) => {
 });
 
 overviewSchedulePrev.addEventListener("click", () => {
-  overviewScheduleStartOffset -= 5;
+  overviewScheduleStartOffset -= overviewScheduleWindowDays;
   renderOverviewSchedule();
 });
 
 overviewScheduleNext.addEventListener("click", () => {
-  overviewScheduleStartOffset += 5;
+  overviewScheduleStartOffset += overviewScheduleWindowDays;
   renderOverviewSchedule();
 });
 
@@ -2205,7 +2476,14 @@ companyTaskList.addEventListener("change", (event) => {
   renderCompanyTasks();
 });
 
-addCompanyTaskButton.addEventListener("click", openCompanyTaskModal);
+addCompanyTaskButton.addEventListener("click", () => {
+  if (isAgentUser()) {
+    window.alert("Company tasks are managed by broker/admin users.");
+    return;
+  }
+
+  openCompanyTaskModal();
+});
 closeCompanyTaskModal.addEventListener("click", closeCompanyTaskForm);
 cancelCompanyTaskButton.addEventListener("click", closeCompanyTaskForm);
 
@@ -2276,7 +2554,13 @@ commissionModal.addEventListener("click", (event) => {
 
 userTableBody.addEventListener("click", (event) => {
   const editButton = event.target.closest("[data-user-edit]");
+  const deleteButton = event.target.closest("[data-user-delete]");
   const userRow = event.target.closest("tr[data-user-edit]");
+
+  if (deleteButton) {
+    deleteUser(deleteButton.dataset.userDelete);
+    return;
+  }
 
   if (editButton) {
     openUserModal(editButton.dataset.userEdit);
@@ -2294,6 +2578,11 @@ userTableBody.addEventListener("keydown", (event) => {
 
   event.preventDefault();
   openUserModal(userRow.dataset.userEdit);
+});
+
+deleteUserButton.addEventListener("click", async () => {
+  if (!editingUserId) return;
+  if (await deleteUser(editingUserId)) closeUserForm();
 });
 
 archiveQueueList.addEventListener("click", (event) => {
@@ -2319,7 +2608,7 @@ commissionForm.addEventListener("submit", (event) => {
 userForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const existingUser = users.find((user) => user.id === editingUserId);
+  const existingUser = users.find((user) => String(user.id) === String(editingUserId));
   const profileImageSrc =
     (await readImageDataUrl(userFields.profileImage.files[0])) || existingUser?.profileImageSrc || "";
   let userData = {
@@ -2342,7 +2631,7 @@ userForm.addEventListener("submit", async (event) => {
   }
 
   if (existingUser) {
-    users = users.map((user) => (user.id === existingUser.id ? userData : user));
+    users = users.map((user) => (String(user.id) === String(existingUser.id) ? userData : user));
   } else {
     users = [userData, ...users];
   }
@@ -2355,6 +2644,11 @@ transactionForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
   const existingTransaction = transactions.find((transaction) => transaction.id === editingTransactionId);
+  if (isAgentUser() && !existingTransaction) {
+    window.alert("Agents can upload files to assigned transactions only. Ask the broker/admin to create new transactions.");
+    return;
+  }
+
   const documents = { ...getTransactionDocuments(existingTransaction) };
   const deadlines = isUnderContractStatus(transactionFields.status.value)
     ? Object.fromEntries(Object.entries(transactionFields.deadlines).map(([key, field]) => [key, field.value]))
@@ -2377,25 +2671,49 @@ transactionForm.addEventListener("submit", (event) => {
         fileName: document.fileName,
       });
     });
-  const transactionData = {
+  let transactionData = {
     id: existingTransaction?.id || Date.now(),
     agentId: Number(transactionFields.agentId.value),
     side: transactionFields.side.value,
     clientName: transactionFields.clientName.value.trim(),
     clientEmail: transactionFields.clientEmail.value.trim(),
-    clientPhone: transactionFields.clientPhone.value.trim(),
+    clientPhone: formatPhoneNumber(transactionFields.clientPhone.value),
     propertyAddress: transactionFields.propertyAddress.value.trim(),
     contractDate: transactionFields.contractDate.value,
-    listPrice: transactionFields.side.value === "seller" ? Number(transactionFields.listPrice.value) || 0 : 0,
+    listPrice: transactionFields.side.value === "seller" ? parseCurrencyInput(transactionFields.listPrice.value) : 0,
     contractPrice: isUnderContractStatus(transactionFields.status.value)
-      ? Number(transactionFields.contractPrice.value) || 0
+      ? parseCurrencyInput(transactionFields.contractPrice.value)
       : 0,
+    commissionType: transactionFields.commissionType.value,
+    commissionRate: transactionFields.commissionType.value === "percent" ? Number(transactionFields.commissionRate.value) || 0 : 0,
+    commissionFlatFee:
+      transactionFields.commissionType.value === "flat" ? parseCurrencyInput(transactionFields.commissionFlatFee.value) : 0,
     deadlines,
     documents,
     additionalDocuments: additionalDocumentsDraft.map(({ notifyOnSave, ...document }) => document),
     fileNames: Object.values(documents),
     status: transactionFields.status.value,
   };
+
+  if (isAgentUser() && existingTransaction) {
+    transactionData = {
+      ...transactionData,
+      agentId: existingTransaction.agentId,
+      side: existingTransaction.side,
+      clientName: existingTransaction.clientName,
+      clientEmail: existingTransaction.clientEmail,
+      clientPhone: existingTransaction.clientPhone,
+      propertyAddress: existingTransaction.propertyAddress,
+      contractDate: existingTransaction.contractDate,
+      listPrice: existingTransaction.listPrice,
+      contractPrice: existingTransaction.contractPrice,
+      commissionType: existingTransaction.commissionType,
+      commissionRate: existingTransaction.commissionRate,
+      commissionFlatFee: existingTransaction.commissionFlatFee,
+      deadlines: existingTransaction.deadlines || {},
+      status: existingTransaction.status,
+    };
+  }
 
   if (existingTransaction) {
     transactions = transactions.map((transaction) =>

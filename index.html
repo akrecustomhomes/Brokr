@@ -63,11 +63,6 @@
           </button>
         </nav>
 
-        <div class="sidebar-footer">
-          <p>Brokerage workspace</p>
-          <strong>Secure workspace</strong>
-        </div>
-
         <div class="theme-toggle sidebar-theme" role="group" aria-label="Theme">
           <button class="theme-option active" type="button" data-theme="light" data-short="L" aria-pressed="true">Light</button>
           <button class="theme-option" type="button" data-theme="dark" data-short="D" aria-pressed="false">Dark</button>
@@ -82,7 +77,6 @@
             </div>
           </div>
           <button class="auth-toggle" id="auth-toggle" type="button" aria-pressed="true">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17v-2h4V9h-4V7l-5 5 5 5Zm2 5H4V2h8v2H6v16h6v2Zm3.5-5.5 1.4-1.4 2.1 2.1V6.8l-2.1 2.1-1.4-1.4L20 3l4.5 4.5-1.4 1.4L21 6.8v10.4l2.1-2.1 1.4 1.4L20 21l-4.5-4.5Z" /></svg>
             <span>Logout</span>
           </button>
         </div>
@@ -156,12 +150,12 @@
             <div class="panel-header">
               <div>
                 <p class="eyebrow">Upcoming Schedule</p>
-                <h3 id="overview-schedule-title">Next 5 Days</h3>
+                <h3 id="overview-schedule-title">Next 10 Days</h3>
               </div>
               <div class="overview-schedule-controls">
-                <button class="icon-button" id="overview-schedule-prev" type="button" aria-label="Previous 5 days">‹</button>
-                <p class="panel-note" id="overview-schedule-range">Next 5 days</p>
-                <button class="icon-button" id="overview-schedule-next" type="button" aria-label="Next 5 days">›</button>
+                <button class="icon-button" id="overview-schedule-prev" type="button" aria-label="Previous 10 days">‹</button>
+                <p class="panel-note" id="overview-schedule-range">Next 10 days</p>
+                <button class="icon-button" id="overview-schedule-next" type="button" aria-label="Next 10 days">›</button>
               </div>
             </div>
             <div class="overview-schedule-grid" id="overview-schedule-grid"></div>
@@ -576,14 +570,67 @@
               <input id="agent-zip" name="zip" type="text" inputmode="numeric" />
             </label>
             <label>
-              Active real estate license
-              <input id="agent-license-file" name="licenseFile" type="file" accept=".pdf,image/*" />
-            </label>
-            <label>
               License expires
               <input id="agent-license-expiration" name="licenseExpiration" type="date" required />
             </label>
           </div>
+
+          <section class="agent-file-vault" aria-labelledby="agent-file-vault-title">
+            <div>
+              <p class="eyebrow">File Vault</p>
+              <h4 id="agent-file-vault-title">Agent documents</h4>
+            </div>
+            <div class="agent-file-grid">
+            <article class="transaction-file-tile agent-file-tile" id="agent-license-tile">
+              <div>
+                <p class="file-tile-category">License</p>
+                <h5>Active Real Estate License</h5>
+                <p class="file-tile-description">Attach the agent's current active real estate license.</p>
+              </div>
+              <div class="file-tile-meta">
+                <span class="file-tile-status" id="agent-license-status">Needed</span>
+                <span class="file-tile-name" id="agent-license-file-name">No file uploaded</span>
+              </div>
+              <div class="file-tile-divider"></div>
+              <label class="file-upload-action">
+                Upload File
+                <input id="agent-license-file" name="licenseFile" type="file" accept=".pdf,image/*" />
+              </label>
+            </article>
+            <article class="transaction-file-tile agent-file-tile" id="agent-contract-tile">
+              <div>
+                <p class="file-tile-category">Agreement</p>
+                <h5>Broker/Agent Contract</h5>
+                <p class="file-tile-description">Attach the signed agreement between the agent and brokerage.</p>
+              </div>
+              <div class="file-tile-meta">
+                <span class="file-tile-status" id="agent-contract-status">Needed</span>
+                <span class="file-tile-name" id="agent-contract-file-name">No file uploaded</span>
+              </div>
+              <div class="file-tile-divider"></div>
+              <label class="file-upload-action">
+                Upload File
+                <input id="agent-contract-file" name="contractFile" type="file" accept=".pdf,image/*,.doc,.docx" />
+              </label>
+            </article>
+            <article class="transaction-file-tile agent-file-tile" id="agent-other-tile">
+              <div>
+                <p class="file-tile-category">Other</p>
+                <h5>Other</h5>
+                <p class="file-tile-description">Attach any additional agent document the brokerage needs on file.</p>
+              </div>
+              <div class="file-tile-meta">
+                <span class="file-tile-status" id="agent-other-status">Optional</span>
+                <span class="file-tile-name" id="agent-other-file-name">No file uploaded</span>
+              </div>
+              <div class="file-tile-divider"></div>
+              <label class="file-upload-action">
+                Upload File
+                <input id="agent-other-file" name="otherFile" type="file" accept=".pdf,image/*,.doc,.docx" />
+              </label>
+            </article>
+            </div>
+          </section>
 
           <p class="form-note">Brokr flags licenses expiring within 30 days so the broker can follow up before renewal is due.</p>
 
@@ -641,12 +688,36 @@
               <input id="transaction-contract-date" name="contractDate" type="date" required />
             </label>
             <label id="transaction-list-price-field" hidden>
-              List price
-              <input id="transaction-list-price" name="listPrice" type="number" min="0" step="1000" />
+              List price (USD)
+              <span class="currency-input">
+                <span aria-hidden="true">$</span>
+                <input id="transaction-list-price" name="listPrice" type="text" inputmode="decimal" placeholder="0.00" />
+              </span>
             </label>
             <label id="transaction-contract-price-field" hidden>
-              Contract price
-              <input id="transaction-contract-price" name="contractPrice" type="number" min="0" step="1000" />
+              Contract price (USD)
+              <span class="currency-input">
+                <span aria-hidden="true">$</span>
+                <input id="transaction-contract-price" name="contractPrice" type="text" inputmode="decimal" placeholder="0.00" />
+              </span>
+            </label>
+            <label>
+              Commission basis
+              <select id="transaction-commission-type" name="commissionType">
+                <option value="percent">Percent of sale price</option>
+                <option value="flat">Flat fee</option>
+              </select>
+            </label>
+            <label id="transaction-commission-rate-field">
+              Commission %
+              <input id="transaction-commission-rate" name="commissionRate" type="number" min="0" max="100" step="0.01" inputmode="decimal" value="3" />
+            </label>
+            <label id="transaction-commission-flat-field" hidden>
+              Commission amount (USD)
+              <span class="currency-input">
+                <span aria-hidden="true">$</span>
+                <input id="transaction-commission-flat-fee" name="commissionFlatFee" type="text" inputmode="decimal" placeholder="0.00" />
+              </span>
             </label>
             <div class="contract-deadlines-field wide-field" id="transaction-deadlines-field" hidden>
               <div>
@@ -771,7 +842,7 @@
             </div>
             <label>
               Linked agent
-              <select id="user-agent" name="agentId" required></select>
+              <select id="user-agent" name="agentId"></select>
             </label>
             <label>
               Role
@@ -815,6 +886,7 @@
           <div class="modal-actions">
             <span></span>
             <div>
+              <button class="secondary-action danger-action" id="delete-user-button" type="button">Delete User</button>
               <button class="secondary-action" id="cancel-user-button" type="button">Cancel</button>
               <button class="primary-action" type="submit">Save User</button>
             </div>
@@ -874,8 +946,9 @@
 
         <div class="inbox-detail-body">
           <span class="status-pill warning" id="inbox-detail-status">Open</span>
+          <p class="inbox-detail-date" id="inbox-detail-date">Received today</p>
           <p id="inbox-detail-copy"></p>
-          <a class="inbox-action" id="inbox-detail-action" href="#">Open Action</a>
+          <button class="inbox-action" id="inbox-detail-action" type="button">Review Item</button>
         </div>
 
         <div class="modal-actions">
