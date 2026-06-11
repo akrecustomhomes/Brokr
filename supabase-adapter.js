@@ -305,13 +305,23 @@
     const client = await getClient();
     if (!client) return;
 
-    const { error } = await client.from("broker_contacts").upsert({
+    const payload = {
       id: "primary",
       broker_name: contact.name,
       broker_email: contact.email,
       broker_phone: contact.phone,
+      profile_image_src: contact.profileImageSrc || null,
       updated_at: new Date().toISOString(),
-    });
+    };
+
+    const { error } = await client.from("broker_contacts").upsert(payload);
+
+    if (error && /profile_image_src/i.test(error.message || "")) {
+      const { profile_image_src: _profileImageSrc, ...legacyPayload } = payload;
+      const { error: legacyError } = await client.from("broker_contacts").upsert(legacyPayload);
+      if (legacyError) console.warn("Unable to save Supabase broker contact.", legacyError);
+      return;
+    }
 
     if (error) console.warn("Unable to save Supabase broker contact.", error);
   }

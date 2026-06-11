@@ -19,6 +19,7 @@ const inboxCount = document.querySelector("#inbox-count");
 const authToggle = document.querySelector("#auth-toggle");
 const authStatus = document.querySelector("#auth-status");
 const authName = document.querySelector("#auth-name");
+const authAvatar = document.querySelector(".auth-avatar");
 const authGate = document.querySelector("#auth-gate");
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
@@ -46,7 +47,9 @@ const brokerContactFields = {
   name: document.querySelector("#broker-contact-name"),
   email: document.querySelector("#broker-contact-email"),
   phone: document.querySelector("#broker-contact-phone"),
+  profileImage: document.querySelector("#broker-profile-image"),
 };
+const brokerProfilePreview = document.querySelector("#broker-profile-preview");
 const archiveStorageForm = document.querySelector("#archive-storage-form");
 const archiveStorageFields = {
   folderUrl: document.querySelector("#archive-folder-url"),
@@ -429,6 +432,7 @@ let brokerContact = {
   name: "Jared Alvey",
   email: "broker@lumerealestate.com",
   phone: "(555) 430-1000",
+  profileImageSrc: "",
 };
 let archiveSettings = {
   folderUrl: "",
@@ -607,17 +611,48 @@ function getAuthDisplayName(user) {
   return toDisplayNameFromEmail(user.email);
 }
 
+function getAuthAvatarMarkup(user, displayName) {
+  if (["Broker", "Admin"].includes(user?.role || currentUserRole) && brokerContact.profileImageSrc) {
+    return `<img src="${brokerContact.profileImageSrc}" alt="${displayName}" />`;
+  }
+
+  if (user?.profileImageSrc) {
+    return `<img src="${user.profileImageSrc}" alt="${displayName}" />`;
+  }
+
+  const linkedAgent = agents.find(
+    (agent) => Number(agent.id) === Number(user?.agentId) || agent.email?.toLowerCase() === user?.email?.toLowerCase(),
+  );
+  if (linkedAgent?.profileImageSrc) {
+    return `<img src="${linkedAgent.profileImageSrc}" alt="${displayName}" />`;
+  }
+
+  const source = user ? { ...user, firstName: displayName.split(" ")[0], lastName: displayName.split(" ")[1] || "" } : {
+    firstName: "Jared",
+    lastName: "Alvey",
+  };
+  return getUserInitials(source);
+}
+
+function renderAuthIdentity(user = currentUser) {
+  const isLoggedIn = isSignedIn();
+  const displayName = getAuthDisplayName(user);
+
+  authStatus.textContent = isLoggedIn ? currentUserRole : "Signed out";
+  authName.textContent = isLoggedIn ? displayName : "Guest";
+  authAvatar.innerHTML = getAuthAvatarMarkup(user, displayName);
+  authAvatar.classList.toggle("has-image", authAvatar.querySelector("img") !== null);
+}
+
 function setAuthState(user = null, session = null) {
   currentUser = user;
   currentSession = session;
   currentUserRole = user?.role || (!window.BrokrBackend?.isConfigured ? "Broker" : "Guest");
   const isLoggedIn = isSignedIn();
-  const displayName = getAuthDisplayName(user);
 
   authToggle.setAttribute("aria-pressed", String(isLoggedIn));
   authToggle.querySelector("span").textContent = isLoggedIn ? "Logout" : "Login";
-  authStatus.textContent = isLoggedIn ? currentUserRole : "Signed out";
-  authName.textContent = isLoggedIn ? displayName : "Guest";
+  renderAuthIdentity(user);
   syncMenuAccess();
   renderAll();
 }
@@ -757,6 +792,16 @@ Object.values(brokerContactFields).forEach((field) => {
   field.addEventListener("input", syncBrokerContact);
 });
 attachPhoneFormatter(brokerContactFields.phone);
+
+brokerContactFields.profileImage.addEventListener("change", () => {
+  readImage(brokerContactFields.profileImage.files[0], (src) => {
+    brokerContact.profileImageSrc = src;
+    updateBrokerProfilePreview(src);
+    renderAuthIdentity();
+    saveBrokerContact();
+    saveBrokerContactToBackend();
+  });
+});
 
 brokerContactForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -924,6 +969,15 @@ function getUserDisplayName(user) {
   return fullName || toDisplayNameFromEmail(user?.email || "");
 }
 
+function getBrokerInitials(contact = brokerContact) {
+  const nameParts = (contact.name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  const initials = nameParts.map((part) => part[0]).join("").toUpperCase();
+  return initials || "B";
+}
+
 function isUnderContractStatus(status) {
   return ["Under Contract", "Closing", "Closed", "Review Needed"].includes(status);
 }
@@ -978,6 +1032,11 @@ function updateUserProfilePreview(src = "") {
 
   userProfilePreview.innerHTML = src ? `<img src="${src}" alt="" />` : getUserInitials(previewUser);
   userProfilePreview.classList.toggle("has-image", Boolean(src));
+}
+
+function updateBrokerProfilePreview(src = brokerContact.profileImageSrc || "") {
+  brokerProfilePreview.innerHTML = src ? `<img src="${src}" alt="" />` : getBrokerInitials();
+  brokerProfilePreview.classList.toggle("has-image", Boolean(src));
 }
 
 function renderAgents() {
@@ -1364,7 +1423,10 @@ function syncBrokerContact() {
     name: brokerContactFields.name.value.trim(),
     email: brokerContactFields.email.value.trim(),
     phone: brokerContactFields.phone.value.trim(),
+    profileImageSrc: brokerContact.profileImageSrc || "",
   };
+  updateBrokerProfilePreview();
+  renderAuthIdentity();
   saveBrokerContact();
   saveBrokerContactToBackend();
   renderInbox();
@@ -1379,6 +1441,9 @@ function restoreBrokerContact() {
   brokerContactFields.name.value = brokerContact.name;
   brokerContactFields.email.value = brokerContact.email;
   brokerContactFields.phone.value = brokerContact.phone;
+  brokerContactFields.profileImage.value = "";
+  updateBrokerProfilePreview();
+  renderAuthIdentity();
 }
 
 async function restoreBrokerContactFromBackend() {
@@ -1389,11 +1454,15 @@ async function restoreBrokerContactFromBackend() {
     name: savedContact.broker_name || brokerContact.name,
     email: savedContact.broker_email || brokerContact.email,
     phone: formatPhoneNumber(savedContact.broker_phone || brokerContact.phone),
+    profileImageSrc: savedContact.profile_image_src || brokerContact.profileImageSrc || "",
   };
 
   brokerContactFields.name.value = brokerContact.name;
   brokerContactFields.email.value = brokerContact.email;
   brokerContactFields.phone.value = brokerContact.phone;
+  brokerContactFields.profileImage.value = "";
+  updateBrokerProfilePreview();
+  renderAuthIdentity();
   saveBrokerContact();
   renderInbox();
 }

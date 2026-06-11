@@ -238,6 +238,13 @@ h1 {
   color: #fff;
   font-size: 0.72rem;
   font-weight: 480;
+  overflow: hidden;
+}
+
+.auth-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .auth-user p {
@@ -1664,7 +1671,8 @@ img.agent-avatar,
 }
 
 .agent-profile-field,
-.user-profile-field {
+.user-profile-field,
+.broker-profile-field {
   display: grid;
   grid-template-columns: 76px minmax(0, 1fr);
   align-items: center;
@@ -1672,7 +1680,8 @@ img.agent-avatar,
 }
 
 .agent-profile-preview,
-.user-profile-preview {
+.user-profile-preview,
+.broker-profile-preview {
   display: grid;
   width: 76px;
   height: 76px;
@@ -1687,7 +1696,8 @@ img.agent-avatar,
 }
 
 .agent-profile-preview img,
-.user-profile-preview img {
+.user-profile-preview img,
+.broker-profile-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -2906,6 +2916,13 @@ h1 {
   color: #fff;
   font-size: 0.72rem;
   font-weight: 480;
+  overflow: hidden;
+}
+
+.auth-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .auth-user p {
@@ -4307,7 +4324,8 @@ img.agent-avatar,
 }
 
 .agent-profile-field,
-.user-profile-field {
+.user-profile-field,
+.broker-profile-field {
   display: grid;
   grid-template-columns: 76px minmax(0, 1fr);
   align-items: center;
@@ -4315,7 +4333,8 @@ img.agent-avatar,
 }
 
 .agent-profile-preview,
-.user-profile-preview {
+.user-profile-preview,
+.broker-profile-preview {
   display: grid;
   width: 76px;
   height: 76px;
@@ -4330,7 +4349,8 @@ img.agent-avatar,
 }
 
 .agent-profile-preview img,
-.user-profile-preview img {
+.user-profile-preview img,
+.broker-profile-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;

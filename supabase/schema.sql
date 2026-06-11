@@ -16,8 +16,11 @@ create table if not exists public.broker_contacts (
   broker_name text not null,
   broker_email text not null,
   broker_phone text not null,
+  profile_image_src text,
   updated_at timestamptz not null default now()
 );
+
+alter table public.broker_contacts add column if not exists profile_image_src text;
 
 create table if not exists public.archive_settings (
   id text primary key default 'default',
