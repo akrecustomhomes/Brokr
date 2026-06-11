@@ -1385,6 +1385,11 @@ img.agent-avatar,
   color: var(--clay);
 }
 
+.text-action.danger-action,
+.danger-action {
+  color: #7d2f2f;
+}
+
 .empty-state {
   display: none;
   padding: 32px;

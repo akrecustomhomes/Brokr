@@ -91,6 +91,7 @@ const agentModalTitle = document.querySelector("#agent-modal-title");
 const closeAgentModal = document.querySelector("#close-agent-modal");
 const cancelAgentButton = document.querySelector("#cancel-agent-button");
 const archiveAgentButton = document.querySelector("#archive-agent-button");
+const deleteAgentButton = document.querySelector("#delete-agent-button");
 const agentEmptyState = document.querySelector("#agent-empty-state");
 const rosterTabs = document.querySelectorAll(".roster-tab");
 const activeAgentCount = document.querySelector("#active-agent-count");
@@ -888,6 +889,7 @@ function renderAgents() {
           <button class="text-action ${agent.archived ? "" : "archive"}" type="button" data-agent-archive="${agent.id}">
             ${agent.archived ? "Restore" : "Archive"}
           </button>
+          <button class="text-action danger-action" type="button" data-agent-delete="${agent.id}">Delete</button>
         </div>
       </td>
     `;
@@ -1891,6 +1893,7 @@ function openAgentModal(agentId = null) {
   agentFields.licenseFile.value = "";
   updateAgentProfilePreview(agent?.profileImageSrc || "");
   archiveAgentButton.hidden = !agent;
+  deleteAgentButton.hidden = !agent;
   archiveAgentButton.textContent = agent?.archived ? "Restore Agent" : "Archive Agent";
   agentModal.hidden = false;
   agentFields.firstName.focus();
@@ -1911,6 +1914,30 @@ function archiveAgent(agentId) {
   renderUsers();
   renderCommissionRules();
   renderInbox();
+}
+
+function deleteAgent(agentId) {
+  const agent = agents.find((item) => item.id === agentId);
+  if (!agent) return false;
+
+  const agentName = `${agent.firstName} ${agent.lastName}`;
+  const hasTransactions = transactions.some((transaction) => Number(transaction.agentId) === Number(agentId));
+  const warning = hasTransactions
+    ? `\n\nExisting transactions assigned to ${agentName} will show as unassigned.`
+    : "";
+
+  if (!window.confirm(`Delete ${agentName} from the roster? This cannot be undone.${warning}`)) return false;
+
+  agents = agents.filter((item) => item.id !== agentId);
+  users = users.map((user) => (Number(user.agentId) === Number(agentId) ? { ...user, agentId: null } : user));
+  renderAgents();
+  renderAgentOptions();
+  renderUsers();
+  renderCommissionRules();
+  renderCalendar();
+  renderOverviewSchedule();
+  renderInbox();
+  return true;
 }
 
 addAgentButton.addEventListener("click", () => openAgentModal());
@@ -1936,7 +1963,13 @@ rosterTabs.forEach((tab) => {
 agentTableBody.addEventListener("click", (event) => {
   const editButton = event.target.closest("[data-agent-edit]");
   const archiveButton = event.target.closest("[data-agent-archive]");
+  const deleteButton = event.target.closest("[data-agent-delete]");
   const agentRow = event.target.closest("tr[data-agent-edit]");
+
+  if (deleteButton) {
+    deleteAgent(Number(deleteButton.dataset.agentDelete));
+    return;
+  }
 
   if (archiveButton) {
     archiveAgent(Number(archiveButton.dataset.agentArchive));
@@ -1966,6 +1999,12 @@ archiveAgentButton.addEventListener("click", () => {
 
   archiveAgent(editingAgentId);
   closeModal();
+});
+
+deleteAgentButton.addEventListener("click", () => {
+  if (!editingAgentId) return;
+
+  if (deleteAgent(editingAgentId)) closeModal();
 });
 
 agentFields.profileImage.addEventListener("change", () => {
