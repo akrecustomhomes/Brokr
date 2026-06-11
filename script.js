@@ -388,6 +388,7 @@ let transactions = [
     status: "Review Needed",
   },
 ];
+transactions = JSON.parse(localStorage.getItem("brokr-transactions") || "null") || transactions;
 let calendarView = "month";
 let calendarDate = new Date();
 calendarDate.setHours(0, 0, 0, 0);
@@ -1056,18 +1057,77 @@ function getRequiredTransactionDocs(side, status) {
 }
 
 function getTransactionDocuments(transaction) {
-  if (transaction?.documents) return transaction.documents;
+  if (transaction?.documents) {
+    return Object.fromEntries(
+      Object.entries(transaction.documents).map(([docName, record]) => [
+        docName,
+        typeof record === "string" ? { fileName: record } : record,
+      ]),
+    );
+  }
 
   return (transaction?.fileNames || []).reduce((documents, fileName) => {
-    documents[fileName] = fileName;
+    documents[fileName] = { fileName };
     return documents;
   }, {});
+}
+
+function getDocumentFileName(record) {
+  if (!record) return "";
+  return typeof record === "string" ? record : record.fileName || "";
+}
+
+function getDocumentFileNames(documents) {
+  return Object.values(documents).map(getDocumentFileName).filter(Boolean);
+}
+
+function createLocalFileRecord(file) {
+  return {
+    bucket: "",
+    storagePath: "",
+    fileName: file?.name || "",
+    contentType: file?.type || "",
+    uploadedAt: new Date().toISOString(),
+  };
+}
+
+async function uploadTransactionFileRecord({ transactionId, documentName, file }) {
+  if (!file) return null;
+
+  if (!window.BrokrBackend?.isConfigured || !window.BrokrBackend.uploadTransactionFile) {
+    return createLocalFileRecord(file);
+  }
+
+  return window.BrokrBackend.uploadTransactionFile({ transactionId, documentName, file });
+}
+
+async function openTransactionFile(record) {
+  const fileName = getDocumentFileName(record);
+  if (!fileName) return;
+
+  if (!record?.storagePath || !window.BrokrBackend?.createTransactionFileUrl) {
+    window.alert(`${fileName} has not been uploaded to cloud storage yet. Replace the file and save the transaction to make it viewable.`);
+    return;
+  }
+
+  const viewer = window.open("", "_blank", "noopener");
+  try {
+    const url = await window.BrokrBackend.createTransactionFileUrl(record);
+    if (viewer) {
+      viewer.location.href = url;
+    } else {
+      window.location.href = url;
+    }
+  } catch (error) {
+    if (viewer) viewer.close();
+    window.alert(error.message || "Unable to open this file.");
+  }
 }
 
 function getTransactionFileSummary(transaction) {
   const requiredDocs = getRequiredTransactionDocs(transaction.side, transaction.status);
   const documents = getTransactionDocuments(transaction);
-  const uploadedCount = requiredDocs.filter((docName) => documents[docName]).length;
+  const uploadedCount = requiredDocs.filter((docName) => getDocumentFileName(documents[docName])).length;
 
   return {
     requiredDocs,
@@ -1325,6 +1385,10 @@ function saveFileUploadNotifications() {
   localStorage.setItem("brokr-file-upload-notifications", JSON.stringify(fileUploadNotifications));
 }
 
+function saveTransactions() {
+  localStorage.setItem("brokr-transactions", JSON.stringify(transactions));
+}
+
 function saveInboxItemStates() {
   localStorage.setItem("brokr-inbox-item-states", JSON.stringify(inboxItemStates));
 }
@@ -1423,6 +1487,7 @@ function approveArchivePackage(transactionId) {
       : transaction,
   );
 
+  saveTransactions();
   renderArchiveQueue();
   renderTransactions();
   renderInbox();
@@ -1908,8 +1973,12 @@ function renderTransactionFileVault(transaction) {
 
   transactionFileGrid.innerHTML = requiredDocs
     .map((docName) => {
-      const fileName = documents[docName];
+      const fileRecord = documents[docName];
+      const fileName = getDocumentFileName(fileRecord);
       const detail = transactionDocumentDetails[docName];
+      const fileDisplay = fileName
+        ? `<button class="file-tile-name file-link" type="button" data-file-doc-name="${docName}">${fileName}</button>`
+        : '<span class="file-tile-name">No file uploaded</span>';
 
       return `
         <article class="transaction-file-tile ${fileName ? "uploaded" : ""}">
@@ -1920,7 +1989,7 @@ function renderTransactionFileVault(transaction) {
           </div>
           <div class="file-tile-meta">
             <span class="file-tile-status">${fileName ? "Uploaded" : "Needed"}</span>
-            <span class="file-tile-name">${fileName || "No file uploaded"}</span>
+            ${fileDisplay}
           </div>
           <div class="file-tile-divider"></div>
           <div>
@@ -1958,21 +2027,27 @@ function renderAdditionalDocuments() {
 
   additionalDocumentList.innerHTML = additionalDocumentsDraft
     .map(
-      (document) => `
-        <article class="additional-document-row">
-          <div>
-            <span class="status-pill">${document.type}</span>
-            <h5>${document.name}</h5>
-            <p>${document.fileName || "No file uploaded"}${document.relatedDate ? ` | Related date ${formatDate(document.relatedDate)}` : ""}</p>
-            ${document.notes ? `<p>${document.notes}</p>` : ""}
-          </div>
-          ${
-            !isAgentUser() || document.notifyOnSave
-              ? `<button class="text-action" type="button" data-remove-additional-document="${document.id}">Remove</button>`
-              : ""
-          }
-        </article>
-      `,
+      (document) => {
+        const fileCopy = document.fileName
+          ? `<button class="file-inline-link" type="button" data-additional-file="${document.id}">${document.fileName}</button>`
+          : "No file uploaded";
+
+        return `
+          <article class="additional-document-row">
+            <div>
+              <span class="status-pill">${document.type}</span>
+              <h5>${document.name}</h5>
+              <p>${fileCopy}${document.relatedDate ? ` | Related date ${formatDate(document.relatedDate)}` : ""}</p>
+              ${document.notes ? `<p>${document.notes}</p>` : ""}
+            </div>
+            ${
+              !isAgentUser() || document.notifyOnSave
+                ? `<button class="text-action" type="button" data-remove-additional-document="${document.id}">Remove</button>`
+                : ""
+            }
+          </article>
+        `;
+      },
     )
     .join("");
 }
@@ -2399,6 +2474,15 @@ transactionFileGrid.addEventListener("change", (event) => {
   tile.querySelector(".file-upload-action-text").textContent = "Replace File";
 });
 
+transactionFileGrid.addEventListener("click", (event) => {
+  const fileButton = event.target.closest("[data-file-doc-name]");
+  if (!fileButton) return;
+
+  const transaction = transactions.find((item) => item.id === editingTransactionId);
+  const documents = getTransactionDocuments(transaction);
+  openTransactionFile(documents[fileButton.dataset.fileDocName]);
+});
+
 addAdditionalDocumentButton.addEventListener("click", () => {
   const type = transactionFields.additionalDocumentType.value;
   const file = transactionFields.additionalDocumentFile.files[0];
@@ -2413,6 +2497,7 @@ addAdditionalDocumentButton.addEventListener("click", () => {
       relatedDate: transactionFields.additionalDocumentDate.value,
       notes: transactionFields.additionalDocumentNotes.value.trim(),
       fileName: file?.name || "",
+      file,
       reviewStatus: file ? "Pending Review" : "No file uploaded",
       notifyOnSave: Boolean(file),
     },
@@ -2423,6 +2508,13 @@ addAdditionalDocumentButton.addEventListener("click", () => {
 });
 
 additionalDocumentList.addEventListener("click", (event) => {
+  const fileButton = event.target.closest("[data-additional-file]");
+  if (fileButton) {
+    const document = additionalDocumentsDraft.find((item) => item.id === Number(fileButton.dataset.additionalFile));
+    openTransactionFile(document);
+    return;
+  }
+
   const removeButton = event.target.closest("[data-remove-additional-document]");
   if (!removeButton) return;
 
@@ -2640,7 +2732,7 @@ userForm.addEventListener("submit", async (event) => {
   closeUserForm();
 });
 
-transactionForm.addEventListener("submit", (event) => {
+transactionForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const existingTransaction = transactions.find((transaction) => transaction.id === editingTransactionId);
@@ -2654,25 +2746,46 @@ transactionForm.addEventListener("submit", (event) => {
     ? Object.fromEntries(Object.entries(transactionFields.deadlines).map(([key, field]) => [key, field.value]))
     : {};
   const selectedUploads = [];
-  transactionFileGrid.querySelectorAll("input[type='file']").forEach((input) => {
-    if (input.files[0]) {
-      documents[input.dataset.docName] = input.files[0].name;
-      selectedUploads.push({
-        documentName: input.dataset.docName,
-        fileName: input.files[0].name,
-      });
+  const transactionId = existingTransaction?.id || Date.now();
+
+  try {
+    for (const input of transactionFileGrid.querySelectorAll("input[type='file']")) {
+      if (input.files[0]) {
+        const fileRecord = await uploadTransactionFileRecord({
+          transactionId,
+          documentName: input.dataset.docName,
+          file: input.files[0],
+        });
+        documents[input.dataset.docName] = fileRecord;
+        selectedUploads.push({
+          documentName: input.dataset.docName,
+          fileName: input.files[0].name,
+        });
+      }
     }
-  });
-  additionalDocumentsDraft
-    .filter((document) => document.notifyOnSave && document.fileName)
-    .forEach((document) => {
+
+    for (const document of additionalDocumentsDraft.filter((item) => item.notifyOnSave && item.fileName && item.file)) {
+      const fileRecord = await uploadTransactionFileRecord({
+        transactionId,
+        documentName: document.name,
+        file: document.file,
+      });
+      document.bucket = fileRecord.bucket;
+      document.storagePath = fileRecord.storagePath;
+      document.contentType = fileRecord.contentType;
+      document.uploadedAt = fileRecord.uploadedAt;
       selectedUploads.push({
         documentName: document.name,
         fileName: document.fileName,
       });
-    });
+    }
+  } catch (error) {
+    window.alert(error.message || "Unable to upload one of the files.");
+    return;
+  }
+
   let transactionData = {
-    id: existingTransaction?.id || Date.now(),
+    id: transactionId,
     agentId: Number(transactionFields.agentId.value),
     side: transactionFields.side.value,
     clientName: transactionFields.clientName.value.trim(),
@@ -2690,8 +2803,8 @@ transactionForm.addEventListener("submit", (event) => {
       transactionFields.commissionType.value === "flat" ? parseCurrencyInput(transactionFields.commissionFlatFee.value) : 0,
     deadlines,
     documents,
-    additionalDocuments: additionalDocumentsDraft.map(({ notifyOnSave, ...document }) => document),
-    fileNames: Object.values(documents),
+    additionalDocuments: additionalDocumentsDraft.map(({ file, notifyOnSave, ...document }) => document),
+    fileNames: getDocumentFileNames(documents),
     status: transactionFields.status.value,
   };
 
@@ -2723,6 +2836,7 @@ transactionForm.addEventListener("submit", (event) => {
     transactions = [transactionData, ...transactions];
   }
 
+  saveTransactions();
   createFileUploadNotifications(transactionData, selectedUploads);
   renderTransactions();
   renderCalendar();
@@ -2740,6 +2854,7 @@ cancelCalendarEventButton.addEventListener("click", () => {
   transactions = transactions.map((transaction) =>
     transaction.id === editingTransactionId ? { ...transaction, status: "Cancelled" } : transaction,
   );
+  saveTransactions();
   renderTransactions();
   renderCalendar();
   renderCommissionRules();

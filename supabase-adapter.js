@@ -331,6 +331,43 @@
     if (error) console.warn("Unable to save Supabase archive settings.", error);
   }
 
+  async function uploadTransactionFile({ transactionId, documentName, file }) {
+    const client = await getClient();
+    if (!client || !file) return null;
+
+    const safeDocumentName = String(documentName || "document")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    const safeFileName = file.name.replace(/[^\w.\-]+/g, "-");
+    const path = `${transactionId || "draft"}/${safeDocumentName}/${Date.now()}-${safeFileName}`;
+    const { data, error } = await client.storage.from("transaction-files").upload(path, file, {
+      cacheControl: "3600",
+      contentType: file.type || "application/octet-stream",
+      upsert: false,
+    });
+
+    if (error) throw error;
+
+    return {
+      bucket: "transaction-files",
+      storagePath: data.path,
+      fileName: file.name,
+      contentType: file.type || "",
+      uploadedAt: new Date().toISOString(),
+    };
+  }
+
+  async function createTransactionFileUrl(fileRecord) {
+    const client = await getClient();
+    if (!client || !fileRecord?.storagePath) return "";
+
+    const bucket = fileRecord.bucket || "transaction-files";
+    const { data, error } = await client.storage.from(bucket).createSignedUrl(fileRecord.storagePath, 60 * 10);
+    if (error) throw error;
+    return data.signedUrl;
+  }
+
   window.BrokrBackend = {
     isConfigured: hasSupabase,
     getSession,
@@ -350,5 +387,7 @@
     saveBrokerContact,
     loadArchiveSettings,
     saveArchiveSettings,
+    uploadTransactionFile,
+    createTransactionFileUrl,
   };
 })();

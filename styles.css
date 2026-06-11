@@ -1256,6 +1256,26 @@ img.agent-avatar,
   word-break: break-word;
 }
 
+.file-link,
+.file-inline-link {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: #c9c1b8;
+  text-underline-offset: 3px;
+}
+
+.file-link:hover,
+.file-inline-link:hover {
+  color: var(--menu-text);
+  text-decoration-color: var(--menu-text);
+}
+
 .file-tile-divider {
   height: 1px;
   background: var(--line);
@@ -3867,6 +3887,26 @@ img.agent-avatar,
   font-size: 0.78rem;
   line-height: 1.35;
   word-break: break-word;
+}
+
+.file-link,
+.file-inline-link {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: #c9c1b8;
+  text-underline-offset: 3px;
+}
+
+.file-link:hover,
+.file-inline-link:hover {
+  color: var(--menu-text);
+  text-decoration-color: var(--menu-text);
 }
 
 .file-tile-divider {
