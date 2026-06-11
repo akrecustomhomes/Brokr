@@ -483,6 +483,7 @@ function activatePage(pageId) {
     page.classList.toggle("active", page.id === pageId);
   });
 
+  document.body.classList.toggle("overview-active", pageId === "overview");
   pageTitle.textContent = pageTitles[pageId];
   topbarNewTransaction.hidden = !["overview", "transactions"].includes(pageId);
   document.body.classList.remove("menu-open");

@@ -383,6 +383,10 @@ body.sidebar-collapsed .sidebar-toggle svg {
   line-height: 1.05;
 }
 
+body.overview-active .topbar > div:first-of-type {
+  display: none;
+}
+
 .topbar-actions {
   display: flex;
   align-items: center;
