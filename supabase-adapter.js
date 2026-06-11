@@ -37,7 +37,9 @@
     return {
       id: typeof user.id === "string" ? user.id : undefined,
       auth_user_id: user.authUserId || null,
-      agent_id: user.agentId || null,
+      // Agent records are still local prototype data, so do not send those ids
+      // into Supabase until agents are persisted there too.
+      agent_id: null,
       profile_image_url: user.profileImageSrc || null,
       email: user.email,
       role: user.role,

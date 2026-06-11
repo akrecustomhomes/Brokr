@@ -81,7 +81,9 @@ module.exports = async function inviteUser(request, response) {
     .upsert(
       {
         auth_user_id: inviteData?.user?.id || null,
-        agent_id: body.agentId || null,
+        // Agent ids currently come from the local roster, not Supabase.
+        // Keep this null so app user updates do not violate the database FK.
+        agent_id: null,
         email,
         role,
         can_upload_files: Boolean(body.canUpload),

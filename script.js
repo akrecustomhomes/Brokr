@@ -888,9 +888,10 @@ function renderAgentOptions() {
     '<option value="all">All agents</option>',
     ...activeAgents.map((agent) => `<option value="${agent.id}">${agent.firstName} ${agent.lastName}</option>`),
   ].join("");
-  userFields.agentId.innerHTML = activeAgents
-    .map((agent) => `<option value="${agent.id}">${agent.firstName} ${agent.lastName}</option>`)
-    .join("");
+  userFields.agentId.innerHTML = [
+    '<option value="">No linked agent</option>',
+    ...activeAgents.map((agent) => `<option value="${agent.id}">${agent.firstName} ${agent.lastName}</option>`),
+  ].join("");
 }
 
 function getRequiredTransactionDocs(side, status) {
@@ -1567,6 +1568,11 @@ function syncUserEmailFromAgent() {
   const agent = agents.find((item) => item.id === Number(userFields.agentId.value));
   if (!editingUserId && agent) userFields.email.value = agent.email;
   if (!userProfilePreview.classList.contains("has-image")) updateUserProfilePreview();
+}
+
+function getSelectedUserAgentId() {
+  const selectedAgentId = Number(userFields.agentId.value);
+  return agents.some((agent) => agent.id === selectedAgentId) ? selectedAgentId : null;
 }
 
 function getFilteredTransactions() {
@@ -2255,7 +2261,7 @@ userForm.addEventListener("submit", async (event) => {
     id: existingUser?.id || Date.now(),
     authUserId: existingUser?.authUserId || "",
     profileImageSrc,
-    agentId: Number(userFields.agentId.value),
+    agentId: getSelectedUserAgentId(),
     email: userFields.email.value.trim(),
     role: userFields.role.value,
     canUpload: userFields.canUpload.checked,
