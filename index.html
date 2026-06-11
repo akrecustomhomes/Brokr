@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brokr | Lume Real Estate</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-theme="light">
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">B</div>
+          <div>
+            <p class="eyebrow">Lume Real Estate</p>
+            <h1>Brokr</h1>
+          </div>
+        </div>
+
+        <nav class="menu" aria-label="Brokr sections">
+          <button class="menu-item active" type="button" data-page="overview" aria-current="page">
+            <span class="menu-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 13h6V4H4v9Zm0 7h6v-5H4v5Zm10 0h6v-9h-6v9Zm0-16v5h6V4h-6Z" /></svg>
+            </span>
+            <span>Overview</span>
+          </button>
+          <button class="menu-item" type="button" data-page="agents">
+            <span class="menu-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-3.99-4A4 4 0 0 0 16 11Zm-8 1a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 8 12Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm-8.5.35C4.49 14.74 0 16 0 18.5V20h6v-2c0-1.38.76-2.57 1.5-3.65Z" /></svg>
+            </span>
+            <span>Agents</span>
+          </button>
+          <button class="menu-item" type="button" data-page="transactions">
+            <span class="menu-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4Zm2 2v12h12V6H6Zm2 3h8v2H8V9Zm0 4h8v2H8v-2Z" /></svg>
+            </span>
+            <span>Transactions</span>
+          </button>
+          <button class="menu-item" type="button" data-page="schedule">
+            <span class="menu-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 2h2v3h6V2h2v3h3v17H4V5h3V2Zm11 8H6v10h12V10Zm-9 2h3v3H9v-3Z" /></svg>
+            </span>
+            <span>Schedule</span>
+          </button>
+          <button class="menu-item" type="button" data-page="inbox">
+            <span class="menu-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16l2 10v6H2v-6L4 4Zm1.6 2-1.2 6H8l1.4 2h5.2L16 12h3.6l-1.2-6H5.6ZM4 14v4h16v-4h-2.9l-1.4 2H8.3l-1.4-2H4Z" /></svg>
+            </span>
+            <span>Inbox</span>
+          </button>
+          <button class="menu-item" type="button" data-page="users">
+            <span class="menu-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.31 0-6 1.57-6 3.5V20h12v-2.5c0-1.93-2.69-3.5-6-3.5Zm8-1h-2v-2h-2V9h2V7h2v2h2v2h-2v2Z" /></svg>
+            </span>
+            <span>Users</span>
+          </button>
+          <button class="menu-item" type="button" data-page="admin">
+            <span class="menu-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M19.4 13.5c.08-.49.08-1.01 0-1.5l2.1-1.62-2-3.46-2.47 1a7.2 7.2 0 0 0-1.3-.76L15.35 4h-4l-.38 3.16c-.46.19-.9.45-1.3.76l-2.47-1-2 3.46L7.3 12c-.08.49-.08 1.01 0 1.5l-2.1 1.62 2 3.46 2.47-1c.4.31.84.57 1.3.76l.38 3.16h4l.38-3.16c.46-.19.9-.45 1.3-.76l2.47 1 2-3.46-2.1-1.62ZM13.35 15.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" /></svg>
+            </span>
+            <span>Admin</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <p>Brokerage workspace</p>
+          <strong>Demo shell</strong>
+        </div>
+
+        <div class="theme-toggle sidebar-theme" role="group" aria-label="Theme">
+          <button class="theme-option active" type="button" data-theme="light" data-short="L" aria-pressed="true">Light</button>
+          <button class="theme-option" type="button" data-theme="dark" data-short="D" aria-pressed="false">Dark</button>
+        </div>
+
+        <div class="auth-panel">
+          <div class="auth-user">
+            <span class="auth-avatar" aria-hidden="true">JA</span>
+            <div>
+              <p id="auth-status">Signed out</p>
+              <strong id="auth-name">Guest</strong>
+            </div>
+          </div>
+          <button class="auth-toggle" id="auth-toggle" type="button" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17v-2h4V9h-4V7l-5 5 5 5Zm2 5H4V2h8v2H6v16h6v2Zm3.5-5.5 1.4-1.4 2.1 2.1V6.8l-2.1 2.1-1.4-1.4L20 3l4.5 4.5-1.4 1.4L21 6.8v10.4l2.1-2.1 1.4 1.4L20 21l-4.5-4.5Z" /></svg>
+            <span>Login</span>
+          </button>
+        </div>
+
+        <button class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3 13.3 4.9 6.2 12l7.1 7.1 1.4-1.4-4.7-4.7H20v-2H10l4.7-4.7Z" /></svg>
+          <span>Collapse</span>
+        </button>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <button class="mobile-menu" type="button" aria-label="Open menu">Menu</button>
+          <div>
+            <p class="eyebrow">Brokerage operations</p>
+            <h2 id="page-title">Overview</h2>
+          </div>
+          <div class="topbar-actions">
+            <label class="header-search" aria-label="Search Brokr">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.18 10.43l4.44 4.45-1.41 1.41-4.45-4.44A6.5 6.5 0 1 1 10.5 4Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z" /></svg>
+              <input id="header-search" type="search" placeholder="Search" />
+            </label>
+            <button class="inbox-button" id="header-inbox-button" type="button" aria-label="Open inbox">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16l2 10v6H2v-6L4 4Zm1.6 2-1.2 6H8l1.4 2h5.2L16 12h3.6l-1.2-6H5.6ZM4 14v4h16v-4h-2.9l-1.4 2H8.3l-1.4-2H4Z" /></svg>
+              <span id="inbox-count">0</span>
+            </button>
+            <button class="primary-action" id="topbar-new-transaction" type="button">+ New Transaction</button>
+          </div>
+        </header>
+
+        <section class="page active" id="overview" aria-labelledby="overview-title">
+          <div class="visual-header">
+            <div class="visual-copy">
+              <div class="overview-logo" id="overview-logo">
+                <span>Logo</span>
+                <img id="overview-logo-image" alt="Uploaded company logo" />
+              </div>
+              <p id="overview-date">Today</p>
+            </div>
+          </div>
+
+          <div class="metric-grid" aria-label="Overview metrics">
+            <article class="metric-card">
+              <p>Active Listings</p>
+              <strong id="overview-active-listings">--</strong>
+            </article>
+            <article class="metric-card">
+              <p>Pending Deals</p>
+              <strong id="overview-pending-deals">--</strong>
+            </article>
+            <article class="metric-card">
+              <p>Sales Volume</p>
+              <strong id="overview-sales-volume">--</strong>
+            </article>
+            <article class="metric-card">
+              <p>Agent Commissions</p>
+              <strong id="overview-agent-commission">--</strong>
+            </article>
+            <article class="metric-card">
+              <p>Brokerage Commissions</p>
+              <strong id="overview-brokerage-commission">--</strong>
+            </article>
+            <article class="metric-card">
+              <p>YTD Transactions</p>
+              <strong id="overview-ytd-transactions">--</strong>
+            </article>
+          </div>
+
+          <section class="overview-schedule-panel" aria-labelledby="overview-schedule-title">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Upcoming Schedule</p>
+                <h3 id="overview-schedule-title">Next 5 Days</h3>
+              </div>
+              <div class="overview-schedule-controls">
+                <button class="icon-button" id="overview-schedule-prev" type="button" aria-label="Previous 5 days">‹</button>
+                <p class="panel-note" id="overview-schedule-range">Next 5 days</p>
+                <button class="icon-button" id="overview-schedule-next" type="button" aria-label="Next 5 days">›</button>
+              </div>
+            </div>
+            <div class="overview-schedule-grid" id="overview-schedule-grid"></div>
+          </section>
+
+          <section class="company-tasks-panel" aria-labelledby="company-tasks-title">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">General to-do</p>
+                <h3 id="company-tasks-title">Company Tasks</h3>
+              </div>
+              <div class="task-panel-actions">
+                <span id="company-task-open-count">0 open</span>
+                <button class="primary-action" id="add-company-task-button" type="button">+ Task</button>
+              </div>
+            </div>
+            <div class="company-task-list" id="company-task-list"></div>
+          </section>
+        </section>
+
+        <section class="page" id="agents" aria-labelledby="agents-title">
+          <div class="agents-page">
+            <div class="section-toolbar">
+              <div>
+                <p class="eyebrow">Roster</p>
+                <h3 class="sr-only" id="agents-title">Agents</h3>
+              </div>
+            </div>
+
+            <div class="agent-summary" aria-label="Agent roster summary">
+              <article>
+                <p>Active Agents</p>
+                <strong id="active-agent-count">0</strong>
+              </article>
+              <article>
+                <p>License Alerts</p>
+                <strong id="license-alert-count">0</strong>
+              </article>
+              <article>
+                <p>Archived</p>
+                <strong id="archived-agent-count">0</strong>
+              </article>
+            </div>
+
+            <div class="panel-action-row">
+              <button class="primary-action" id="add-agent-button" type="button">+ Agent</button>
+            </div>
+
+            <div class="roster-panel">
+              <div class="roster-tabs" role="tablist" aria-label="Agent roster filters">
+                <button class="roster-tab active" type="button" data-agent-filter="active" aria-pressed="true">Active</button>
+                <button class="roster-tab" type="button" data-agent-filter="archived" aria-pressed="false">Archived</button>
+              </div>
+
+              <div class="agent-table-wrap">
+                <table class="agent-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Contact</th>
+                      <th>Address on File</th>
+                      <th>License</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="agent-table-body"></tbody>
+                </table>
+              </div>
+
+              <div class="empty-state" id="agent-empty-state">
+                <h4>No agents here yet</h4>
+                <p>Add an agent or switch roster views.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="transactions" aria-labelledby="transactions-title">
+          <div class="transactions-page">
+            <div class="section-toolbar">
+              <div>
+                <p class="eyebrow">Real Estate Transactions</p>
+                <h3 class="sr-only" id="transactions-title">Transactions</h3>
+              </div>
+            </div>
+
+            <div class="roster-panel">
+              <div class="agent-table-wrap">
+                <table class="agent-table transaction-table">
+                  <thead>
+                    <tr>
+                      <th>Client</th>
+                      <th>Agent</th>
+                      <th>Side</th>
+                      <th>Contact</th>
+                      <th>Property</th>
+                      <th>Files</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transaction-table-body"></tbody>
+                </table>
+              </div>
+
+              <div class="empty-state" id="transaction-empty-state">
+                <h4>No current transactions</h4>
+                <p>Add a transaction to start tracking the deal file.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="schedule" aria-labelledby="schedule-title">
+          <div class="schedule-page">
+            <div class="section-toolbar schedule-toolbar">
+              <div>
+                <p class="eyebrow">Calendar</p>
+                <h3 class="sr-only" id="schedule-title">Schedule</h3>
+              </div>
+              <div class="calendar-controls">
+                <button class="secondary-action" id="calendar-prev" type="button">Back</button>
+                <button class="secondary-action" id="calendar-today" type="button">Today</button>
+                <button class="secondary-action" id="calendar-next" type="button">Forward</button>
+              </div>
+            </div>
+
+            <div class="calendar-filter-row">
+              <div class="theme-toggle calendar-view-toggle" role="group" aria-label="Calendar view">
+                <button class="theme-option calendar-view-option" type="button" data-calendar-view="day" aria-pressed="false">Day</button>
+                <button class="theme-option calendar-view-option" type="button" data-calendar-view="week" aria-pressed="false">Week</button>
+                <button class="theme-option calendar-view-option active" type="button" data-calendar-view="month" aria-pressed="true">Month</button>
+              </div>
+              <label class="calendar-agent-filter">
+                Agent
+                <select id="calendar-agent-filter"></select>
+              </label>
+            </div>
+
+            <section class="calendar-panel" aria-label="Transaction contract date calendar">
+              <div class="calendar-heading">
+                <h4 id="calendar-range-label">Month</h4>
+                <p id="calendar-summary">Showing contract dates for all agents.</p>
+              </div>
+              <div class="month-weekdays" aria-hidden="true">
+                <span>Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+              </div>
+              <div class="calendar-grid" id="calendar-grid"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="inbox" aria-labelledby="inbox-title">
+          <div class="inbox-page">
+            <div class="section-toolbar">
+              <div>
+                <p class="eyebrow">Notifications</p>
+                <h3 class="sr-only" id="inbox-title">Inbox</h3>
+              </div>
+            </div>
+
+            <div class="roster-panel">
+              <div class="inbox-list" id="inbox-list"></div>
+              <div class="empty-state" id="inbox-empty-state">
+                <h4>Inbox is clear</h4>
+                <p>No file tasks, license alerts, or transaction deadlines need attention right now.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="users" aria-labelledby="users-title">
+          <div class="users-page">
+            <div class="section-toolbar">
+              <div>
+                <p class="eyebrow">Access</p>
+                <h3 class="sr-only" id="users-title">Users</h3>
+              </div>
+              <button class="primary-action" id="add-user-button" type="button">+ User</button>
+            </div>
+
+            <div class="roster-panel">
+              <div class="agent-table-wrap">
+                <table class="agent-table user-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Linked Agent</th>
+                      <th>Role</th>
+                      <th>Transaction File Access</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="user-table-body"></tbody>
+                </table>
+              </div>
+
+              <div class="empty-state" id="user-empty-state">
+                <h4>No users yet</h4>
+                <p>Add agents as users and control whether they can upload files to their own transactions.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="admin" aria-labelledby="admin-title">
+          <div class="admin-layout">
+            <form class="branding-panel" aria-label="Branding settings">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Style settings</p>
+                  <h3 id="admin-title">Branding</h3>
+                </div>
+                <button class="secondary-action" type="reset">Reset Branding</button>
+              </div>
+
+              <div class="branding-content">
+                <div class="brand-preview">
+                  <div class="preview-icon" id="icon-preview">B</div>
+                  <div>
+                    <p class="preview-company" id="company-preview">Lume Real Estate</p>
+                    <strong id="system-preview">Brokr</strong>
+                  </div>
+                  <img class="logo-preview" id="logo-preview" alt="Uploaded logo preview" />
+                </div>
+
+                <div class="form-grid branding-grid">
+                  <label>
+                    App name
+                    <input id="system-name" type="text" value="Brokr" />
+                  </label>
+                  <label>
+                    Company name
+                    <input id="company-name" type="text" value="Lume Real Estate" />
+                  </label>
+                  <label>
+                    Logo
+                    <input id="logo-upload" type="file" accept="image/*" />
+                  </label>
+                  <label>
+                    Compact icon
+                    <input id="icon-upload" type="file" accept="image/*" />
+                  </label>
+                  <label>
+                    Primary color
+                    <span class="color-row">
+                      <span>Navigation</span>
+                      <input id="primary-color" type="color" value="#bdb8b2" />
+                      <span>#bdb8b2</span>
+                    </span>
+                  </label>
+                  <label>
+                    Accent color
+                    <span class="color-row">
+                      <span>Accent</span>
+                      <input id="accent-color" type="color" value="#837a6d" />
+                      <span>#837a6d</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </form>
+
+            <form class="broker-contact-panel" id="broker-contact-form" aria-label="Broker contact settings">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Required contact</p>
+                  <h3>Broker Contact</h3>
+                </div>
+                <p class="panel-note">Primary deadline contact</p>
+              </div>
+
+              <div class="form-grid broker-contact-grid">
+                <label>
+                  Broker name
+                  <input id="broker-contact-name" type="text" value="Jared Alvey" required />
+                </label>
+                <label>
+                  Broker email
+                  <input id="broker-contact-email" type="email" value="broker@lumerealestate.com" required />
+                </label>
+                <label>
+                  Broker phone
+                  <input id="broker-contact-phone" type="tel" value="(555) 430-1000" required />
+                </label>
+              </div>
+
+              <p class="form-note">Deadline alerts and file upload review notices route to this broker contact.</p>
+            </form>
+
+            <form class="archive-storage-panel" id="archive-storage-form" aria-label="Archive storage settings">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Database link</p>
+                  <h3>Archive Storage</h3>
+                </div>
+                <p class="panel-note">Broker approval required</p>
+              </div>
+
+              <div class="form-grid archive-storage-grid">
+                <label class="wide-field">
+                  Google Drive archive folder link
+                  <input id="archive-folder-url" type="url" placeholder="https://drive.google.com/drive/folders/..." />
+                </label>
+                <label>
+                  Archive folder name
+                  <input id="archive-folder-name" type="text" value="Brokr Closed Transaction Archives" />
+                </label>
+                <label>
+                  Package format
+                  <select id="archive-package-format">
+                    <option value="ZIP package">ZIP package</option>
+                    <option value="PDF packet">PDF packet</option>
+                    <option value="Folder copy">Folder copy</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="archive-queue">
+                <div class="archive-queue-header">
+                  <div>
+                    <p class="eyebrow">Closed files</p>
+                    <h4>Ready for Broker Approval</h4>
+                  </div>
+                  <span id="archive-queue-count">0 ready</span>
+                </div>
+                <div class="archive-queue-list" id="archive-queue-list"></div>
+              </div>
+
+              <p class="form-note">Closed transaction files wait here until the broker approves archive packaging and backup to the designated Google Drive folder.</p>
+            </form>
+
+            <section class="commission-panel" aria-labelledby="commission-rules-title">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Brokerage settings</p>
+                  <h3 id="commission-rules-title">Commission Rules</h3>
+                </div>
+                <p class="panel-note">Broker/Admin only</p>
+              </div>
+              <div class="commission-list" id="commission-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <footer class="app-socket">
+          <p>&copy; Brokr LLC. All Rights Reserved.</p>
+        </footer>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="agent-modal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="agent-modal-title">
+        <form id="agent-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Agent file</p>
+              <h3 id="agent-modal-title">Add Agent</h3>
+            </div>
+            <button class="icon-button" id="close-agent-modal" type="button" aria-label="Close agent form">X</button>
+          </div>
+
+          <div class="form-grid agent-form-grid">
+            <div class="agent-profile-field wide-field">
+              <div class="agent-profile-preview" id="agent-profile-preview" aria-hidden="true">A</div>
+              <label>
+                Profile image
+                <input id="agent-profile-image" name="profileImage" type="file" accept="image/*" />
+              </label>
+            </div>
+            <label>
+              First name
+              <input id="agent-first-name" name="firstName" type="text" required />
+            </label>
+            <label>
+              Last name
+              <input id="agent-last-name" name="lastName" type="text" required />
+            </label>
+            <label>
+              Email
+              <input id="agent-email" name="email" type="email" required />
+            </label>
+            <label>
+              Phone
+              <input id="agent-phone" name="phone" type="tel" />
+            </label>
+            <label>
+              Calendar color
+              <input id="agent-calendar-color" name="calendarColor" type="color" value="#837a6d" />
+            </label>
+            <label class="wide-field">
+              Street address
+              <input id="agent-street" name="street" type="text" />
+            </label>
+            <label>
+              City
+              <input id="agent-city" name="city" type="text" />
+            </label>
+            <label>
+              State
+              <input id="agent-state" name="state" type="text" maxlength="2" />
+            </label>
+            <label>
+              ZIP
+              <input id="agent-zip" name="zip" type="text" inputmode="numeric" />
+            </label>
+            <label>
+              Active real estate license
+              <input id="agent-license-file" name="licenseFile" type="file" accept=".pdf,image/*" />
+            </label>
+            <label>
+              License expires
+              <input id="agent-license-expiration" name="licenseExpiration" type="date" required />
+            </label>
+          </div>
+
+          <p class="form-note">Brokr flags licenses expiring within 30 days so the broker can follow up before renewal is due.</p>
+
+          <div class="modal-actions">
+            <button class="secondary-action" id="archive-agent-button" type="button">Archive Agent</button>
+            <div>
+              <button class="secondary-action" id="cancel-agent-button" type="button">Cancel</button>
+              <button class="primary-action" type="submit">Save Agent</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="transaction-modal" hidden>
+      <section class="modal transaction-modal-panel" role="dialog" aria-modal="true" aria-labelledby="transaction-modal-title">
+        <form id="transaction-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Transaction file</p>
+              <h3 id="transaction-modal-title">Add Transaction</h3>
+            </div>
+            <button class="icon-button" id="close-transaction-modal" type="button" aria-label="Close transaction form">X</button>
+          </div>
+
+          <div class="form-grid agent-form-grid">
+            <label>
+              Agent
+              <select id="transaction-agent" name="agentId" required></select>
+            </label>
+            <label>
+              Representation
+              <select id="transaction-side" name="side" required>
+                <option value="buyer">Buyer</option>
+                <option value="seller">Seller</option>
+              </select>
+            </label>
+            <label>
+              <span id="transaction-client-label">Buyer name</span>
+              <input id="transaction-client-name" name="clientName" type="text" required />
+            </label>
+            <label>
+              Client email
+              <input id="transaction-client-email" name="clientEmail" type="email" />
+            </label>
+            <label>
+              Client phone
+              <input id="transaction-client-phone" name="clientPhone" type="tel" />
+            </label>
+            <label>
+              Contract date
+              <input id="transaction-contract-date" name="contractDate" type="date" required />
+            </label>
+            <label id="transaction-list-price-field" hidden>
+              List price
+              <input id="transaction-list-price" name="listPrice" type="number" min="0" step="1000" />
+            </label>
+            <label id="transaction-contract-price-field" hidden>
+              Contract price
+              <input id="transaction-contract-price" name="contractPrice" type="number" min="0" step="1000" />
+            </label>
+            <div class="contract-deadlines-field wide-field" id="transaction-deadlines-field" hidden>
+              <div>
+                <p class="eyebrow">Contract deadlines</p>
+                <h4>Calendar dates</h4>
+              </div>
+              <div class="deadline-grid">
+                <label>
+                  Seller Disclosure Deadline
+                  <input id="deadline-seller-disclosure" type="date" />
+                </label>
+                <label>
+                  Due Diligence Deadline
+                  <input id="deadline-due-diligence" type="date" />
+                </label>
+                <label>
+                  Financing &amp; Appraisal Deadline
+                  <input id="deadline-financing-appraisal" type="date" />
+                </label>
+                <label>
+                  Settlement Deadline
+                  <input id="deadline-settlement" type="date" />
+                </label>
+              </div>
+            </div>
+            <label>
+              Status
+              <select id="transaction-status" name="status">
+                <option value="New">New</option>
+                <option value="Under Contract">Under Contract</option>
+                <option value="Closing">Closing</option>
+                <option value="Closed">Closed</option>
+                <option value="Review Needed">Review Needed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </label>
+            <label class="wide-field">
+              Property address
+              <input id="transaction-property-address" name="propertyAddress" type="text" />
+            </label>
+            <div class="transaction-file-vault wide-field">
+              <div>
+                <p class="eyebrow">File vault</p>
+                <h4>Required documents</h4>
+              </div>
+              <div class="transaction-file-grid" id="transaction-file-grid"></div>
+            </div>
+            <div class="additional-documents-panel wide-field">
+              <div class="additional-documents-heading">
+                <div>
+                  <p class="eyebrow">Contract period</p>
+                  <h4>Additional Documents</h4>
+                </div>
+                <p>Add addendums, amendments, disclosures, counters, or other contract changes.</p>
+              </div>
+              <div class="additional-document-composer">
+                <label>
+                  Type
+                  <select id="additional-document-type">
+                    <option value="Addendum">Addendum</option>
+                    <option value="Amendment">Amendment</option>
+                    <option value="Disclosure">Disclosure</option>
+                    <option value="Counter Offer">Counter Offer</option>
+                    <option value="Inspection Notice">Inspection Notice</option>
+                    <option value="Appraisal Addendum">Appraisal Addendum</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+                <label>
+                  Document name
+                  <input id="additional-document-name" type="text" placeholder="Addendum 1" />
+                </label>
+                <label>
+                  Related date
+                  <input id="additional-document-date" type="date" />
+                </label>
+                <label>
+                  Upload file
+                  <input id="additional-document-file" type="file" accept=".pdf,.doc,.docx,image/*" />
+                </label>
+                <label class="wide-field">
+                  Notes
+                  <input id="additional-document-notes" type="text" placeholder="Contract change, extra disclosure, or broker note" />
+                </label>
+                <button class="secondary-action" id="add-additional-document-button" type="button">+ Document</button>
+              </div>
+              <div class="additional-document-list" id="additional-document-list"></div>
+            </div>
+          </div>
+
+          <p class="form-note">Representation files appear by Buyer or Seller side. Contract files appear once the transaction is under contract. Additional documents can be added any time during the contract period.</p>
+
+          <div class="modal-actions">
+            <button class="secondary-action" id="cancel-calendar-event-button" type="button" hidden>Cancel Event</button>
+            <div>
+              <button class="secondary-action" id="cancel-transaction-button" type="button">Cancel</button>
+              <button class="primary-action" type="submit">Save Transaction</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="user-modal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="user-modal-title">
+        <form id="user-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Permissions</p>
+              <h3 id="user-modal-title">Add User</h3>
+            </div>
+            <button class="icon-button" id="close-user-modal" type="button" aria-label="Close user form">X</button>
+          </div>
+
+          <div class="form-grid agent-form-grid">
+            <div class="user-profile-field wide-field">
+              <div class="user-profile-preview" id="user-profile-preview" aria-hidden="true">U</div>
+              <label>
+                Profile image
+                <input id="user-profile-image" name="profileImage" type="file" accept="image/*" />
+              </label>
+            </div>
+            <label>
+              Linked agent
+              <select id="user-agent" name="agentId" required></select>
+            </label>
+            <label>
+              Role
+              <select id="user-role" name="role">
+                <option value="Agent">Agent</option>
+                <option value="Broker">Broker</option>
+                <option value="Admin">Admin</option>
+                <option value="Read only">Read only</option>
+              </select>
+            </label>
+            <label>
+              User email
+              <input id="user-email" name="email" type="email" required />
+            </label>
+            <label>
+              Status
+              <select id="user-status" name="status">
+                <option value="Active">Active</option>
+                <option value="Suspended">Suspended</option>
+              </select>
+            </label>
+            <label class="permission-field wide-field">
+              <input id="user-can-upload" name="canUpload" type="checkbox" checked />
+              <span class="permission-check" aria-hidden="true"></span>
+              <span class="permission-copy">
+                <strong>Transaction file uploads</strong>
+                <span>Allow uploads to assigned agent transactions only</span>
+              </span>
+            </label>
+            <label class="wide-field">
+              Permission scope
+              <select id="user-scope" name="permissionScope">
+                <option value="Own transactions only">Own transactions only</option>
+                <option value="Any transaction">Any transaction</option>
+              </select>
+            </label>
+          </div>
+
+          <p class="form-note">Use permission scope to limit users to their assigned transactions or allow access across all transaction files.</p>
+
+          <div class="modal-actions">
+            <span></span>
+            <div>
+              <button class="secondary-action" id="cancel-user-button" type="button">Cancel</button>
+              <button class="primary-action" type="submit">Save User</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="commission-modal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="commission-modal-title">
+        <form id="commission-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Commission rules</p>
+              <h3 id="commission-modal-title">Edit Split</h3>
+            </div>
+            <button class="icon-button" id="close-commission-modal" type="button" aria-label="Close commission form">X</button>
+          </div>
+
+          <div class="form-grid agent-form-grid">
+            <label class="wide-field">
+              Agent
+              <input id="commission-agent-name" type="text" readonly />
+            </label>
+            <label>
+              Agent split %
+              <input id="commission-agent-split" type="number" min="0" max="100" step="1" required />
+            </label>
+            <label>
+              Brokerage split %
+              <input id="commission-brokerage-split" type="number" readonly />
+            </label>
+          </div>
+
+          <p class="form-note">Set the default agent/brokerage commission split used for this agent's transactions.</p>
+
+          <div class="modal-actions">
+            <span></span>
+            <div>
+              <button class="secondary-action" id="cancel-commission-button" type="button">Cancel</button>
+              <button class="primary-action" type="submit">Save Split</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="inbox-detail-modal" hidden>
+      <section class="modal inbox-detail-modal" role="dialog" aria-modal="true" aria-labelledby="inbox-detail-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow" id="inbox-detail-type">Notification</p>
+            <h3 id="inbox-detail-title">Inbox Details</h3>
+          </div>
+          <button class="icon-button" id="close-inbox-detail-modal" type="button" aria-label="Close inbox details">X</button>
+        </div>
+
+        <div class="inbox-detail-body">
+          <span class="status-pill warning" id="inbox-detail-status">Open</span>
+          <p id="inbox-detail-copy"></p>
+          <a class="inbox-action" id="inbox-detail-action" href="#">Open Action</a>
+        </div>
+
+        <div class="modal-actions">
+          <button class="secondary-action" id="archive-inbox-item-button" type="button">Archive</button>
+          <div>
+            <button class="secondary-action" id="dismiss-inbox-item-button" type="button">Dismiss</button>
+            <button class="primary-action" id="approve-inbox-item-button" type="button">Approve</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="company-task-modal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="company-task-modal-title">
+        <form id="company-task-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Company task</p>
+              <h3 id="company-task-modal-title">Add Task</h3>
+            </div>
+            <button class="icon-button" id="close-company-task-modal" type="button" aria-label="Close task form">X</button>
+          </div>
+
+          <div class="form-grid agent-form-grid">
+            <label class="wide-field">
+              Task label
+              <input id="company-task-title" type="text" required />
+            </label>
+            <label>
+              Assign to
+              <input id="company-task-owner" type="text" required />
+            </label>
+            <label>
+              Deadline
+              <input id="company-task-deadline" type="date" />
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <span></span>
+            <div>
+              <button class="secondary-action" id="cancel-company-task-button" type="button">Cancel</button>
+              <button class="primary-action" type="submit">Save Task</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="supabase-adapter.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
