@@ -34,6 +34,7 @@ const primaryColorInput = document.querySelector("#primary-color");
 const accentColorInput = document.querySelector("#accent-color");
 const logoUpload = document.querySelector("#logo-upload");
 const iconUpload = document.querySelector("#icon-upload");
+const appFavicon = document.querySelector("#app-favicon");
 const companyPreview = document.querySelector("#company-preview");
 const systemPreview = document.querySelector("#system-preview");
 const logoPreview = document.querySelector("#logo-preview");
@@ -2406,6 +2407,7 @@ function saveBrandingSetting(key, value) {
 }
 
 let isRestoringBranding = false;
+const defaultFaviconHref = appFavicon?.getAttribute("href") || "";
 
 function getCurrentBrandingSettings() {
   return {
@@ -2442,6 +2444,12 @@ function readImageDataUrl(file) {
     reader.addEventListener("load", () => resolve(reader.result));
     reader.readAsDataURL(file);
   });
+}
+
+function updateFavicon(src = "") {
+  if (!appFavicon) return;
+
+  appFavicon.href = src || defaultFaviconHref;
 }
 
 function syncBrandText() {
@@ -2488,6 +2496,7 @@ iconUpload.addEventListener("change", () => {
     const iconImage = `<img src="${src}" alt="Brokr logo icon" />`;
     iconPreview.innerHTML = iconImage;
     brandMark.innerHTML = iconImage;
+    updateFavicon(src);
     saveBrandingSetting("brokr-icon-src", src);
     saveBrandingToBackend();
   });
@@ -2522,6 +2531,7 @@ function restoreBrandingSettings() {
     const iconImage = `<img src="${savedIconSrc}" alt="Brokr logo icon" />`;
     iconPreview.innerHTML = iconImage;
     brandMark.innerHTML = iconImage;
+    updateFavicon(savedIconSrc);
   }
   isRestoringBranding = false;
 }
@@ -2553,6 +2563,7 @@ async function restoreBrandingFromBackend() {
     const iconImage = `<img src="${savedBranding.icon_src}" alt="Brokr logo icon" />`;
     iconPreview.innerHTML = iconImage;
     brandMark.innerHTML = iconImage;
+    updateFavicon(savedBranding.icon_src);
   }
   isRestoringBranding = false;
 }
@@ -2578,5 +2589,6 @@ brandingForm.addEventListener("reset", () => {
     overviewLogo.classList.remove("has-image");
     iconPreview.textContent = "B";
     brandMark.textContent = "B";
+    updateFavicon();
   }, 0);
 });
