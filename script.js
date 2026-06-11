@@ -504,6 +504,11 @@ authToggle.addEventListener("click", () => {
   setAuthState(authToggle.getAttribute("aria-pressed") !== "true");
 });
 
+if (localStorage.getItem("brokr-auth-default-version") !== "2") {
+  localStorage.setItem("brokr-authenticated", "true");
+  localStorage.setItem("brokr-auth-default-version", "2");
+}
+
 setAuthState(localStorage.getItem("brokr-authenticated") === "true");
 
 function setTheme(theme) {
