@@ -221,15 +221,18 @@ h1 {
 }
 
 .auth-user p {
-  margin-bottom: 2px;
-  color: var(--muted);
-  font-size: 0.76rem;
+  display: none;
 }
 
 .auth-user strong {
   display: block;
+  overflow: hidden;
+  color: var(--ink);
   font-size: 0.9rem;
   font-weight: 510;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .auth-toggle {

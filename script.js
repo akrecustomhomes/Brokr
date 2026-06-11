@@ -509,12 +509,36 @@ sidebarToggle.addEventListener("click", () => {
 
 setSidebarCollapsed(localStorage.getItem("brokr-sidebar-collapsed") === "true");
 
+function toDisplayNameFromEmail(email = "") {
+  return (
+    email
+      .split("@")[0]
+      ?.split(/[._\-\s]+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}`)
+      .join(" ") || "Guest"
+  );
+}
+
+function getAuthDisplayName(user) {
+  if (!user) return !window.BrokrBackend?.isConfigured ? "Jared Alvey" : "Guest";
+  if (["Broker", "Admin"].includes(user.role)) return brokerContact.name || toDisplayNameFromEmail(user.email);
+
+  const linkedAgent = agents.find(
+    (agent) => Number(agent.id) === Number(user.agentId) || agent.email?.toLowerCase() === user.email?.toLowerCase(),
+  );
+  if (linkedAgent) return `${linkedAgent.firstName} ${linkedAgent.lastName}`;
+
+  return toDisplayNameFromEmail(user.email);
+}
+
 function setAuthState(user = null, session = null) {
   currentUser = user;
   currentSession = session;
   currentUserRole = user?.role || (!window.BrokrBackend?.isConfigured ? "Broker" : "Guest");
   const isLoggedIn = isSignedIn();
-  const displayName = user?.email || (!window.BrokrBackend?.isConfigured ? "Jared Alvey" : "Guest");
+  const displayName = getAuthDisplayName(user);
 
   authToggle.setAttribute("aria-pressed", String(isLoggedIn));
   authToggle.querySelector("span").textContent = isLoggedIn ? "Logout" : "Login";
