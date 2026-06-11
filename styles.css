@@ -387,10 +387,12 @@ body.overview-active .topbar > div:first-of-type {
   display: none;
 }
 
-.topbar-actions {
+.overview-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
+  margin: 0 0 14px;
 }
 
 .app-socket {
@@ -624,7 +626,7 @@ body.overview-active .topbar > div:first-of-type {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
-  margin: 18px 0;
+  margin: 0 0 18px;
 }
 
 .metric-card,
@@ -2437,7 +2439,7 @@ body.menu-open .sidebar {
     flex-wrap: wrap;
   }
 
-  .topbar-actions {
+  .overview-actions {
     display: flex;
     flex-wrap: wrap;
     width: 100%;
@@ -2446,11 +2448,6 @@ body.menu-open .sidebar {
   .theme-toggle {
     width: 100%;
     grid-template-columns: 1fr 1fr;
-  }
-
-  .topbar-actions .icon-button,
-  .topbar-actions .primary-action {
-    display: none;
   }
 
   .header-search {
