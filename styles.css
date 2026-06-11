@@ -276,6 +276,7 @@ h1 {
 .sidebar-toggle {
   display: grid;
   min-height: 40px;
+  width: 100%;
   grid-template-columns: 30px 1fr;
   align-items: center;
   gap: 10px;
@@ -364,7 +365,7 @@ body.sidebar-collapsed .menu-icon {
 
 body.sidebar-collapsed .sidebar-toggle {
   width: 100%;
-  margin-top: auto;
+  min-height: 42px;
 }
 
 body.sidebar-collapsed .sidebar-toggle svg {
@@ -1614,10 +1615,14 @@ img.agent-avatar,
 
 .auth-actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 18px;
+}
+
+.auth-reset-link {
+  margin-right: auto;
 }
 
 #auth-message[data-type="error"] {
@@ -2939,6 +2944,7 @@ h1 {
 .sidebar-toggle {
   display: grid;
   min-height: 40px;
+  width: 100%;
   grid-template-columns: 30px 1fr;
   align-items: center;
   gap: 10px;
@@ -3027,7 +3033,7 @@ body.sidebar-collapsed .menu-icon {
 
 body.sidebar-collapsed .sidebar-toggle {
   width: 100%;
-  margin-top: auto;
+  min-height: 42px;
 }
 
 body.sidebar-collapsed .sidebar-toggle svg {
@@ -4252,10 +4258,14 @@ img.agent-avatar,
 
 .auth-actions {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 18px;
+}
+
+.auth-reset-link {
+  margin-right: auto;
 }
 
 #auth-message[data-type="error"] {

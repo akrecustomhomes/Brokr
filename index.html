@@ -18,6 +18,11 @@
           </div>
         </div>
 
+        <button class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3 13.3 4.9 6.2 12l7.1 7.1 1.4-1.4-4.7-4.7H20v-2H10l4.7-4.7Z" /></svg>
+          <span>Collapse</span>
+        </button>
+
         <nav class="menu" aria-label="Brokr sections">
           <button class="menu-item active" type="button" data-page="overview" aria-current="page">
             <span class="menu-icon" aria-hidden="true">
@@ -81,10 +86,6 @@
           </button>
         </div>
 
-        <button class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3 13.3 4.9 6.2 12l7.1 7.1 1.4-1.4-4.7-4.7H20v-2H10l4.7-4.7Z" /></svg>
-          <span>Collapse</span>
-        </button>
       </aside>
 
       <main class="content">
@@ -1034,11 +1035,11 @@
             </label>
           </div>
 
-          <p class="form-note" id="auth-message">Use the broker account or an invited user account to continue.</p>
+          <p class="form-note" id="auth-message">Sign in with your Brokr account to continue.</p>
 
           <div class="auth-actions">
-            <button class="secondary-action" id="auth-reset-button" type="button">Send Password Setup Email</button>
-            <button class="secondary-action" id="auth-create-super-button" type="button">Create Broker Super Admin</button>
+            <button class="text-action auth-reset-link" id="auth-reset-button" type="button">Forgot password?</button>
+            <button class="secondary-action" id="auth-create-super-button" type="button" hidden>Create Broker Super Admin</button>
             <button class="primary-action" type="submit">Sign In</button>
           </div>
         </form>

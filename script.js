@@ -703,7 +703,7 @@ authForm.addEventListener("submit", async (event) => {
   }
 });
 
-authCreateSuperButton.addEventListener("click", async () => {
+authCreateSuperButton?.addEventListener("click", async () => {
   if (!authForm.reportValidity()) return;
 
   setAuthMessage("Creating broker super admin...");
@@ -722,12 +722,12 @@ authCreateSuperButton.addEventListener("click", async () => {
 authResetButton.addEventListener("click", async () => {
   if (!authEmail.reportValidity()) return;
 
-  setAuthMessage("Sending password setup email...");
+  setAuthMessage("Sending password reset email...");
   try {
     await window.BrokrBackend.sendPasswordSetupEmail(authEmail.value.trim());
-    setAuthMessage("Password setup email sent. Check the inbox for that user.", "success");
+    setAuthMessage("Password reset email sent. Check the inbox for that user.", "success");
   } catch (error) {
-    setAuthMessage(error.message || "Unable to send password setup email.", "error");
+    setAuthMessage(error.message || "Unable to send password reset email.", "error");
   }
 });
 
