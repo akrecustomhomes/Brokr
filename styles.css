@@ -383,7 +383,7 @@ body.sidebar-collapsed .sidebar-toggle svg {
   line-height: 1.05;
 }
 
-body.overview-active .topbar > div:first-of-type {
+body.overview-active .topbar > div:not(.overview-actions) {
   display: none;
 }
 
