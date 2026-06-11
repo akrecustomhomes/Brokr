@@ -19,6 +19,13 @@ const inboxCount = document.querySelector("#inbox-count");
 const authToggle = document.querySelector("#auth-toggle");
 const authStatus = document.querySelector("#auth-status");
 const authName = document.querySelector("#auth-name");
+const authGate = document.querySelector("#auth-gate");
+const authForm = document.querySelector("#auth-form");
+const authEmail = document.querySelector("#auth-email");
+const authPassword = document.querySelector("#auth-password");
+const authMessage = document.querySelector("#auth-message");
+const authResetButton = document.querySelector("#auth-reset-button");
+const authCreateSuperButton = document.querySelector("#auth-create-super-button");
 const themeOptions = document.querySelectorAll("button[data-theme]");
 const brandingForm = document.querySelector(".branding-panel");
 const companyInput = document.querySelector("#company-name");
@@ -163,6 +170,7 @@ const userFields = {
   permissionScope: document.querySelector("#user-scope"),
 };
 const userProfilePreview = document.querySelector("#user-profile-preview");
+const userFormNote = document.querySelector("#user-form-note");
 const commissionList = document.querySelector("#commission-list");
 const commissionModal = document.querySelector("#commission-modal");
 const commissionForm = document.querySelector("#commission-form");
@@ -193,7 +201,10 @@ let editingTransactionId = null;
 let editingCommissionAgentId = null;
 let additionalDocumentsDraft = [];
 let agentFilter = "active";
-const currentUserRole = "Broker";
+let currentSession = null;
+let currentUser = null;
+let currentUserRole = "Guest";
+let authSubscription = null;
 const transactionDeadlineLabels = {
   sellerDisclosure: "Seller Disclosure Deadline",
   dueDiligence: "Due Diligence Deadline",
@@ -430,7 +441,7 @@ overviewDate.textContent = new Intl.DateTimeFormat("en", {
 }).format(new Date());
 
 function isSignedIn() {
-  return localStorage.getItem("brokr-authenticated") === "true";
+  return Boolean(currentSession) || (!window.BrokrBackend?.isConfigured && currentUserRole !== "Guest");
 }
 
 function canAccessAdmin() {
@@ -439,12 +450,19 @@ function canAccessAdmin() {
 
 function syncAdminAccess() {
   const adminMenuItem = document.querySelector('[data-page="admin"]');
+  const usersMenuItem = document.querySelector('[data-page="users"]');
   const hasAccess = canAccessAdmin();
 
   adminMenuItem.hidden = !hasAccess;
   adminMenuItem.setAttribute("aria-disabled", String(!hasAccess));
+  usersMenuItem.hidden = !hasAccess;
+  usersMenuItem.setAttribute("aria-disabled", String(!hasAccess));
 
   if (!hasAccess && document.querySelector("#admin").classList.contains("active")) {
+    activatePage("overview");
+  }
+
+  if (!hasAccess && document.querySelector("#users").classList.contains("active")) {
     activatePage("overview");
   }
 }
@@ -491,25 +509,128 @@ sidebarToggle.addEventListener("click", () => {
 
 setSidebarCollapsed(localStorage.getItem("brokr-sidebar-collapsed") === "true");
 
-function setAuthState(isLoggedIn) {
+function setAuthState(user = null, session = null) {
+  currentUser = user;
+  currentSession = session;
+  currentUserRole = user?.role || (!window.BrokrBackend?.isConfigured ? "Broker" : "Guest");
+  const isLoggedIn = isSignedIn();
+  const displayName = user?.email || (!window.BrokrBackend?.isConfigured ? "Jared Alvey" : "Guest");
+
   authToggle.setAttribute("aria-pressed", String(isLoggedIn));
   authToggle.querySelector("span").textContent = isLoggedIn ? "Logout" : "Login";
   authStatus.textContent = isLoggedIn ? currentUserRole : "Signed out";
-  authName.textContent = isLoggedIn ? "Jared Alvey" : "Guest";
-  localStorage.setItem("brokr-authenticated", String(isLoggedIn));
+  authName.textContent = isLoggedIn ? displayName : "Guest";
   syncAdminAccess();
 }
 
-authToggle.addEventListener("click", () => {
-  setAuthState(authToggle.getAttribute("aria-pressed") !== "true");
-});
-
-if (localStorage.getItem("brokr-auth-default-version") !== "2") {
-  localStorage.setItem("brokr-authenticated", "true");
-  localStorage.setItem("brokr-auth-default-version", "2");
+function setAuthMessage(message, type = "") {
+  authMessage.textContent = message;
+  authMessage.dataset.type = type;
 }
 
-setAuthState(localStorage.getItem("brokr-authenticated") === "true");
+function openAuthGate(message = "Use the broker account or an invited user account to continue.") {
+  authGate.hidden = false;
+  setAuthMessage(message);
+  authPassword.value = "";
+  authEmail.focus();
+}
+
+function closeAuthGate() {
+  authGate.hidden = true;
+}
+
+async function refreshAuthUser(session = currentSession) {
+  if (!window.BrokrBackend?.isConfigured) {
+    setAuthState({ email: "Jared Alvey", role: "Broker", status: "Active" }, null);
+    closeAuthGate();
+    return;
+  }
+
+  if (!session) {
+    setAuthState(null, null);
+    openAuthGate();
+    return;
+  }
+
+  const profile = await window.BrokrBackend.loadCurrentUser();
+  if (!profile || profile.status !== "Active") {
+    setAuthState(null, null);
+    openAuthGate("This login does not have an active Brokr user profile yet. Ask the broker/admin to add this user.");
+    return;
+  }
+
+  setAuthState(profile, session);
+  closeAuthGate();
+  await loadUsersFromBackend();
+}
+
+async function initializeAuth() {
+  if (!window.BrokrBackend?.isConfigured) {
+    await refreshAuthUser(null);
+    return;
+  }
+
+  currentSession = await window.BrokrBackend.getSession();
+  await refreshAuthUser(currentSession);
+  authSubscription = await window.BrokrBackend.onAuthStateChange(async (session) => {
+    currentSession = session;
+    await refreshAuthUser(session);
+  });
+}
+
+authToggle.addEventListener("click", async () => {
+  if (!window.BrokrBackend?.isConfigured) {
+    setAuthState(isSignedIn() ? null : { email: "Jared Alvey", role: "Broker", status: "Active" }, null);
+    return;
+  }
+
+  if (isSignedIn()) {
+    await window.BrokrBackend.signOut();
+    return;
+  }
+
+  openAuthGate();
+});
+
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  setAuthMessage("Signing in...");
+
+  try {
+    const session = await window.BrokrBackend.signIn(authEmail.value.trim(), authPassword.value);
+    await refreshAuthUser(session);
+  } catch (error) {
+    setAuthMessage(error.message || "Unable to sign in.", "error");
+  }
+});
+
+authCreateSuperButton.addEventListener("click", async () => {
+  if (!authForm.reportValidity()) return;
+
+  setAuthMessage("Creating broker super admin...");
+  try {
+    const session = await window.BrokrBackend.createBrokerSuperAdmin(authEmail.value.trim(), authPassword.value);
+    if (session) {
+      await refreshAuthUser(session);
+    } else {
+      setAuthMessage("Check your email to confirm the broker account, then sign in.", "success");
+    }
+  } catch (error) {
+    setAuthMessage(error.message || "Unable to create broker super admin.", "error");
+  }
+});
+
+authResetButton.addEventListener("click", async () => {
+  if (!authEmail.reportValidity()) return;
+
+  setAuthMessage("Sending password setup email...");
+  try {
+    await window.BrokrBackend.sendPasswordSetupEmail(authEmail.value.trim());
+    setAuthMessage("Password setup email sent. Check the inbox for that user.", "success");
+  } catch (error) {
+    setAuthMessage(error.message || "Unable to send password setup email.", "error");
+  }
+});
 
 function setTheme(theme) {
   if (!["light", "dark"].includes(theme)) theme = "light";
@@ -1373,6 +1494,27 @@ function renderUsers() {
   });
 }
 
+async function loadUsersFromBackend() {
+  if (!window.BrokrBackend?.isConfigured || !isSignedIn() || !canAccessAdmin()) return;
+
+  const savedUsers = await window.BrokrBackend.loadUsers();
+  if (!savedUsers.length) return;
+
+  users = savedUsers;
+  renderUsers();
+}
+
+async function saveUserToBackend(user, shouldInvite) {
+  if (!window.BrokrBackend?.isConfigured) return user;
+
+  const savedUser = await window.BrokrBackend.saveUserProfile(user);
+  if (shouldInvite) {
+    const inviteResult = await window.BrokrBackend.inviteUser(savedUser);
+    userFormNote.textContent = inviteResult.message || "Invite sent. The user can set their password from email.";
+  }
+  return savedUser;
+}
+
 function getCommissionSplit(agent) {
   return Number.isFinite(agent.commissionSplit) ? agent.commissionSplit : 70;
 }
@@ -1648,6 +1790,9 @@ function openUserModal(userId = null) {
   const user = users.find((item) => item.id === userId);
 
   userModalTitle.textContent = user ? "Edit User" : "Add User";
+  userFormNote.textContent = user
+    ? "Update the user role, file permissions, and transaction access scope."
+    : "New users receive an email invite to set their password.";
   userFields.profileImage.value = "";
   userFields.agentId.value = user?.agentId || userFields.agentId.options[0]?.value || "";
   userFields.role.value = user?.role || "Agent";
@@ -1858,6 +2003,7 @@ renderOverviewSchedule();
 renderCompanyTasks();
 renderInbox();
 renderArchiveQueue();
+initializeAuth();
 
 topbarNewTransaction.addEventListener("click", openTransactionModal);
 headerInboxButton.addEventListener("click", openInbox);
@@ -2062,11 +2208,11 @@ userTableBody.addEventListener("click", (event) => {
   const userRow = event.target.closest("tr[data-user-edit]");
 
   if (editButton) {
-    openUserModal(Number(editButton.dataset.userEdit));
+    openUserModal(editButton.dataset.userEdit);
     return;
   }
 
-  if (userRow) openUserModal(Number(userRow.dataset.userEdit));
+  if (userRow) openUserModal(userRow.dataset.userEdit);
 });
 
 userTableBody.addEventListener("keydown", (event) => {
@@ -2076,7 +2222,7 @@ userTableBody.addEventListener("keydown", (event) => {
   if (!userRow) return;
 
   event.preventDefault();
-  openUserModal(Number(userRow.dataset.userEdit));
+  openUserModal(userRow.dataset.userEdit);
 });
 
 archiveQueueList.addEventListener("click", (event) => {
@@ -2105,8 +2251,9 @@ userForm.addEventListener("submit", async (event) => {
   const existingUser = users.find((user) => user.id === editingUserId);
   const profileImageSrc =
     (await readImageDataUrl(userFields.profileImage.files[0])) || existingUser?.profileImageSrc || "";
-  const userData = {
+  let userData = {
     id: existingUser?.id || Date.now(),
+    authUserId: existingUser?.authUserId || "",
     profileImageSrc,
     agentId: Number(userFields.agentId.value),
     email: userFields.email.value.trim(),
@@ -2115,6 +2262,13 @@ userForm.addEventListener("submit", async (event) => {
     permissionScope: userFields.permissionScope.value,
     status: userFields.status.value,
   };
+
+  try {
+    userData = await saveUserToBackend(userData, !existingUser);
+  } catch (error) {
+    userFormNote.textContent = error.message || "Unable to save user.";
+    return;
+  }
 
   if (existingUser) {
     users = users.map((user) => (user.id === existingUser.id ? userData : user));

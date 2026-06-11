@@ -21,7 +21,7 @@ Open `http://127.0.0.1:4173`.
 3. Set environment variables from `.env.example` using the new Brokr Supabase project values:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-   - Future server routes/functions will also need `SUPABASE_SERVICE_ROLE_KEY`, email provider values, and Google Drive values.
+   - `SUPABASE_SERVICE_ROLE_KEY` for broker/admin user invites. Keep this server-only in Vercel.
 4. Vercel will run `npm run build`.
 5. Output directory is `dist`.
 
@@ -31,7 +31,7 @@ Open `http://127.0.0.1:4173`.
 2. Run `supabase/schema.sql` in the Supabase SQL editor.
 3. Copy the project URL and anon key into Vercel environment variables.
 4. Confirm Storage buckets exist for branding assets, profile images, transaction files, and archive packages.
-5. Keep the service role key server-only for future Vercel API routes or Supabase Edge Functions.
+5. In Supabase Auth URL settings, allow `https://app.lumerealestate.com` as a redirect URL.
 
 ## Database Coverage
 
@@ -51,6 +51,9 @@ The Supabase schema now includes:
 
 Currently wired to Supabase:
 
+- Login/logout with Supabase Auth email and password
+- First broker super-admin setup
+- Broker/Admin user records and invite emails through the Vercel `/api/invite-user` function
 - Branding load/save when Supabase config exists
 - Required broker contact load/save when Supabase config exists
 - Google Drive archive settings load/save when Supabase config exists
@@ -60,7 +63,6 @@ Still browser/local-state until the next backend wiring pass:
 - Agents
 - Transactions
 - File vault metadata
-- Users and invite flow
 - Company tasks
 - Inbox state
 
@@ -70,9 +72,8 @@ Recommended next steps:
 
 1. Wire each local collection in `script.js` to Supabase load/save calls.
 2. Move uploaded files into Supabase Storage buckets.
-3. Add Supabase Auth user invites so new users receive a password setup email.
-4. Add server-side broker notification emails.
-5. Add Google Drive archive packaging through an Edge Function or Vercel API route.
-6. Replace prototype open RLS policies with role-aware policies before production.
+3. Add server-side broker notification emails.
+4. Add Google Drive archive packaging through an Edge Function or Vercel API route.
+5. Replace prototype open RLS policies with role-aware policies before production.
 
 See `supabase/edge-functions.md` for the planned user invite, broker notification, and Google Drive archive functions.

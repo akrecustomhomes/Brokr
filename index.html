@@ -64,7 +64,7 @@
 
         <div class="sidebar-footer">
           <p>Brokerage workspace</p>
-          <strong>Demo shell</strong>
+          <strong>Secure workspace</strong>
         </div>
 
         <div class="theme-toggle sidebar-theme" role="group" aria-label="Theme">
@@ -805,7 +805,7 @@
             </label>
           </div>
 
-          <p class="form-note">Use permission scope to limit users to their assigned transactions or allow access across all transaction files.</p>
+          <p class="form-note" id="user-form-note">Use permission scope to limit users to their assigned transactions or allow access across all transaction files. New users receive an email invite to set their password.</p>
 
           <div class="modal-actions">
             <span></span>
@@ -915,6 +915,38 @@
               <button class="secondary-action" id="cancel-company-task-button" type="button">Cancel</button>
               <button class="primary-action" type="submit">Save Task</button>
             </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop auth-gate" id="auth-gate" hidden>
+      <section class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-gate-title">
+        <form id="auth-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Secure access</p>
+              <h3 id="auth-gate-title">Sign in to Brokr</h3>
+            </div>
+          </div>
+
+          <div class="form-grid auth-form-grid">
+            <label class="wide-field">
+              Email
+              <input id="auth-email" type="email" autocomplete="email" required />
+            </label>
+            <label class="wide-field">
+              Password
+              <input id="auth-password" type="password" autocomplete="current-password" minlength="6" required />
+            </label>
+          </div>
+
+          <p class="form-note" id="auth-message">Use the broker account or an invited user account to continue.</p>
+
+          <div class="auth-actions">
+            <button class="secondary-action" id="auth-reset-button" type="button">Send Password Setup Email</button>
+            <button class="secondary-action" id="auth-create-super-button" type="button">Create Broker Super Admin</button>
+            <button class="primary-action" type="submit">Sign In</button>
           </div>
         </form>
       </section>

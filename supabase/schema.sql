@@ -187,6 +187,15 @@ insert into public.broker_contacts (id, broker_name, broker_email, broker_phone)
 values ('primary', 'Jared Alvey', 'broker@lumerealestate.com', '(555) 430-1000')
 on conflict (id) do nothing;
 
+insert into public.app_users (email, role, can_upload_files, permission_scope, status)
+values ('broker@lumerealestate.com', 'Broker', true, 'Any transaction', 'Active')
+on conflict (email) do update set
+  role = 'Broker',
+  can_upload_files = true,
+  permission_scope = 'Any transaction',
+  status = 'Active',
+  updated_at = now();
+
 insert into public.archive_settings (id, archive_folder_name, package_format)
 values ('default', 'Brokr Closed Transaction Archives', 'ZIP package')
 on conflict (id) do nothing;
