@@ -98,11 +98,13 @@ const activeAgentCount = document.querySelector("#active-agent-count");
 const archivedAgentCount = document.querySelector("#archived-agent-count");
 const licenseAlertCount = document.querySelector("#license-alert-count");
 const transactionTableBody = document.querySelector("#transaction-table-body");
+const addTransactionButton = document.querySelector("#add-transaction-button");
 const transactionModal = document.querySelector("#transaction-modal");
 const transactionForm = document.querySelector("#transaction-form");
 const closeTransactionModal = document.querySelector("#close-transaction-modal");
 const cancelTransactionButton = document.querySelector("#cancel-transaction-button");
 const cancelCalendarEventButton = document.querySelector("#cancel-calendar-event-button");
+const deleteTransactionButton = document.querySelector("#delete-transaction-button");
 const transactionEmptyState = document.querySelector("#transaction-empty-state");
 const transactionClientLabel = document.querySelector("#transaction-client-label");
 const transactionFileGrid = document.querySelector("#transaction-file-grid");
@@ -173,6 +175,8 @@ const userFields = {
   profileImage: document.querySelector("#user-profile-image"),
   agentId: document.querySelector("#user-agent"),
   role: document.querySelector("#user-role"),
+  firstName: document.querySelector("#user-first-name"),
+  lastName: document.querySelector("#user-last-name"),
   email: document.querySelector("#user-email"),
   status: document.querySelector("#user-status"),
   canUpload: document.querySelector("#user-can-upload"),
@@ -438,6 +442,8 @@ let users = [
   {
     id: 1,
     agentId: 1,
+    firstName: "Maren",
+    lastName: "Cole",
     email: "maren@lumerealestate.com",
     role: "Agent",
     canUpload: true,
@@ -447,6 +453,8 @@ let users = [
   {
     id: 2,
     agentId: 2,
+    firstName: "Elliot",
+    lastName: "Rey",
     email: "elliot@lumerealestate.com",
     role: "Agent",
     canUpload: true,
@@ -588,6 +596,7 @@ function toDisplayNameFromEmail(email = "") {
 
 function getAuthDisplayName(user) {
   if (!user) return !window.BrokrBackend?.isConfigured ? "Jared Alvey" : "Guest";
+  if (user.firstName || user.lastName) return getUserDisplayName(user);
   if (["Broker", "Admin"].includes(user.role)) return brokerContact.name || toDisplayNameFromEmail(user.email);
 
   const linkedAgent = agents.find(
@@ -888,6 +897,10 @@ function renderAgentAvatar(agent, className = "agent-avatar") {
 }
 
 function getUserInitials(user) {
+  const first = user?.firstName?.trim()?.[0] || "";
+  const last = user?.lastName?.trim()?.[0] || "";
+  if (first || last) return `${first}${last}`.toUpperCase();
+
   const emailName = user?.email?.split("@")[0] || "";
   return emailName
     .split(/[.\s_-]+/)
@@ -900,10 +913,15 @@ function getUserInitials(user) {
 
 function renderUserAvatar(user) {
   if (user.profileImageSrc) {
-    return `<img class="agent-avatar" src="${user.profileImageSrc}" alt="${user.email}" />`;
+    return `<img class="agent-avatar" src="${user.profileImageSrc}" alt="${getUserDisplayName(user)}" />`;
   }
 
   return `<span class="agent-avatar" aria-hidden="true">${getUserInitials(user)}</span>`;
+}
+
+function getUserDisplayName(user) {
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
+  return fullName || toDisplayNameFromEmail(user?.email || "");
 }
 
 function isUnderContractStatus(status) {
@@ -952,6 +970,8 @@ function updateAgentFileVault(agent = {}) {
 
 function updateUserProfilePreview(src = "") {
   const previewUser = {
+    firstName: userFields.firstName.value,
+    lastName: userFields.lastName.value,
     email: userFields.email.value,
     profileImageSrc: src,
   };
@@ -1164,6 +1184,7 @@ function getTransactionCalendarEvents(sourceTransactions) {
 function renderTransactions() {
   const visibleTransactions = getVisibleTransactions({ includeCancelled: true });
   transactionTableBody.innerHTML = "";
+  addTransactionButton.hidden = isAgentUser();
   transactionEmptyState.classList.toggle("visible", visibleTransactions.length === 0);
 
   visibleTransactions.forEach((transaction) => {
@@ -1708,8 +1729,8 @@ function renderUsers() {
         <div class="agent-identity">
           ${renderUserAvatar(user)}
           <div class="agent-name">
-            <strong>${user.email}</strong>
-            <span>${user.status}</span>
+            <strong>${getUserDisplayName(user)}</strong>
+            <span>${user.email}</span>
           </div>
         </div>
       </td>
@@ -1741,15 +1762,20 @@ async function loadUsersFromBackend() {
   renderUsers();
 }
 
-async function saveUserToBackend(user, shouldInvite) {
+async function saveUserToBackend(user) {
   if (!window.BrokrBackend?.isConfigured) return user;
 
-  const savedUser = await window.BrokrBackend.saveUserProfile(user);
-  if (shouldInvite) {
-    const inviteResult = await window.BrokrBackend.inviteUser(savedUser);
-    userFormNote.textContent = inviteResult.message || "Invite sent. The user can set their password from email.";
+  return window.BrokrBackend.saveUserProfile(user);
+}
+
+async function inviteSavedUser(user) {
+  if (!window.BrokrBackend?.isConfigured || !window.BrokrBackend.inviteUser) {
+    window.alert("User saved. Invite email is available after Supabase is configured.");
+    return;
   }
-  return savedUser;
+
+  const inviteResult = await window.BrokrBackend.inviteUser(user);
+  window.alert(inviteResult.message || "Invite sent. The user can set their password from email.");
 }
 
 async function deleteUserFromBackend(user) {
@@ -1807,7 +1833,17 @@ function renderCommissionRules() {
 
 function syncUserEmailFromAgent() {
   const agent = agents.find((item) => item.id === Number(userFields.agentId.value));
-  if (!editingUserId && agent) userFields.email.value = agent.email;
+  if (agent) {
+    userFields.firstName.value = agent.firstName;
+    userFields.lastName.value = agent.lastName;
+    if (!editingUserId || !userFields.email.value.trim()) userFields.email.value = agent.email;
+  }
+
+  const hasLinkedAgent = Boolean(agent);
+  userFields.firstName.readOnly = hasLinkedAgent;
+  userFields.lastName.readOnly = hasLinkedAgent;
+  userFields.firstName.required = !hasLinkedAgent;
+  userFields.lastName.required = !hasLinkedAgent;
   if (!userProfilePreview.classList.contains("has-image")) updateUserProfilePreview();
 }
 
@@ -1965,6 +2001,7 @@ function syncTransactionFormAccess(transaction) {
   });
 
   cancelCalendarEventButton.hidden = !transaction || agentLocked;
+  deleteTransactionButton.hidden = !transaction || agentLocked;
 }
 
 function renderTransactionFileVault(transaction) {
@@ -2099,10 +2136,12 @@ function openUserModal(userId = null) {
   userModalTitle.textContent = user ? "Edit User" : "Add User";
   userFormNote.textContent = user
     ? "Update the user role, file permissions, and transaction access scope."
-    : "New users receive an email invite to set their password.";
+    : "After saving, choose whether to send the password setup invite email.";
   userFields.profileImage.value = "";
   userFields.agentId.value = user?.agentId || userFields.agentId.options[0]?.value || "";
   userFields.role.value = user?.role || "Agent";
+  userFields.firstName.value = user?.firstName || "";
+  userFields.lastName.value = user?.lastName || "";
   userFields.email.value = user?.email || "";
   userFields.status.value = user?.status || "Active";
   userFields.canUpload.checked = user?.canUpload ?? true;
@@ -2175,6 +2214,32 @@ function syncBrokerageSplit() {
 function closeTransactionForm() {
   transactionModal.hidden = true;
   editingTransactionId = null;
+}
+
+function deleteTransaction(transactionId) {
+  const transaction = transactions.find((item) => item.id === transactionId);
+  if (!transaction) return false;
+
+  if (isAgentUser()) {
+    window.alert("Only broker/admin users can delete transactions.");
+    return false;
+  }
+
+  const confirmed = window.confirm(
+    `Delete ${transaction.clientName} from transactions?\n\nThis removes the transaction from the roster, calendar, inbox, and local file vault records.`,
+  );
+  if (!confirmed) return false;
+
+  transactions = transactions.filter((item) => item.id !== transaction.id);
+  saveTransactions();
+  renderTransactions();
+  renderCalendar();
+  renderCommissionRules();
+  renderOverviewMetrics();
+  renderOverviewSchedule();
+  renderInbox();
+  renderArchiveQueue();
+  return true;
 }
 
 function openAgentModal(agentId = null) {
@@ -2410,6 +2475,14 @@ topbarNewTransaction.addEventListener("click", () => {
 
   openTransactionModal();
 });
+addTransactionButton.addEventListener("click", () => {
+  if (isAgentUser()) {
+    window.alert("New transactions are created by broker/admin users. Agents can upload files to assigned transactions.");
+    return;
+  }
+
+  openTransactionModal();
+});
 headerInboxButton.addEventListener("click", openInbox);
 closeInboxDetailModal.addEventListener("click", closeInboxDetail);
 dismissInboxItemButton.addEventListener("click", () => updateInboxItemState("dismissed"));
@@ -2441,6 +2514,10 @@ inboxList.addEventListener("keydown", (event) => {
 });
 closeTransactionModal.addEventListener("click", closeTransactionForm);
 cancelTransactionButton.addEventListener("click", closeTransactionForm);
+deleteTransactionButton.addEventListener("click", () => {
+  if (!editingTransactionId) return;
+  if (deleteTransaction(editingTransactionId)) closeTransactionForm();
+});
 
 transactionModal.addEventListener("click", (event) => {
   if (event.target === transactionModal) closeTransactionForm();
@@ -2630,6 +2707,12 @@ userFields.profileImage.addEventListener("change", () => {
 userFields.email.addEventListener("input", () => {
   if (!userProfilePreview.classList.contains("has-image")) updateUserProfilePreview();
 });
+userFields.firstName.addEventListener("input", () => {
+  if (!userProfilePreview.classList.contains("has-image")) updateUserProfilePreview();
+});
+userFields.lastName.addEventListener("input", () => {
+  if (!userProfilePreview.classList.contains("has-image")) updateUserProfilePreview();
+});
 
 commissionList.addEventListener("click", (event) => {
   const row = event.target.closest("[data-commission-agent]");
@@ -2703,11 +2786,14 @@ userForm.addEventListener("submit", async (event) => {
   const existingUser = users.find((user) => String(user.id) === String(editingUserId));
   const profileImageSrc =
     (await readImageDataUrl(userFields.profileImage.files[0])) || existingUser?.profileImageSrc || "";
+  const linkedAgent = agents.find((agent) => agent.id === Number(userFields.agentId.value));
   let userData = {
     id: existingUser?.id || Date.now(),
     authUserId: existingUser?.authUserId || "",
     profileImageSrc,
     agentId: getSelectedUserAgentId(),
+    firstName: linkedAgent?.firstName || userFields.firstName.value.trim(),
+    lastName: linkedAgent?.lastName || userFields.lastName.value.trim(),
     email: userFields.email.value.trim(),
     role: userFields.role.value,
     canUpload: userFields.canUpload.checked,
@@ -2716,12 +2802,13 @@ userForm.addEventListener("submit", async (event) => {
   };
 
   try {
-    userData = await saveUserToBackend(userData, !existingUser);
+    userData = await saveUserToBackend(userData);
   } catch (error) {
     userFormNote.textContent = error.message || "Unable to save user.";
     return;
   }
 
+  const isNewUser = !existingUser;
   if (existingUser) {
     users = users.map((user) => (String(user.id) === String(existingUser.id) ? userData : user));
   } else {
@@ -2730,6 +2817,20 @@ userForm.addEventListener("submit", async (event) => {
 
   renderUsers();
   closeUserForm();
+
+  if (isNewUser) {
+    const shouldInvite = window.confirm(
+      `User saved for ${getUserDisplayName(userData)}.\n\nSend invite email now so they can set up their password and complete the account?`,
+    );
+
+    if (shouldInvite) {
+      try {
+        await inviteSavedUser(userData);
+      } catch (error) {
+        window.alert(error.message || "User saved, but the invite email could not be sent.");
+      }
+    }
+  }
 });
 
 transactionForm.addEventListener("submit", async (event) => {

@@ -25,6 +25,8 @@
       authUserId: row.auth_user_id,
       agentId: row.agent_id,
       profileImageSrc: row.profile_image_url || "",
+      firstName: row.first_name || "",
+      lastName: row.last_name || "",
       email: row.email,
       role: row.role,
       canUpload: row.can_upload_files,
@@ -41,6 +43,8 @@
       // into Supabase until agents are persisted there too.
       agent_id: null,
       profile_image_url: user.profileImageSrc || null,
+      first_name: user.firstName || null,
+      last_name: user.lastName || null,
       email: user.email,
       role: user.role,
       can_upload_files: Boolean(user.canUpload),
@@ -199,7 +203,13 @@
     if (!client) return null;
 
     const row = mapUserToRow(user);
-    const { data, error } = await client.from("app_users").upsert(row, { onConflict: "email" }).select("*").single();
+    let { data, error } = await client.from("app_users").upsert(row, { onConflict: "email" }).select("*").single();
+    if (error && /first_name|last_name/i.test(error.message || "")) {
+      const fallbackRow = { ...row };
+      delete fallbackRow.first_name;
+      delete fallbackRow.last_name;
+      ({ data, error } = await client.from("app_users").upsert(fallbackRow, { onConflict: "email" }).select("*").single());
+    }
     if (error) throw error;
     return mapUserFromRow(data);
   }
@@ -226,6 +236,8 @@
       },
       body: JSON.stringify({
         email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
         agentId: user.agentId,
         canUpload: user.canUpload,

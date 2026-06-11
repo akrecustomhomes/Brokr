@@ -243,6 +243,10 @@
               </div>
             </div>
 
+            <div class="panel-action-row">
+              <button class="primary-action" id="add-transaction-button" type="button">+ Transaction</button>
+            </div>
+
             <div class="roster-panel">
               <div class="agent-table-wrap">
                 <table class="agent-table transaction-table">
@@ -811,7 +815,10 @@
           <p class="form-note">Representation files appear by Buyer or Seller side. Contract files appear once the transaction is under contract. Additional documents can be added any time during the contract period.</p>
 
           <div class="modal-actions">
-            <button class="secondary-action" id="cancel-calendar-event-button" type="button" hidden>Cancel Event</button>
+            <div>
+              <button class="secondary-action" id="cancel-calendar-event-button" type="button" hidden>Cancel Event</button>
+              <button class="secondary-action danger-action" id="delete-transaction-button" type="button" hidden>Delete Transaction</button>
+            </div>
             <div>
               <button class="secondary-action" id="cancel-transaction-button" type="button">Cancel</button>
               <button class="primary-action" type="submit">Save Transaction</button>
@@ -854,6 +861,14 @@
               </select>
             </label>
             <label>
+              First name
+              <input id="user-first-name" name="firstName" type="text" required />
+            </label>
+            <label>
+              Last name
+              <input id="user-last-name" name="lastName" type="text" required />
+            </label>
+            <label>
               User email
               <input id="user-email" name="email" type="email" required />
             </label>
@@ -881,7 +896,7 @@
             </label>
           </div>
 
-          <p class="form-note" id="user-form-note">Use permission scope to limit users to their assigned transactions or allow access across all transaction files. New users receive an email invite to set their password.</p>
+          <p class="form-note" id="user-form-note">Use permission scope to limit users to their assigned transactions or allow access across all transaction files. After saving a new user, choose whether to send the password setup invite email.</p>
 
           <div class="modal-actions">
             <span></span>

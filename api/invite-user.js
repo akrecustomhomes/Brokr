@@ -58,6 +58,8 @@ module.exports = async function inviteUser(request, response) {
 
   const body = typeof request.body === "string" ? JSON.parse(request.body || "{}") : request.body || {};
   const email = String(body.email || "").trim().toLowerCase();
+  const firstName = String(body.firstName || "").trim();
+  const lastName = String(body.lastName || "").trim();
   const role = allowedRoles.has(body.role) ? body.role : "Agent";
   const permissionScope = allowedScopes.has(body.permissionScope) ? body.permissionScope : "Own transactions only";
 
@@ -67,7 +69,7 @@ module.exports = async function inviteUser(request, response) {
   }
 
   const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    data: { role, app: "Brokr" },
+    data: { role, app: "Brokr", firstName, lastName },
     redirectTo: request.headers.origin || "https://app.lumerealestate.com",
   });
 
@@ -76,25 +78,36 @@ module.exports = async function inviteUser(request, response) {
     return;
   }
 
-  const { data: savedUser, error: saveError } = await adminClient
+  const userRow = {
+    auth_user_id: inviteData?.user?.id || null,
+    // Agent ids currently come from the local roster, not Supabase.
+    // Keep this null so app user updates do not violate the database FK.
+    agent_id: null,
+    first_name: firstName || null,
+    last_name: lastName || null,
+    email,
+    role,
+    can_upload_files: Boolean(body.canUpload),
+    permission_scope: permissionScope,
+    status: body.status || "Active",
+    updated_at: new Date().toISOString(),
+  };
+  let { data: savedUser, error: saveError } = await adminClient
     .from("app_users")
-    .upsert(
-      {
-        auth_user_id: inviteData?.user?.id || null,
-        // Agent ids currently come from the local roster, not Supabase.
-        // Keep this null so app user updates do not violate the database FK.
-        agent_id: null,
-        email,
-        role,
-        can_upload_files: Boolean(body.canUpload),
-        permission_scope: permissionScope,
-        status: body.status || "Active",
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "email" },
-    )
+    .upsert(userRow, { onConflict: "email" })
     .select("id,email,role,status")
     .single();
+
+  if (saveError && /first_name|last_name/i.test(saveError.message || "")) {
+    const fallbackRow = { ...userRow };
+    delete fallbackRow.first_name;
+    delete fallbackRow.last_name;
+    ({ data: savedUser, error: saveError } = await adminClient
+      .from("app_users")
+      .upsert(fallbackRow, { onConflict: "email" })
+      .select("id,email,role,status")
+      .single());
+  }
 
   if (saveError) {
     sendJson(response, 400, { error: saveError.message });

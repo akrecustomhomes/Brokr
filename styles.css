@@ -546,6 +546,7 @@ body.overview-active .topbar > div:not(.overview-actions) {
 }
 
 #topbar-new-transaction:hover,
+#add-transaction-button:hover,
 #add-company-task-button:hover,
 #add-agent-button:hover,
 #add-user-button:hover {
@@ -1303,9 +1304,9 @@ img.agent-avatar,
   width: 100%;
   min-height: 46px;
   place-items: center;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--menu-text);
+  border: 1px solid var(--forest);
+  background: var(--forest);
+  color: var(--ink);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 580;
@@ -1314,7 +1315,9 @@ img.agent-avatar,
 }
 
 .file-upload-action:hover {
-  background: var(--menu-hover);
+  border-color: var(--brass);
+  background: var(--brass);
+  color: #fff;
 }
 
 .file-upload-action input {
@@ -2351,9 +2354,9 @@ img.agent-avatar,
   width: 100%;
   min-height: 46px;
   place-items: center;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--menu-text);
+  border: 1px solid var(--forest);
+  background: var(--forest);
+  color: var(--ink);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 580;
@@ -2362,7 +2365,9 @@ img.agent-avatar,
 }
 
 .form-grid .transaction-file-tile .file-upload-action:hover {
-  background: var(--menu-hover);
+  border-color: var(--brass);
+  background: var(--brass);
+  color: #fff;
 }
 
 .form-grid .transaction-file-tile .file-upload-action input[type="file"] {
@@ -3204,6 +3209,7 @@ body.overview-active .topbar > div:not(.overview-actions) {
 }
 
 #topbar-new-transaction:hover,
+#add-transaction-button:hover,
 #add-company-task-button:hover,
 #add-agent-button:hover,
 #add-user-button:hover {
@@ -3936,9 +3942,9 @@ img.agent-avatar,
   width: 100%;
   min-height: 46px;
   place-items: center;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--menu-text);
+  border: 1px solid var(--forest);
+  background: var(--forest);
+  color: var(--ink);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 580;
@@ -3947,7 +3953,9 @@ img.agent-avatar,
 }
 
 .file-upload-action:hover {
-  background: var(--menu-hover);
+  border-color: var(--brass);
+  background: var(--brass);
+  color: #fff;
 }
 
 .file-upload-action input {
@@ -4958,9 +4966,9 @@ img.agent-avatar,
   width: 100%;
   min-height: 46px;
   place-items: center;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--menu-text);
+  border: 1px solid var(--forest);
+  background: var(--forest);
+  color: var(--ink);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 580;
@@ -4969,7 +4977,9 @@ img.agent-avatar,
 }
 
 .form-grid .transaction-file-tile .file-upload-action:hover {
-  background: var(--menu-hover);
+  border-color: var(--brass);
+  background: var(--brass);
+  color: #fff;
 }
 
 .form-grid .transaction-file-tile .file-upload-action input[type="file"] {
