@@ -1640,6 +1640,14 @@ img.agent-avatar,
   color: var(--brass);
 }
 
+#password-setup-message[data-type="error"] {
+  color: var(--clay);
+}
+
+#password-setup-message[data-type="success"] {
+  color: var(--brass);
+}
+
 .transaction-modal-panel {
   width: min(1180px, 100%);
 }
@@ -4290,6 +4298,14 @@ img.agent-avatar,
 }
 
 #auth-message[data-type="success"] {
+  color: var(--brass);
+}
+
+#password-setup-message[data-type="error"] {
+  color: var(--clay);
+}
+
+#password-setup-message[data-type="success"] {
   color: var(--brass);
 }
 

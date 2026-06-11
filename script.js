@@ -27,6 +27,11 @@ const authPassword = document.querySelector("#auth-password");
 const authMessage = document.querySelector("#auth-message");
 const authResetButton = document.querySelector("#auth-reset-button");
 const authCreateSuperButton = document.querySelector("#auth-create-super-button");
+const passwordSetupGate = document.querySelector("#password-setup-gate");
+const passwordSetupForm = document.querySelector("#password-setup-form");
+const passwordSetupNew = document.querySelector("#password-setup-new");
+const passwordSetupConfirm = document.querySelector("#password-setup-confirm");
+const passwordSetupMessage = document.querySelector("#password-setup-message");
 const themeOptions = document.querySelectorAll("button[data-theme]");
 const brandingForm = document.querySelector(".branding-panel");
 const companyInput = document.querySelector("#company-name");
@@ -232,6 +237,7 @@ let currentSession = null;
 let currentUser = null;
 let currentUserRole = "Guest";
 let authSubscription = null;
+let pendingPasswordSetupType = "";
 const transactionDeadlineLabels = {
   sellerDisclosure: "Seller Disclosure Deadline",
   dueDiligence: "Due Diligence Deadline",
@@ -662,9 +668,15 @@ function setAuthMessage(message, type = "") {
   authMessage.dataset.type = type;
 }
 
-function openAuthGate(message = "Use the broker account or an invited user account to continue.") {
+function setPasswordSetupMessage(message, type = "") {
+  passwordSetupMessage.textContent = message;
+  passwordSetupMessage.dataset.type = type;
+}
+
+function openAuthGate(message = "Sign in with your Brokr account to continue.", type = "") {
+  passwordSetupGate.hidden = true;
   authGate.hidden = false;
-  setAuthMessage(message);
+  setAuthMessage(message, type);
   authPassword.value = "";
   authEmail.focus();
 }
@@ -673,7 +685,30 @@ function closeAuthGate() {
   authGate.hidden = true;
 }
 
+function openPasswordSetupGate(type = "setup") {
+  pendingPasswordSetupType = type;
+  authGate.hidden = true;
+  passwordSetupGate.hidden = false;
+  passwordSetupNew.value = "";
+  passwordSetupConfirm.value = "";
+  setPasswordSetupMessage(
+    type === "recovery"
+      ? "Create a new password, then sign in again with that password."
+      : "Create a password to finish your Brokr account setup.",
+  );
+  passwordSetupNew.focus();
+}
+
+function closePasswordSetupGate() {
+  passwordSetupGate.hidden = true;
+}
+
 async function refreshAuthUser(session = currentSession) {
+  if (pendingPasswordSetupType) {
+    if (session) openPasswordSetupGate(pendingPasswordSetupType);
+    return;
+  }
+
   if (!window.BrokrBackend?.isConfigured) {
     setAuthState({ email: "Jared Alvey", role: "Broker", status: "Active" }, null);
     closeAuthGate();
@@ -704,8 +739,17 @@ async function initializeAuth() {
     return;
   }
 
+  pendingPasswordSetupType = window.BrokrBackend.getAuthCallbackType?.() || "";
   currentSession = await window.BrokrBackend.getSession();
-  await refreshAuthUser(currentSession);
+  if (pendingPasswordSetupType && currentSession) {
+    setAuthState(null, currentSession);
+    openPasswordSetupGate(pendingPasswordSetupType);
+  } else if (pendingPasswordSetupType && !currentSession) {
+    openAuthGate("This setup link has expired. Use Forgot password? to send a fresh password setup email.", "error");
+    pendingPasswordSetupType = "";
+  } else {
+    await refreshAuthUser(currentSession);
+  }
   authSubscription = await window.BrokrBackend.onAuthStateChange(async (session) => {
     currentSession = session;
     await refreshAuthUser(session);
@@ -763,6 +807,38 @@ authResetButton.addEventListener("click", async () => {
     setAuthMessage("Password reset email sent. Check the inbox for that user.", "success");
   } catch (error) {
     setAuthMessage(error.message || "Unable to send password reset email.", "error");
+  }
+});
+
+passwordSetupForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const newPassword = passwordSetupNew.value;
+  const confirmedPassword = passwordSetupConfirm.value;
+
+  if (newPassword.length < 6) {
+    setPasswordSetupMessage("Password must be at least 6 characters.", "error");
+    passwordSetupNew.focus();
+    return;
+  }
+
+  if (newPassword !== confirmedPassword) {
+    setPasswordSetupMessage("Passwords do not match.", "error");
+    passwordSetupConfirm.focus();
+    return;
+  }
+
+  setPasswordSetupMessage("Saving password...");
+  try {
+    const loginEmail = currentSession?.user?.email || "";
+    await window.BrokrBackend.updatePassword(newPassword);
+    window.BrokrBackend.clearAuthCallbackUrl?.();
+    pendingPasswordSetupType = "";
+    closePasswordSetupGate();
+    await window.BrokrBackend.signOut();
+    openAuthGate("Password saved. Sign in with your email and new password.", "success");
+    if (loginEmail) authEmail.value = loginEmail;
+  } catch (error) {
+    setPasswordSetupMessage(error.message || "Unable to save password.", "error");
   }
 });
 
@@ -967,6 +1043,34 @@ function renderUserAvatar(user) {
 function getUserDisplayName(user) {
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
   return fullName || toDisplayNameFromEmail(user?.email || "");
+}
+
+function getUserNameCache() {
+  return JSON.parse(localStorage.getItem("brokr-user-name-cache") || "{}");
+}
+
+function cacheUserDisplayFields(user) {
+  if (!user?.email) return;
+
+  const cache = getUserNameCache();
+  cache[user.email.toLowerCase()] = {
+    firstName: user.firstName || "",
+    lastName: user.lastName || "",
+    profileImageSrc: user.profileImageSrc || "",
+  };
+  localStorage.setItem("brokr-user-name-cache", JSON.stringify(cache));
+}
+
+function applyUserDisplayFallback(user, fallback = {}) {
+  const cached = user?.email ? getUserNameCache()[user.email.toLowerCase()] || {} : {};
+
+  return {
+    ...fallback,
+    ...user,
+    firstName: user?.firstName || fallback.firstName || cached.firstName || "",
+    lastName: user?.lastName || fallback.lastName || cached.lastName || "",
+    profileImageSrc: user?.profileImageSrc || fallback.profileImageSrc || cached.profileImageSrc || "",
+  };
 }
 
 function getBrokerInitials(contact = brokerContact) {
@@ -1827,14 +1931,21 @@ async function loadUsersFromBackend() {
   const savedUsers = await window.BrokrBackend.loadUsers();
   if (!savedUsers.length) return;
 
-  users = savedUsers;
+  users = savedUsers.map((savedUser) => {
+    const existingUser = users.find((user) => user.email?.toLowerCase() === savedUser.email?.toLowerCase());
+    return applyUserDisplayFallback(savedUser, existingUser);
+  });
   renderUsers();
 }
 
 async function saveUserToBackend(user) {
+  cacheUserDisplayFields(user);
   if (!window.BrokrBackend?.isConfigured) return user;
 
-  return window.BrokrBackend.saveUserProfile(user);
+  const savedUser = await window.BrokrBackend.saveUserProfile(user);
+  const mergedUser = applyUserDisplayFallback(savedUser || user, user);
+  cacheUserDisplayFields(mergedUser);
+  return mergedUser;
 }
 
 async function inviteSavedUser(user) {

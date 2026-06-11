@@ -95,7 +95,7 @@ module.exports = async function inviteUser(request, response) {
   let { data: savedUser, error: saveError } = await adminClient
     .from("app_users")
     .upsert(userRow, { onConflict: "email" })
-    .select("id,email,role,status")
+    .select("id,email,first_name,last_name,role,status")
     .single();
 
   if (saveError && /first_name|last_name/i.test(saveError.message || "")) {

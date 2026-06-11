@@ -1053,6 +1053,37 @@
       </section>
     </div>
 
+    <div class="modal-backdrop auth-gate" id="password-setup-gate" hidden>
+      <section class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="password-setup-title">
+        <form id="password-setup-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Account setup</p>
+              <h3 id="password-setup-title">Create your password</h3>
+            </div>
+          </div>
+
+          <div class="form-grid auth-form-grid">
+            <label class="wide-field">
+              New password
+              <input id="password-setup-new" type="password" autocomplete="new-password" minlength="6" required />
+            </label>
+            <label class="wide-field">
+              Confirm password
+              <input id="password-setup-confirm" type="password" autocomplete="new-password" minlength="6" required />
+            </label>
+          </div>
+
+          <p class="form-note" id="password-setup-message">Create a password to finish your Brokr account setup.</p>
+
+          <div class="auth-actions">
+            <span></span>
+            <button class="primary-action" type="submit">Save Password</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
     <script src="config.js"></script>
     <script src="supabase-adapter.js"></script>
     <script src="script.js"></script>

@@ -17,6 +17,25 @@
     return `${window.location.origin}${window.location.pathname}`;
   }
 
+  function getAuthCallbackType() {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const queryParams = new URLSearchParams(window.location.search);
+    const type = hashParams.get("type") || queryParams.get("type");
+    const hasSetupToken =
+      hashParams.has("access_token") ||
+      hashParams.has("refresh_token") ||
+      queryParams.has("code") ||
+      queryParams.has("token_hash");
+
+    if (["invite", "recovery"].includes(type)) return type;
+    return hasSetupToken ? "setup" : "";
+  }
+
+  function clearAuthCallbackUrl() {
+    if (!window.history?.replaceState) return;
+    window.history.replaceState({}, document.title, getRedirectUrl());
+  }
+
   function mapUserFromRow(row) {
     if (!row) return null;
 
@@ -57,6 +76,16 @@
   async function getSession() {
     const client = await getClient();
     if (!client) return null;
+
+    const authCode = new URLSearchParams(window.location.search).get("code");
+    if (authCode && getAuthCallbackType()) {
+      const { data, error } = await client.auth.exchangeCodeForSession(authCode);
+      if (error) {
+        console.warn("Unable to exchange Supabase auth code.", error);
+      } else if (data.session) {
+        return data.session;
+      }
+    }
 
     const { data, error } = await client.auth.getSession();
     if (error) {
@@ -132,6 +161,15 @@
       redirectTo: getRedirectUrl(),
     });
     if (error) throw error;
+  }
+
+  async function updatePassword(password) {
+    const client = await getClient();
+    if (!client) throw new Error("Supabase is not configured.");
+
+    const { data, error } = await client.auth.updateUser({ password });
+    if (error) throw error;
+    return data.user;
   }
 
   async function getCurrentAuthUser() {
@@ -397,6 +435,9 @@
     signOut,
     createBrokerSuperAdmin,
     sendPasswordSetupEmail,
+    updatePassword,
+    getAuthCallbackType,
+    clearAuthCallbackUrl,
     loadCurrentUser,
     loadUsers,
     saveUserProfile,
