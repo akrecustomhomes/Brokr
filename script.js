@@ -706,6 +706,8 @@ function activatePage(pageId) {
   pageTitle.textContent = pageTitles[pageId];
   topbarNewTransaction.hidden = isAgentUser() || !["overview", "transactions"].includes(pageId);
   document.body.classList.remove("menu-open");
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  document.querySelector(".content")?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
 }
 
 menuItems.forEach((item) => {
