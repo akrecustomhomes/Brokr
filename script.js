@@ -83,6 +83,7 @@ const overviewMetrics = {
   brokerageCommission: document.querySelector("#overview-brokerage-commission"),
   ytdTransactions: document.querySelector("#overview-ytd-transactions"),
 };
+const metricCards = document.querySelectorAll(".metric-card[data-page-target]");
 const overviewScheduleGrid = document.querySelector("#overview-schedule-grid");
 const overviewScheduleRange = document.querySelector("#overview-schedule-range");
 const overviewSchedulePrev = document.querySelector("#overview-schedule-prev");
@@ -684,6 +685,16 @@ function activatePage(pageId) {
 
 menuItems.forEach((item) => {
   item.addEventListener("click", () => activatePage(item.dataset.page));
+});
+
+metricCards.forEach((card) => {
+  const openMetricPage = () => activatePage(card.dataset.pageTarget);
+  card.addEventListener("click", openMetricPage);
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    openMetricPage();
+  });
 });
 
 mobileMenu.addEventListener("click", () => {

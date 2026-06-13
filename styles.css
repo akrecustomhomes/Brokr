@@ -6191,6 +6191,26 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
   margin-top: 0;
 }
 
+.metric-card[role="button"] {
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.metric-card[role="button"]:hover,
+.metric-card[role="button"]:focus-visible {
+  border-color: #d1c9bf;
+  box-shadow: 0 10px 26px rgba(42, 36, 28, 0.09);
+  transform: translateY(-3px);
+}
+
+.metric-card[role="button"]:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+
 button,
 .icon-button,
 .mobile-menu,
