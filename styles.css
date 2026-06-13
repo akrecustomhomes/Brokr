@@ -6716,6 +6716,7 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 .agent-summary strong,
 .transaction-summary strong {
   font-size: clamp(1.65rem, 2.2vw, 2.35rem);
+  font-weight: 420;
   line-height: 1;
 }
 
