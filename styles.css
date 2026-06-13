@@ -6802,9 +6802,9 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     width: 42px;
     min-height: 42px;
     place-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.88);
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
     padding: 0;
   }
 
@@ -6865,13 +6865,13 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     width: 42px;
     height: 42px;
     flex: 0 0 42px;
-    border-color: rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.06);
-    color: rgba(255, 255, 255, 0.88);
+    border-color: var(--line);
+    background: var(--panel);
+    color: var(--ink);
   }
 
   .topbar .inbox-button:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #f3f0eb;
   }
 
   .topbar .inbox-button svg {
