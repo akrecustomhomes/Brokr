@@ -116,12 +116,14 @@ const cancelAgentButton = document.querySelector("#cancel-agent-button");
 const archiveAgentButton = document.querySelector("#archive-agent-button");
 const deleteAgentButton = document.querySelector("#delete-agent-button");
 const agentEmptyState = document.querySelector("#agent-empty-state");
-const rosterTabs = document.querySelectorAll(".roster-tab");
+const rosterTabs = document.querySelectorAll("[data-agent-filter]");
 const activeAgentCount = document.querySelector("#active-agent-count");
 const archivedAgentCount = document.querySelector("#archived-agent-count");
 const licenseAlertCount = document.querySelector("#license-alert-count");
 const agentSummaryItems = document.querySelectorAll("[data-agent-summary-action]");
 const transactionTableBody = document.querySelector("#transaction-table-body");
+const transactionTabs = document.querySelectorAll("[data-transaction-filter]");
+const transactionSummaryItems = document.querySelectorAll("[data-transaction-summary-filter]");
 const addTransactionButton = document.querySelector("#add-transaction-button");
 const transactionModal = document.querySelector("#transaction-modal");
 const transactionForm = document.querySelector("#transaction-form");
@@ -574,6 +576,7 @@ let archiveSettings = {
 let fileUploadNotifications = JSON.parse(localStorage.getItem("brokr-file-upload-notifications") || "[]");
 let inboxItemStates = JSON.parse(localStorage.getItem("brokr-inbox-item-states") || "{}");
 let activeInboxItemId = null;
+let transactionFilter = "all";
 let users = [
   {
     id: 1,
@@ -1600,21 +1603,29 @@ function getTransactionCalendarEvents(sourceTransactions) {
   });
 }
 
+function matchesTransactionFilter(transaction, filter = transactionFilter) {
+  if (filter === "active") return transaction.side === "seller" && transaction.status === "New";
+  if (filter === "pending") return isUnderContractStatus(transaction.status) && transaction.status !== "Closed";
+  if (filter === "closed") return transaction.status === "Closed";
+  return transaction.status !== "Cancelled";
+}
+
 function renderTransactions() {
   const visibleTransactions = getVisibleTransactions({ includeCancelled: true });
   const activeTransactions = visibleTransactions.filter((transaction) => transaction.status !== "Cancelled");
   const pendingTransactions = activeTransactions.filter(
     (transaction) => isUnderContractStatus(transaction.status) && transaction.status !== "Closed",
   );
+  const filteredTransactions = visibleTransactions.filter((transaction) => matchesTransactionFilter(transaction));
   transactionTableBody.innerHTML = "";
   addTransactionButton.hidden = isAgentUser();
-  transactionEmptyState.classList.toggle("visible", visibleTransactions.length === 0);
+  transactionEmptyState.classList.toggle("visible", filteredTransactions.length === 0);
   transactionSummary.total.textContent = activeTransactions.length;
   transactionSummary.active.textContent = getActiveOfficeListings().length;
   transactionSummary.pending.textContent = pendingTransactions.length;
   transactionSummary.closed.textContent = activeTransactions.filter((transaction) => transaction.status === "Closed").length;
 
-  visibleTransactions.forEach((transaction) => {
+  filteredTransactions.forEach((transaction) => {
     const sideLabel = transaction.side === "buyer" ? "Buyer rep" : "Seller rep";
     const fileSummary = getTransactionFileSummary(transaction);
     const row = document.createElement("tr");
@@ -1644,6 +1655,16 @@ function renderTransactions() {
     `;
     transactionTableBody.appendChild(row);
   });
+}
+
+function setTransactionFilter(filter) {
+  transactionFilter = filter;
+  transactionTabs.forEach((tab) => {
+    const isActive = tab.dataset.transactionFilter === filter;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-pressed", String(isActive));
+  });
+  renderTransactions();
 }
 
 function renderOverviewMetrics() {
@@ -3178,6 +3199,19 @@ companyTaskForm.addEventListener("submit", (event) => {
   ];
   renderCompanyTasks();
   closeCompanyTaskForm();
+});
+
+transactionTabs.forEach((tab) => {
+  tab.addEventListener("click", () => setTransactionFilter(tab.dataset.transactionFilter));
+});
+
+transactionSummaryItems.forEach((item) => {
+  item.addEventListener("click", () => setTransactionFilter(item.dataset.transactionSummaryFilter));
+  item.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    setTransactionFilter(item.dataset.transactionSummaryFilter);
+  });
 });
 
 transactionTableBody.addEventListener("click", (event) => {

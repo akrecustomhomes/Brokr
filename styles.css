@@ -6736,7 +6736,8 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   transform: none;
 }
 
-.agent-summary article[role="button"] {
+.agent-summary article[role="button"],
+.transaction-summary article[role="button"] {
   cursor: pointer;
 }
 

@@ -268,19 +268,19 @@
             </div>
 
             <div class="transaction-summary" aria-label="Transaction summary">
-              <article>
+              <article role="button" tabindex="0" data-transaction-summary-filter="all" aria-label="Show all transactions">
                 <p>Total Transactions</p>
                 <strong id="transaction-total-count">0</strong>
               </article>
-              <article>
+              <article role="button" tabindex="0" data-transaction-summary-filter="active" aria-label="Show active transactions">
                 <p>Active</p>
                 <strong id="transaction-active-count">0</strong>
               </article>
-              <article>
+              <article role="button" tabindex="0" data-transaction-summary-filter="pending" aria-label="Show pending transactions">
                 <p>Pending</p>
                 <strong id="transaction-pending-count">0</strong>
               </article>
-              <article>
+              <article role="button" tabindex="0" data-transaction-summary-filter="closed" aria-label="Show closed transactions">
                 <p>Closed</p>
                 <strong id="transaction-closed-count">0</strong>
               </article>
@@ -291,6 +291,13 @@
             </div>
 
             <div class="roster-panel">
+              <div class="roster-tabs transaction-tabs" role="tablist" aria-label="Transaction filters">
+                <button class="roster-tab active" type="button" data-transaction-filter="all" aria-pressed="true">All</button>
+                <button class="roster-tab" type="button" data-transaction-filter="active" aria-pressed="false">Active</button>
+                <button class="roster-tab" type="button" data-transaction-filter="pending" aria-pressed="false">Pending</button>
+                <button class="roster-tab" type="button" data-transaction-filter="closed" aria-pressed="false">Closed</button>
+              </div>
+
               <div class="agent-table-wrap">
                 <table class="agent-table transaction-table">
                   <thead>
