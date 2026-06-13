@@ -6729,7 +6729,7 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 .metric-card strong,
 .agent-summary strong,
 .transaction-summary strong {
-  font-size: clamp(1.65rem, 2.2vw, 2.35rem);
+  font-size: clamp(1.35rem, 1.65vw, 1.85rem);
   font-weight: 420;
   line-height: 1;
 }
