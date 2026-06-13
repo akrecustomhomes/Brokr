@@ -57,6 +57,9 @@ const sidebarLogo = document.querySelector("#sidebar-logo");
 const sidebarBrokerageLogo = document.querySelector("#sidebar-brokerage-logo");
 const sidebarBrokerageLogoImage = document.querySelector("#sidebar-brokerage-logo-image");
 const sidebarBrokerageLogoFallback = document.querySelector("#sidebar-brokerage-logo-fallback");
+const topbarBrokerageLogo = document.querySelector("#topbar-brokerage-logo");
+const topbarBrokerageLogoImage = document.querySelector("#topbar-brokerage-logo-image");
+const topbarBrokerageLogoFallback = document.querySelector("#topbar-brokerage-logo-fallback");
 const overviewDate = document.querySelector("#overview-date");
 const overviewWelcomeTitle = document.querySelector("#overview-welcome-title");
 const brokerContactForm = document.querySelector("#broker-contact-form");
@@ -3580,14 +3583,24 @@ let isRestoringBranding = false;
 const defaultFaviconHref = appFavicon?.getAttribute("href") || "";
 
 function setSidebarBrokerageLogo(src = "") {
-  if (!sidebarBrokerageLogo || !sidebarBrokerageLogoImage) return;
-
   if (src) {
-    sidebarBrokerageLogoImage.src = src;
-    sidebarBrokerageLogo.classList.add("has-image");
+    if (sidebarBrokerageLogo && sidebarBrokerageLogoImage) {
+      sidebarBrokerageLogoImage.src = src;
+      sidebarBrokerageLogo.classList.add("has-image");
+    }
+    if (topbarBrokerageLogo && topbarBrokerageLogoImage) {
+      topbarBrokerageLogoImage.src = src;
+      topbarBrokerageLogo.classList.add("has-image");
+    }
   } else {
-    sidebarBrokerageLogoImage.removeAttribute("src");
-    sidebarBrokerageLogo.classList.remove("has-image");
+    if (sidebarBrokerageLogo && sidebarBrokerageLogoImage) {
+      sidebarBrokerageLogoImage.removeAttribute("src");
+      sidebarBrokerageLogo.classList.remove("has-image");
+    }
+    if (topbarBrokerageLogo && topbarBrokerageLogoImage) {
+      topbarBrokerageLogoImage.removeAttribute("src");
+      topbarBrokerageLogo.classList.remove("has-image");
+    }
   }
 }
 
@@ -3644,6 +3657,7 @@ function syncBrandText() {
   if (brandTitle) brandTitle.textContent = systemName;
   if (sidebarLogo) sidebarLogo.querySelector("span").textContent = "Brokr";
   if (sidebarBrokerageLogoFallback) sidebarBrokerageLogoFallback.textContent = companyName;
+  if (topbarBrokerageLogoFallback) topbarBrokerageLogoFallback.textContent = companyName;
   if (appAppleTitle) appAppleTitle.content = systemName;
   saveBrandingSetting("brokr-company-name", companyName);
   saveBrandingSetting("brokr-system-name", systemName);

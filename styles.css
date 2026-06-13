@@ -5771,6 +5771,10 @@ input[type="file"]::-webkit-file-upload-button {
   border-radius: var(--button-radius);
 }
 
+.topbar-mobile-logo {
+  display: none;
+}
+
 @media (max-width: 820px) {
   .topbar .mobile-menu {
     display: inline-flex;
@@ -6776,6 +6780,121 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 }
 
 @media (max-width: 720px) {
+  .topbar {
+    display: grid;
+    min-height: 64px;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 8px;
+    align-items: center;
+    margin: -18px -18px 18px;
+    padding: 10px 14px;
+  }
+
+  .topbar .mobile-menu {
+    display: inline-grid;
+    width: 42px;
+    min-height: 42px;
+    place-items: center;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    padding: 0;
+  }
+
+  .topbar .mobile-menu svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+  }
+
+  .topbar .header-search {
+    display: none;
+  }
+
+  .topbar .topbar-mobile-logo {
+    position: absolute;
+    left: 50%;
+    display: flex !important;
+    max-width: 138px;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .topbar-mobile-logo img {
+    display: none;
+    max-width: 138px;
+    max-height: 34px;
+    object-fit: contain;
+  }
+
+  .topbar-mobile-logo span {
+    color: var(--ink);
+    font-size: 0.82rem;
+    font-weight: 520;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .topbar-mobile-logo.has-image img {
+    display: block;
+  }
+
+  .topbar-mobile-logo.has-image span {
+    display: none;
+  }
+
+  .topbar .topbar-user-actions {
+    display: flex !important;
+    grid-column: 3;
+    justify-self: end;
+    gap: 8px;
+  }
+
+  .topbar .inbox-button {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+  }
+
+  .topbar .inbox-button svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .topbar .inbox-button span {
+    top: 3px;
+    right: 3px;
+  }
+
+  .topbar .user-chip,
+  body.sidebar-collapsed .topbar .user-chip {
+    width: 42px;
+    min-height: 42px;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+  }
+
+  .topbar .user-chip .auth-avatar,
+  body.sidebar-collapsed .topbar .user-chip .auth-avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .topbar .user-chip .auth-chip-copy,
+  body.sidebar-collapsed .topbar .user-chip .auth-chip-copy {
+    display: none;
+  }
+
+  .account-dropdown {
+    right: 0;
+    left: auto;
+    width: min(88vw, 300px);
+  }
+
   .metric-grid,
   .agent-summary,
   .transaction-summary {
