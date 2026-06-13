@@ -6187,6 +6187,12 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
   margin-bottom: 10px;
 }
 
+.overview-welcome span {
+  font-size: 0.95rem;
+  font-style: italic;
+  font-weight: 500;
+}
+
 .metric-grid {
   margin-top: 0;
 }
