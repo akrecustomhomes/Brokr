@@ -6481,3 +6481,32 @@ body.sidebar-collapsed .sidebar-brokerage-logo {
 .admin-layout {
   margin-top: 0;
 }
+
+/* Keep roster and schedule header controls consistent with the newer surface style */
+.agent-summary article {
+  border-radius: var(--surface-radius);
+  box-shadow: var(--surface-shadow);
+}
+
+.calendar-filter-row {
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.calendar-view-toggle {
+  gap: 8px;
+  border: 0;
+  background: transparent;
+}
+
+.calendar-view-toggle .theme-option {
+  border: 1px solid var(--line);
+  border-radius: var(--button-radius);
+  background: var(--panel);
+}
+
+.calendar-view-toggle .theme-option.active {
+  border-color: var(--brass);
+  background: var(--menu-active);
+}
