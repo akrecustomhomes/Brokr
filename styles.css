@@ -7316,6 +7316,24 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     text-align: left;
   }
 
+  .office-listings-actions,
+  .task-panel-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .task-panel-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .office-listings-actions .primary-action,
+  .task-panel-actions .primary-action {
+    width: 100%;
+    justify-content: center;
+  }
+
   .overview-schedule-panel .panel-header {
     display: grid;
     grid-template-columns: 1fr;
