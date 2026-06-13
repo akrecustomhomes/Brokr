@@ -6791,6 +6791,8 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     grid-template-columns: 44px minmax(0, 1fr) auto;
     gap: 8px;
     align-items: center;
+    border-bottom-color: rgba(255, 255, 255, 0.14);
+    background: #333333;
     margin: -18px -18px 18px;
     padding: 10px 14px;
   }
@@ -6800,9 +6802,9 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     width: 42px;
     min-height: 42px;
     place-items: center;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    color: var(--ink);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.88);
     padding: 0;
   }
 
@@ -6837,7 +6839,7 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   }
 
   .topbar-mobile-logo span {
-    color: var(--ink);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.82rem;
     font-weight: 520;
     line-height: 1.1;
@@ -6863,6 +6865,13 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     width: 42px;
     height: 42px;
     flex: 0 0 42px;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.88);
+  }
+
+  .topbar .inbox-button:hover {
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .topbar .inbox-button svg {
@@ -6881,6 +6890,7 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     min-height: 42px;
     justify-content: center;
     gap: 0;
+    background: #1f2226;
     padding: 0;
   }
 
