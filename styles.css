@@ -6817,20 +6817,21 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   }
 
   .topbar .topbar-mobile-logo {
-    position: absolute;
-    left: 50%;
+    position: static;
     display: flex !important;
-    max-width: 138px;
+    grid-column: 2;
+    justify-self: start;
+    max-width: 150px;
     min-height: 42px;
     align-items: center;
-    justify-content: center;
-    transform: translateX(-50%);
+    justify-content: flex-start;
+    transform: none;
     pointer-events: none;
   }
 
   .topbar-mobile-logo img {
     display: none;
-    max-width: 138px;
+    max-width: 150px;
     max-height: 34px;
     object-fit: contain;
   }
