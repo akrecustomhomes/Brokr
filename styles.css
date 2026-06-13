@@ -7334,11 +7334,13 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     justify-content: center;
   }
 
-  #agents .panel-action-row {
+  #agents .panel-action-row,
+  #transactions .panel-action-row {
     width: 100%;
   }
 
-  #agents .panel-action-row .primary-action {
+  #agents .panel-action-row .primary-action,
+  #transactions .panel-action-row .primary-action {
     width: 100%;
     justify-content: center;
   }
