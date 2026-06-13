@@ -6803,7 +6803,7 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     min-height: 42px;
     place-items: center;
     border: 1px solid var(--line);
-    background: var(--panel);
+    background: var(--paper);
     color: var(--ink);
     padding: 0;
   }
@@ -6866,7 +6866,7 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     height: 42px;
     flex: 0 0 42px;
     border-color: var(--line);
-    background: var(--panel);
+    background: var(--paper);
     color: var(--ink);
   }
 
