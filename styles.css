@@ -6595,3 +6595,32 @@ input[type="file"]::-webkit-file-upload-button,
 .agent-file-vault .form-note {
   margin: 0;
 }
+
+/* Let the full agent form scroll, including the file vault section. */
+#agent-modal .modal {
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+}
+
+#agent-form {
+  display: block;
+  max-height: none;
+  padding: 22px;
+}
+
+#agent-form .modal-header {
+  margin-bottom: 18px;
+  border-bottom: 0;
+  padding: 0;
+}
+
+#agent-form .form-grid {
+  overflow: visible;
+  padding: 0;
+}
+
+#agent-form .modal-actions {
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding: 16px 0 0;
+}
