@@ -2112,13 +2112,11 @@ function runInboxAction(itemId) {
   closeInboxDetail();
 
   if (item.actionType === "transaction" && item.transactionId) {
-    activatePage("transactions");
     openTransactionModal(Number(item.transactionId));
     return;
   }
 
   if (item.actionType === "agent" && item.agentId && canAccessAdmin()) {
-    activatePage("agents");
     openAgentModal(Number(item.agentId));
   }
 }
