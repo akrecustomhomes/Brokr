@@ -7226,6 +7226,8 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     border-radius: var(--button-radius);
     background: rgba(255, 255, 255, 0.04);
     color: rgba(255, 255, 255, 0.86);
+    padding: 0;
+    position: relative;
   }
 
   .brand .sidebar-toggle svg,
@@ -7235,9 +7237,14 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 
   .brand .sidebar-toggle::before {
     content: "X";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
     font-size: 0.88rem;
     font-weight: 520;
     line-height: 1;
+    transform: translateY(-1px);
   }
 
   .brand .sidebar-toggle:hover,
