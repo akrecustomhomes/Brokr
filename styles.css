@@ -6578,3 +6578,20 @@ input[type="file"]::-webkit-file-upload-button,
   background: var(--panel-soft);
   transform: none;
 }
+
+.agent-file-vault {
+  border: 1px solid var(--line);
+  border-radius: var(--surface-radius);
+  background: var(--panel);
+  margin: 18px 0 0;
+  padding: 18px;
+}
+
+.agent-file-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 14px;
+}
+
+.agent-file-vault .form-note {
+  margin: 0;
+}
