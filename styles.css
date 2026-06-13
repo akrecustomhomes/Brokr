@@ -5713,7 +5713,7 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
 
 /* Shared button radius and stable topbar placement */
 :root {
-  --button-radius: 10px;
+  --button-radius: 7px;
 }
 
 button,
