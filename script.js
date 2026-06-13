@@ -120,6 +120,7 @@ const rosterTabs = document.querySelectorAll(".roster-tab");
 const activeAgentCount = document.querySelector("#active-agent-count");
 const archivedAgentCount = document.querySelector("#archived-agent-count");
 const licenseAlertCount = document.querySelector("#license-alert-count");
+const agentSummaryItems = document.querySelectorAll("[data-agent-summary-action]");
 const transactionTableBody = document.querySelector("#transaction-table-body");
 const addTransactionButton = document.querySelector("#add-transaction-button");
 const transactionModal = document.querySelector("#transaction-modal");
@@ -2766,6 +2767,40 @@ rosterTabs.forEach((tab) => {
       item.setAttribute("aria-pressed", String(isActive));
     });
     renderAgents();
+  });
+});
+
+function setAgentRosterFilter(filter) {
+  agentFilter = filter;
+  rosterTabs.forEach((tab) => {
+    const isActive = tab.dataset.agentFilter === filter;
+    tab.classList.toggle("active", isActive);
+    tab.setAttribute("aria-pressed", String(isActive));
+  });
+  renderAgents();
+}
+
+function runAgentSummaryAction(action) {
+  if (action === "active" || action === "archived") {
+    setAgentRosterFilter(action);
+    return;
+  }
+
+  if (action === "license-alerts") {
+    const alertAgent = agents
+      .filter((agent) => !agent.archived)
+      .find((agent) => getLicenseStatus(agent.licenseExpiration).type === "warning");
+
+    if (alertAgent) openAgentModal(alertAgent.id);
+  }
+}
+
+agentSummaryItems.forEach((item) => {
+  item.addEventListener("click", () => runAgentSummaryAction(item.dataset.agentSummaryAction));
+  item.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    runAgentSummaryAction(item.dataset.agentSummaryAction);
   });
 });
 
