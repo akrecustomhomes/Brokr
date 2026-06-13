@@ -6567,3 +6567,14 @@ input[type="file"]::-webkit-file-upload-button,
 .form-grid .transaction-file-tile .file-upload-action {
   font-weight: 420;
 }
+
+.modal-header .icon-button {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.modal-header .icon-button:not(:disabled):hover {
+  background: var(--panel-soft);
+  transform: none;
+}
