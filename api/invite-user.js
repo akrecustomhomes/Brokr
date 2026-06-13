@@ -68,14 +68,27 @@ module.exports = async function inviteUser(request, response) {
     return;
   }
 
+  const redirectTo = request.headers.origin || "https://app.lumerealestate.com";
   const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
     data: { role, app: "Brokr", firstName, lastName },
-    redirectTo: request.headers.origin || "https://app.lumerealestate.com",
+    redirectTo,
   });
 
   if (inviteError && !/already|registered|exists/i.test(inviteError.message || "")) {
     sendJson(response, 400, { error: inviteError.message });
     return;
+  }
+
+  let sentPasswordSetup = false;
+  if (inviteError) {
+    const { error: resetError } = await adminClient.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+    if (resetError) {
+      sendJson(response, 400, { error: resetError.message });
+      return;
+    }
+    sentPasswordSetup = true;
   }
 
   const userRow = {
@@ -115,8 +128,10 @@ module.exports = async function inviteUser(request, response) {
   }
 
   sendJson(response, 200, {
-    invited: !inviteError,
+    invited: !inviteError || sentPasswordSetup,
     user: savedUser,
-    message: inviteError ? "User exists; Brokr permissions were updated." : "Invite sent.",
+    message: sentPasswordSetup
+      ? "User exists; password setup email sent and Brokr permissions were updated."
+      : "Invite sent.",
   });
 };
