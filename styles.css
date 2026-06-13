@@ -7325,4 +7325,46 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  #schedule .schedule-toolbar {
+    gap: 12px;
+  }
+
+  #schedule .calendar-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  #schedule .calendar-controls .secondary-action {
+    width: auto;
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 0.86rem;
+  }
+
+  #schedule .calendar-filter-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  #schedule .calendar-view-toggle {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+  }
+
+  #schedule .calendar-view-toggle .theme-option {
+    min-height: 36px;
+    padding: 0 8px;
+    font-size: 0.84rem;
+  }
+
+  #schedule .calendar-agent-filter {
+    min-width: 0;
+    width: 100%;
+  }
 }
