@@ -6948,6 +6948,10 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     display: none;
   }
 
+  .calendar-grid.month-view .calendar-day.before-mobile-month-start {
+    display: none;
+  }
+
   .calendar-day.today {
     border: 2px solid #8f8069;
     padding: 13px;

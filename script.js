@@ -2386,7 +2386,13 @@ function renderCalendar() {
   const days = getCalendarDays();
   const filteredTransactions = getFilteredTransactions();
   const calendarEvents = getTransactionCalendarEvents(filteredTransactions);
-  const todayKey = toDateKey(new Date());
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayKey = toDateKey(today);
+  const isCurrentMonthView =
+    calendarView === "month" &&
+    calendarDate.getFullYear() === today.getFullYear() &&
+    calendarDate.getMonth() === today.getMonth();
 
   calendarGrid.className = `calendar-grid ${calendarView}-view`;
   calendarGrid.innerHTML = "";
@@ -2396,8 +2402,9 @@ function renderCalendar() {
     const dateKey = toDateKey(day);
     const dayEvents = calendarEvents.filter((event) => event.date === dateKey);
     const isOutsideMonth = calendarView === "month" && day.getMonth() !== calendarDate.getMonth();
+    const isBeforeMobileMonthStart = isCurrentMonthView && day < today;
     const tile = document.createElement("article");
-    tile.className = `calendar-day${isOutsideMonth ? " outside-range" : ""}${dateKey === todayKey ? " today" : ""}`;
+    tile.className = `calendar-day${isOutsideMonth ? " outside-range" : ""}${isBeforeMobileMonthStart ? " before-mobile-month-start" : ""}${dateKey === todayKey ? " today" : ""}`;
     tile.innerHTML = `
       <div class="day-number">
         <span>${calendarView === "day" ? formatDate(dateKey) : day.getDate()}</span>
