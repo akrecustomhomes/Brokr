@@ -1633,13 +1633,10 @@ function renderTransactions() {
 }
 
 function renderOverviewMetrics() {
-  const currentYear = new Date().getFullYear();
   const visibleTransactions = getVisibleTransactions({ includeCancelled: true });
   const activeListings = getActiveOfficeListings().length;
   const pendingDeals = visibleTransactions.filter((transaction) => isUnderContractStatus(transaction.status)).length;
-  const ytdTransactions = visibleTransactions.filter(
-    (transaction) => transaction.status !== "Cancelled" && new Date(transaction.contractDate).getFullYear() === currentYear,
-  ).length;
+  const ytdTransactions = visibleTransactions.filter((transaction) => transaction.status !== "Cancelled").length;
   const salesVolume = visibleTransactions
     .filter((transaction) => transaction.status !== "Cancelled" && isUnderContractStatus(transaction.status))
     .reduce((total, transaction) => total + (Number(transaction.contractPrice) || 0), 0);
