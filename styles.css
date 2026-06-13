@@ -7279,3 +7279,36 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     color: rgba(255, 255, 255, 0.56);
   }
 }
+
+@media (max-width: 720px) {
+  .overview-schedule-panel .panel-header {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .overview-schedule-controls {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .overview-schedule-controls .icon-button {
+    width: 42px;
+    min-height: 42px;
+  }
+
+  .overview-schedule-controls .panel-note {
+    margin: 0;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.94rem;
+    line-height: 1.2;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

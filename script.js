@@ -1138,6 +1138,15 @@ function formatDate(dateValue) {
   }).format(new Date(`${dateValue}T00:00:00`));
 }
 
+function formatShortDate(dateValue) {
+  if (!dateValue) return "Not set";
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${dateValue}T00:00:00`));
+}
+
 function toDateKey(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -1734,7 +1743,12 @@ function renderOverviewSchedule() {
   const rangeStart = addDays(today, overviewScheduleStartOffset);
   const rangeEnd = addDays(rangeStart, overviewScheduleWindowDays - 1);
 
-  overviewScheduleRange.textContent = `${formatDate(toDateKey(rangeStart))} - ${formatDate(toDateKey(rangeEnd))}`;
+  const rangeStartKey = toDateKey(rangeStart);
+  const rangeEndKey = toDateKey(rangeEnd);
+  const compactScheduleRange = window.matchMedia("(max-width: 720px)").matches;
+  overviewScheduleRange.textContent = compactScheduleRange
+    ? `${formatShortDate(rangeStartKey)} - ${formatShortDate(rangeEndKey)}`
+    : `${formatDate(rangeStartKey)} - ${formatDate(rangeEndKey)}`;
 
   overviewScheduleGrid.innerHTML = Array.from({ length: overviewScheduleWindowDays }, (_, index) => {
     const day = addDays(rangeStart, index);
