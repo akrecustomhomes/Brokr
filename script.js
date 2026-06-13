@@ -3551,6 +3551,23 @@ function setColor(input, variable) {
   input.nextElementSibling.textContent = input.value;
 }
 
+function getContrastTextColor(hexColor) {
+  const hex = hexColor.replace("#", "");
+  if (!/^[\da-f]{6}$/i.test(hex)) return "#2a241c";
+
+  const red = parseInt(hex.slice(0, 2), 16);
+  const green = parseInt(hex.slice(2, 4), 16);
+  const blue = parseInt(hex.slice(4, 6), 16);
+  const luminance = (red * 0.299 + green * 0.587 + blue * 0.114) / 255;
+
+  return luminance > 0.58 ? "#2a241c" : "#ffffff";
+}
+
+function setBrandColor(input, colorVariable, textVariable) {
+  setColor(input, colorVariable);
+  document.documentElement.style.setProperty(textVariable, getContrastTextColor(input.value));
+}
+
 function saveBrandingSetting(key, value) {
   try {
     localStorage.setItem(key, value);
@@ -3637,13 +3654,13 @@ companyInput.addEventListener("input", syncBrandText);
 systemInput.addEventListener("input", syncBrandText);
 
 primaryColorInput.addEventListener("input", () => {
-  setColor(primaryColorInput, "--forest");
+  setBrandColor(primaryColorInput, "--forest", "--button-text");
   saveBrandingSetting("brokr-primary-color", primaryColorInput.value);
   saveBrandingToBackend();
 });
 
 accentColorInput.addEventListener("input", () => {
-  setColor(accentColorInput, "--brass");
+  setBrandColor(accentColorInput, "--brass", "--button-hover-text");
   saveBrandingSetting("brokr-accent-color", accentColorInput.value);
   saveBrandingToBackend();
 });
@@ -3684,8 +3701,8 @@ function restoreBrandingSettings() {
   if (savedAccentColor) accentColorInput.value = savedAccentColor;
 
   syncBrandText();
-  setColor(primaryColorInput, "--forest");
-  setColor(accentColorInput, "--brass");
+  setBrandColor(primaryColorInput, "--forest", "--button-text");
+  setBrandColor(accentColorInput, "--brass", "--button-hover-text");
 
   if (savedLogoSrc) {
     logoPreview.src = savedLogoSrc;
@@ -3715,8 +3732,8 @@ async function restoreBrandingFromBackend() {
   if (savedBranding.accent_color) accentColorInput.value = savedBranding.accent_color;
 
   syncBrandText();
-  setColor(primaryColorInput, "--forest");
-  setColor(accentColorInput, "--brass");
+  setBrandColor(primaryColorInput, "--forest", "--button-text");
+  setBrandColor(accentColorInput, "--brass", "--button-hover-text");
 
   if (savedBranding.logo_src) {
     logoPreview.src = savedBranding.logo_src;
@@ -3746,8 +3763,8 @@ brandingForm.addEventListener("reset", () => {
       "brokr-icon-src",
     ].forEach((key) => localStorage.removeItem(key));
     syncBrandText();
-    setColor(primaryColorInput, "--forest");
-    setColor(accentColorInput, "--brass");
+    setBrandColor(primaryColorInput, "--forest", "--button-text");
+    setBrandColor(accentColorInput, "--brass", "--button-hover-text");
     logoPreview.removeAttribute("src");
     logoPreview.classList.remove("has-image");
     setSidebarBrokerageLogo();

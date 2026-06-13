@@ -10,6 +10,8 @@
   --menu-hover: #ffffff;
   --menu-active: #efede8;
   --forest: #bdb8b2;
+  --button-text: #2a241c;
+  --button-hover-text: #ffffff;
   --leaf: #d7c19a;
   --brass: #837a6d;
   --clay: #a76543;
@@ -6277,7 +6279,19 @@ input[type="file"]::-webkit-file-upload-button:hover {
 .form-grid .transaction-file-tile .file-upload-action:hover {
   border-color: var(--brass);
   background: var(--brass);
-  color: #ffffff;
+  color: var(--button-hover-text);
+}
+
+.primary-action,
+.file-upload-action,
+.form-grid .transaction-file-tile .file-upload-action {
+  color: var(--button-text);
+}
+
+.primary-action:not(:disabled):hover,
+.file-upload-action:hover,
+.form-grid .transaction-file-tile .file-upload-action:hover {
+  color: var(--button-hover-text);
 }
 
 .sidebar .menu-item,
