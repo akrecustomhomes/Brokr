@@ -467,7 +467,7 @@ const sampleListings = [
       "Wire Fraud Disclosure": "wire-fraud-collins.pdf",
     },
     additionalDocuments: [],
-    status: "New",
+    status: "Active",
   },
   {
     id: 902,
@@ -502,7 +502,7 @@ const sampleListings = [
         notes: "Added during listing prep.",
       },
     ],
-    status: "New",
+    status: "Active",
   },
 ];
 
@@ -1331,6 +1331,11 @@ function getListingStatus(transaction) {
   today.setHours(0, 0, 0, 0);
   const listingAgeDays = Math.floor((today - startDate) / 86400000);
   return listingAgeDays <= 14 ? "New" : "Active";
+}
+
+function getEditableTransactionStatus(transaction) {
+  if (!transaction) return "Active";
+  return transaction.status === "New" ? "Active" : transaction.status || "Active";
 }
 
 function getEstimatedGrossCommission(transaction) {
@@ -2643,7 +2648,7 @@ function openTransactionModal(transactionId = null) {
   Object.entries(transactionFields.deadlines).forEach(([key, field]) => {
     field.value = transaction?.deadlines?.[key] || "";
   });
-  transactionFields.status.value = transaction ? getListingStatus(transaction) : "New";
+  transactionFields.status.value = getEditableTransactionStatus(transaction);
   transactionFields.propertyAddress.value = transaction?.propertyAddress || "";
   renderTransactionFileVault(transaction);
   resetAdditionalDocumentComposer();
