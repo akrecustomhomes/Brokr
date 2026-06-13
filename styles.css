@@ -3244,8 +3244,8 @@ body.overview-active .topbar > div:not(.overview-actions) {
 #add-company-task-button:hover,
 #add-agent-button:hover,
 #add-user-button:hover {
-  border-color: #aaa39c;
-  background: #aaa39c;
+  border-color: var(--brass);
+  background: var(--brass);
 }
 
 #add-additional-document-button:hover {
@@ -6239,6 +6239,13 @@ button:not(:disabled):hover,
 input[type="file"]::file-selector-button:hover,
 input[type="file"]::-webkit-file-upload-button:hover {
   transform: translateY(-2px);
+}
+
+.primary-action:not(:disabled):hover,
+.form-grid .transaction-file-tile .file-upload-action:hover {
+  border-color: var(--brass);
+  background: var(--brass);
+  color: #ffffff;
 }
 
 .sidebar .menu-item,
