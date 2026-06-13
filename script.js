@@ -2193,7 +2193,7 @@ async function deleteUserFromBackend(user) {
 }
 
 function getCommissionSplit(agent) {
-  return Number.isFinite(agent.commissionSplit) ? agent.commissionSplit : 70;
+  return Number.isFinite(Number(agent?.commissionSplit)) ? Number(agent.commissionSplit) : 70;
 }
 
 function getAgentProduction(agentId) {
