@@ -6662,7 +6662,8 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 }
 
 .metric-grid,
-.agent-summary {
+.agent-summary,
+.transaction-summary {
   display: grid;
   overflow: hidden;
   gap: 0;
@@ -6686,8 +6687,14 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.transaction-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
 .metric-card,
-.agent-summary article {
+.agent-summary article,
+.transaction-summary article {
   min-height: 96px;
   border: 0;
   border-right: 1px solid var(--line);
@@ -6699,26 +6706,30 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 }
 
 .metric-card p,
-.agent-summary p {
+.agent-summary p,
+.transaction-summary p {
   margin-bottom: 16px;
   font-size: 0.78rem;
 }
 
 .metric-card strong,
-.agent-summary strong {
+.agent-summary strong,
+.transaction-summary strong {
   font-size: clamp(1.65rem, 2.2vw, 2.35rem);
   line-height: 1;
 }
 
 .metric-card:last-child,
-.agent-summary article:last-child {
+.agent-summary article:last-child,
+.transaction-summary article:last-child {
   border-right: 0;
 }
 
 .metric-card[role="button"]:hover,
 .metric-card[role="button"]:focus-visible,
 .agent-summary article[role="button"]:hover,
-.agent-summary article[role="button"]:focus-visible {
+.agent-summary article[role="button"]:focus-visible,
+.transaction-summary article:hover {
   background: rgba(42, 36, 28, 0.035);
   border-color: var(--line);
   box-shadow: none;
@@ -6747,18 +6758,21 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 
 @media (max-width: 720px) {
   .metric-grid,
-  .agent-summary {
+  .agent-summary,
+  .transaction-summary {
     grid-template-columns: 1fr;
   }
 
   .metric-card,
-  .agent-summary article {
+  .agent-summary article,
+  .transaction-summary article {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
 
   .metric-card:last-child,
-  .agent-summary article:last-child {
+  .agent-summary article:last-child,
+  .transaction-summary article:last-child {
     border-bottom: 0;
   }
 }

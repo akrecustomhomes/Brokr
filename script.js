@@ -130,6 +130,12 @@ const cancelTransactionButton = document.querySelector("#cancel-transaction-butt
 const cancelCalendarEventButton = document.querySelector("#cancel-calendar-event-button");
 const deleteTransactionButton = document.querySelector("#delete-transaction-button");
 const transactionEmptyState = document.querySelector("#transaction-empty-state");
+const transactionSummary = {
+  total: document.querySelector("#transaction-total-count"),
+  active: document.querySelector("#transaction-active-count"),
+  pending: document.querySelector("#transaction-pending-count"),
+  closed: document.querySelector("#transaction-closed-count"),
+};
 const transactionClientLabel = document.querySelector("#transaction-client-label");
 const transactionFileGrid = document.querySelector("#transaction-file-grid");
 const additionalDocumentList = document.querySelector("#additional-document-list");
@@ -1596,9 +1602,17 @@ function getTransactionCalendarEvents(sourceTransactions) {
 
 function renderTransactions() {
   const visibleTransactions = getVisibleTransactions({ includeCancelled: true });
+  const activeTransactions = visibleTransactions.filter((transaction) => transaction.status !== "Cancelled");
+  const pendingTransactions = activeTransactions.filter(
+    (transaction) => isUnderContractStatus(transaction.status) && transaction.status !== "Closed",
+  );
   transactionTableBody.innerHTML = "";
   addTransactionButton.hidden = isAgentUser();
   transactionEmptyState.classList.toggle("visible", visibleTransactions.length === 0);
+  transactionSummary.total.textContent = activeTransactions.length;
+  transactionSummary.active.textContent = getActiveOfficeListings().length;
+  transactionSummary.pending.textContent = pendingTransactions.length;
+  transactionSummary.closed.textContent = activeTransactions.filter((transaction) => transaction.status === "Closed").length;
 
   visibleTransactions.forEach((transaction) => {
     const sideLabel = transaction.side === "buyer" ? "Buyer rep" : "Seller rep";
