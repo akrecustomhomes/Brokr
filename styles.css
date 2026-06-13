@@ -6729,7 +6729,9 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 .metric-card[role="button"]:focus-visible,
 .agent-summary article[role="button"]:hover,
 .agent-summary article[role="button"]:focus-visible,
-.transaction-summary article:hover {
+.transaction-summary article[role="button"]:hover,
+.transaction-summary article[role="button"]:focus-visible,
+.transaction-summary article.active {
   background: rgba(42, 36, 28, 0.035);
   border-color: var(--line);
   box-shadow: none;
@@ -6742,7 +6744,8 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 }
 
 .metric-card[role="button"]:focus-visible,
-.agent-summary article[role="button"]:focus-visible {
+.agent-summary article[role="button"]:focus-visible,
+.transaction-summary article[role="button"]:focus-visible {
   outline: 2px solid var(--brass);
   outline-offset: -3px;
 }

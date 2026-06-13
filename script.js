@@ -1664,6 +1664,11 @@ function setTransactionFilter(filter) {
     tab.classList.toggle("active", isActive);
     tab.setAttribute("aria-pressed", String(isActive));
   });
+  transactionSummaryItems.forEach((item) => {
+    const isActive = item.dataset.transactionSummaryFilter === filter;
+    item.classList.toggle("active", isActive);
+    item.setAttribute("aria-pressed", String(isActive));
+  });
   renderTransactions();
 }
 
@@ -3213,6 +3218,7 @@ transactionSummaryItems.forEach((item) => {
     setTransactionFilter(item.dataset.transactionSummaryFilter);
   });
 });
+setTransactionFilter(transactionFilter);
 
 transactionTableBody.addEventListener("click", (event) => {
   const transactionRow = event.target.closest("[data-transaction-edit]");
