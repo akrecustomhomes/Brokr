@@ -7334,6 +7334,15 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     justify-content: center;
   }
 
+  #agents .panel-action-row {
+    width: 100%;
+  }
+
+  #agents .panel-action-row .primary-action {
+    width: 100%;
+    justify-content: center;
+  }
+
   .overview-schedule-panel .panel-header {
     display: grid;
     grid-template-columns: 1fr;
