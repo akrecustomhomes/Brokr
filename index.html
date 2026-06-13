@@ -15,8 +15,11 @@
     <div class="app-shell">
       <aside class="sidebar" aria-label="Main navigation">
         <div class="brand">
-          <div class="brand-logo" id="sidebar-logo">
-            <span>Brokr</span>
+          <div class="sidebar-mobile-brand-copy">
+            <div class="brand-logo" id="sidebar-logo">
+              <span>Brokr</span>
+            </div>
+            <p class="sidebar-mobile-user" id="sidebar-mobile-user">Jared Alvey</p>
           </div>
           <button class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true" title="Toggle sidebar">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -27,6 +30,11 @@
             <span>Toggle sidebar</span>
           </button>
         </div>
+
+        <label class="sidebar-search" aria-label="Search transactions and agents">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.18 10.43l4.44 4.45-1.41 1.41-4.45-4.44A6.5 6.5 0 1 1 10.5 4Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z" /></svg>
+          <input type="search" placeholder="Search transactions and agents" />
+        </label>
 
         <nav class="menu" aria-label="Brokr sections">
           <button class="menu-item active" type="button" data-page="overview" aria-current="page">

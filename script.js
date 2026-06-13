@@ -20,6 +20,7 @@ const authToggle = document.querySelector("#auth-toggle");
 const authStatus = document.querySelector("#auth-status");
 const authName = document.querySelector("#auth-name");
 const authAvatar = document.querySelector(".auth-avatar");
+const sidebarMobileUser = document.querySelector("#sidebar-mobile-user");
 const authActionText = document.querySelector("#auth-action-text");
 const accountMenu = document.querySelector(".account-menu");
 const accountDropdown = document.querySelector("#account-dropdown");
@@ -733,6 +734,11 @@ function setSidebarCollapsed(isCollapsed) {
 }
 
 sidebarToggle.addEventListener("click", () => {
+  if (window.matchMedia("(max-width: 980px)").matches) {
+    document.body.classList.remove("menu-open");
+    return;
+  }
+
   setSidebarCollapsed(!document.body.classList.contains("sidebar-collapsed"));
 });
 
@@ -799,6 +805,7 @@ function renderAuthIdentity(user = currentUser) {
 
   authStatus.textContent = isLoggedIn ? currentUserRole : "Signed out";
   authName.textContent = isLoggedIn ? displayName : "Guest";
+  if (sidebarMobileUser) sidebarMobileUser.textContent = isLoggedIn ? displayName : "Guest";
   authAvatar.innerHTML = getAuthAvatarMarkup(user, displayName);
   authAvatar.classList.toggle("has-image", authAvatar.querySelector("img") !== null);
   if (accountMenuName) accountMenuName.textContent = isLoggedIn ? displayName : "Guest";
