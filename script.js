@@ -448,6 +448,7 @@ const sampleListings = [
     clientEmail: "avery.collins@example.com",
     clientPhone: "(555) 431-2088",
     propertyAddress: "2818 Forest View Lane, Evergreen, CO 80439",
+    listingDate: "2026-06-10",
     contractDate: "",
     listPrice: 1195000,
     contractPrice: 0,
@@ -474,6 +475,7 @@ const sampleListings = [
     clientEmail: "nora.whitaker@example.com",
     clientPhone: "(555) 782-4109",
     propertyAddress: "3940 Clay Street, Denver, CO 80211",
+    listingDate: "2026-06-10",
     contractDate: "",
     listPrice: 735000,
     contractPrice: 0,
@@ -520,11 +522,13 @@ transactions = transactions.map((transaction) => {
     ...transaction,
     listingTitle: transaction.listingTitle || sampleListing.listingTitle,
     listingPhotoSrc: transaction.listingPhotoSrc || sampleListing.listingPhotoSrc,
+    listingDate: transaction.listingDate || sampleListing.listingDate,
     additionalDocuments: transaction.additionalDocuments || sampleListing.additionalDocuments || [],
   };
   sampleListingsUpdated ||=
     updatedTransaction.listingTitle !== transaction.listingTitle ||
-    updatedTransaction.listingPhotoSrc !== transaction.listingPhotoSrc;
+    updatedTransaction.listingPhotoSrc !== transaction.listingPhotoSrc ||
+    updatedTransaction.listingDate !== transaction.listingDate;
   return updatedTransaction;
 });
 if (sampleListingsUpdated) saveTransactions();
@@ -1293,6 +1297,23 @@ function isUnderContractStatus(status) {
   return ["Under Contract", "Closing", "Closed", "Review Needed"].includes(status);
 }
 
+function isSellerListing(transaction) {
+  return transaction.side === "seller" && !isUnderContractStatus(transaction.status) && transaction.status !== "Cancelled";
+}
+
+function getListingStatus(transaction) {
+  if (!isSellerListing(transaction)) return transaction.status;
+
+  const listingDate = transaction.listingDate || transaction.createdAt || toDateKey(new Date());
+  const startDate = new Date(`${listingDate}T00:00:00`);
+  if (Number.isNaN(startDate.getTime())) return transaction.status || "New";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const listingAgeDays = Math.floor((today - startDate) / 86400000);
+  return listingAgeDays <= 14 ? "New" : "Active";
+}
+
 function getEstimatedGrossCommission(transaction) {
   if (transaction.commissionType === "flat") return Number(transaction.commissionFlatFee) || 0;
 
@@ -1528,7 +1549,7 @@ function getTransactionFileSummary(transaction) {
 
 function getActiveOfficeListings() {
   return getVisibleTransactions({ includeCancelled: false }).filter(
-    (transaction) => transaction.side === "seller" && transaction.status === "New",
+    (transaction) => transaction.side === "seller" && ["New", "Active"].includes(getListingStatus(transaction)),
   );
 }
 
@@ -1557,6 +1578,7 @@ function renderOfficeListings() {
   officeListingsGrid.innerHTML = visibleListings
     .map((listing) => {
       const title = getListingTitle(listing);
+      const listingStatus = getListingStatus(listing);
       const photo = listing.listingPhotoSrc
         ? `<img src="${listing.listingPhotoSrc}" alt="${title}" />`
         : `<div class="listing-photo-placeholder"><span>${title.slice(0, 1)}</span></div>`;
@@ -1569,7 +1591,7 @@ function renderOfficeListings() {
             <p>${listing.propertyAddress || "No property address"}</p>
           </div>
           <div class="office-listing-meta">
-            <span><i aria-hidden="true"></i>Active</span>
+            <span><i aria-hidden="true"></i>${listingStatus}</span>
             <strong>${formatCurrency(listing.listPrice || 0)}</strong>
           </div>
         </article>
@@ -1604,7 +1626,7 @@ function getTransactionCalendarEvents(sourceTransactions) {
 }
 
 function matchesTransactionFilter(transaction, filter = transactionFilter) {
-  if (filter === "active") return transaction.side === "seller" && transaction.status === "New";
+  if (filter === "active") return transaction.side === "seller" && ["New", "Active"].includes(getListingStatus(transaction));
   if (filter === "pending") return isUnderContractStatus(transaction.status) && transaction.status !== "Closed";
   if (filter === "closed") return transaction.status === "Closed";
   return transaction.status !== "Cancelled";
@@ -1627,6 +1649,7 @@ function renderTransactions() {
 
   filteredTransactions.forEach((transaction) => {
     const sideLabel = transaction.side === "buyer" ? "Buyer rep" : "Seller rep";
+    const statusLabel = getListingStatus(transaction);
     const fileSummary = getTransactionFileSummary(transaction);
     const row = document.createElement("tr");
     row.className = "clickable-row";
@@ -1651,7 +1674,7 @@ function renderTransactions() {
         <div>${fileSummary.uploadedCount}/${fileSummary.requiredDocs.length} files complete</div>
         <div class="license-detail">Contract ${formatDate(transaction.contractDate)} | ${fileSummary.missingCount ? `${fileSummary.missingCount} missing` : "Complete"}</div>
       </td>
-      <td><span class="status-pill ${transaction.status === "Review Needed" ? "warning" : ""}">${transaction.status}</span></td>
+      <td><span class="status-pill ${statusLabel === "Review Needed" ? "warning" : ""}">${statusLabel}</span></td>
     `;
     transactionTableBody.appendChild(row);
   });
@@ -2589,7 +2612,7 @@ function openTransactionModal(transactionId = null) {
   Object.entries(transactionFields.deadlines).forEach(([key, field]) => {
     field.value = transaction?.deadlines?.[key] || "";
   });
-  transactionFields.status.value = transaction?.status || "New";
+  transactionFields.status.value = transaction ? getListingStatus(transaction) : "New";
   transactionFields.propertyAddress.value = transaction?.propertyAddress || "";
   renderTransactionFileVault(transaction);
   resetAdditionalDocumentComposer();
@@ -3442,6 +3465,10 @@ transactionForm.addEventListener("submit", async (event) => {
     propertyAddress: transactionFields.propertyAddress.value.trim(),
     listingTitle: transactionFields.side.value === "seller" ? transactionFields.listingTitle.value.trim() : "",
     listingPhotoSrc,
+    listingDate:
+      transactionFields.side.value === "seller"
+        ? existingTransaction?.listingDate || existingTransaction?.createdAt || toDateKey(new Date())
+        : "",
     contractDate: transactionFields.contractDate.value,
     listPrice: transactionFields.side.value === "seller" ? parseCurrencyInput(transactionFields.listPrice.value) : 0,
     contractPrice: isUnderContractStatus(transactionFields.status.value)
