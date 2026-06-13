@@ -1174,11 +1174,11 @@ function formatCurrency(value) {
 }
 
 function formatAgentAddress(agent) {
-  if (agent.address) return agent.address;
-
   const stateZip = [agent.state, agent.zip].filter(Boolean).join(" ");
   const cityStateZip = [agent.city, stateZip].filter(Boolean).join(", ");
-  return [agent.street, cityStateZip].filter(Boolean).join("<br />") || "No address on file";
+  const splitAddress = [agent.street, cityStateZip].filter(Boolean).join("<br />");
+
+  return splitAddress || agent.address || "No address on file";
 }
 
 function splitLegacyAddress(address = "") {
