@@ -7322,6 +7322,19 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     align-items: stretch;
   }
 
+  .office-listings-panel .panel-header,
+  .company-tasks-panel .panel-header {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .office-listings-panel .panel-header > div:first-child,
+  .company-tasks-panel .panel-header > div:first-child {
+    width: 100%;
+  }
+
   .task-panel-actions {
     display: grid;
     grid-template-columns: 1fr;
