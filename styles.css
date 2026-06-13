@@ -6624,3 +6624,39 @@ input[type="file"]::-webkit-file-upload-button,
   margin-top: 18px;
   padding: 16px 0 0;
 }
+
+body.sidebar-collapsed .menu-item::after {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 12px);
+  z-index: 80;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--button-radius);
+  background: #1f2226;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  color: #ffffff;
+  content: attr(data-menu-label);
+  font-size: 0.82rem;
+  font-weight: 420;
+  line-height: 1;
+  opacity: 0;
+  padding: 9px 11px;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(-4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+  white-space: nowrap;
+}
+
+body.sidebar-collapsed .menu-item:hover::after,
+body.sidebar-collapsed .menu-item:focus-visible::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+@media (min-width: 981px) {
+  body.sidebar-collapsed .sidebar {
+    overflow: visible;
+  }
+}

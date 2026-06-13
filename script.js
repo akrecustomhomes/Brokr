@@ -237,6 +237,13 @@ const agentFields = {
   contractFile: document.querySelector("#agent-contract-file"),
   otherFile: document.querySelector("#agent-other-file"),
 };
+
+menuItems.forEach((item) => {
+  const label = item.querySelector("span:last-child")?.textContent?.trim() || pageTitles[item.dataset.page] || "Menu item";
+  item.dataset.menuLabel = label;
+  item.setAttribute("aria-label", label);
+  item.setAttribute("title", label);
+});
 const agentProfilePreview = document.querySelector("#agent-profile-preview");
 const agentLicenseTile = document.querySelector("#agent-license-tile");
 const agentLicenseStatus = document.querySelector("#agent-license-status");
