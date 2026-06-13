@@ -7281,6 +7281,19 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
 }
 
 @media (max-width: 720px) {
+  .section-toolbar,
+  .schedule-toolbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .section-toolbar > div:first-child {
+    width: 100%;
+    text-align: left;
+  }
+
   .overview-schedule-panel .panel-header {
     display: grid;
     grid-template-columns: 1fr;
