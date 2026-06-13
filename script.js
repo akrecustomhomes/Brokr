@@ -1395,7 +1395,7 @@ function renderAgents() {
     row.setAttribute("role", "button");
     row.setAttribute("aria-label", `Edit agent ${agent.firstName} ${agent.lastName}`);
     row.innerHTML = `
-      <td>
+      <td data-label="Name">
         <div class="agent-identity">
           ${renderAgentAvatar(agent)}
           <div class="agent-name">
@@ -1404,18 +1404,18 @@ function renderAgents() {
           </div>
         </div>
       </td>
-      <td>
+      <td data-label="Contact">
         <div class="agent-contact">${agent.email}<br />${agent.phone || "No phone on file"}</div>
       </td>
-      <td><div class="agent-contact">${formatAgentAddress(agent)}</div></td>
-      <td>
+      <td data-label="Address"><div class="agent-contact">${formatAgentAddress(agent)}</div></td>
+      <td data-label="Files">
         <div>${agent.licenseFileName || "No license uploaded"}</div>
         <div class="license-detail">Expires ${formatDate(agent.licenseExpiration)}</div>
         <div class="license-detail">${agent.contractFileName ? `Contract: ${agent.contractFileName}` : "No agent/broker contract"}</div>
         <div class="license-detail">${agent.otherFileName ? `Other: ${agent.otherFileName}` : "No other files"}</div>
       </td>
-      <td><span class="status-pill ${agent.archived ? "archived" : licenseStatus.type}">${agent.archived ? "Archived" : licenseStatus.label}</span></td>
-      <td>
+      <td data-label="Status"><span class="status-pill ${agent.archived ? "archived" : licenseStatus.type}">${agent.archived ? "Archived" : licenseStatus.label}</span></td>
+      <td data-label="Actions">
         <div class="table-actions">
           <button class="text-action" type="button" data-agent-edit="${agent.id}">Edit</button>
           <button class="text-action ${agent.archived ? "" : "archive"}" type="button" data-agent-archive="${agent.id}">
@@ -2207,7 +2207,7 @@ function renderUsers() {
     row.dataset.userEdit = user.id;
     row.tabIndex = 0;
     row.innerHTML = `
-      <td>
+      <td data-label="User">
         <div class="agent-identity">
           ${renderUserAvatar(user)}
           <div class="agent-name">
@@ -2216,14 +2216,14 @@ function renderUsers() {
           </div>
         </div>
       </td>
-      <td>${getUserAgentName(user.agentId)}</td>
-      <td><span class="status-pill">${user.role}</span></td>
-      <td>
+      <td data-label="Linked Agent">${getUserAgentName(user.agentId)}</td>
+      <td data-label="Role"><span class="status-pill">${user.role}</span></td>
+      <td data-label="File Access">
         <div>${user.canUpload ? "Can upload files" : "No upload access"}</div>
         <div class="license-detail">${user.permissionScope || "Own transactions only"}</div>
       </td>
-      <td><span class="status-pill ${user.status === "Suspended" ? "warning" : ""}">${user.status}</span></td>
-      <td>
+      <td data-label="Status"><span class="status-pill ${user.status === "Suspended" ? "warning" : ""}">${user.status}</span></td>
+      <td data-label="Actions">
         <div class="table-actions">
           <button class="text-action" type="button" data-user-edit="${user.id}">Edit</button>
           <button class="text-action danger-action" type="button" data-user-delete="${user.id}">Delete</button>

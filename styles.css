@@ -6976,6 +6976,100 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     font-size: 0.86rem;
   }
 
+  #agents .agent-table-wrap,
+  #users .agent-table-wrap {
+    overflow: visible;
+  }
+
+  #agents .agent-table,
+  #users .agent-table {
+    display: block;
+    min-width: 0;
+  }
+
+  #agents .agent-table thead,
+  #users .agent-table thead {
+    display: none;
+  }
+
+  #agents .agent-table tbody,
+  #users .agent-table tbody {
+    display: grid;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  #agents .agent-table tr,
+  #users .agent-table tr {
+    display: grid;
+    gap: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--surface-radius);
+    background: var(--panel);
+    box-shadow: var(--surface-shadow);
+    overflow: hidden;
+  }
+
+  #agents .agent-table tr:hover,
+  #users .agent-table tr:hover {
+    background: var(--panel);
+    transform: none;
+  }
+
+  #agents .agent-table td,
+  #users .agent-table td {
+    display: grid;
+    grid-template-columns: minmax(86px, 0.34fr) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    border-bottom: 1px solid var(--line);
+    padding: 12px;
+    font-size: 0.86rem;
+  }
+
+  #agents .agent-table td:first-child,
+  #users .agent-table td:first-child {
+    display: block;
+    padding: 14px;
+  }
+
+  #agents .agent-table td:last-child,
+  #users .agent-table td:last-child {
+    border-bottom: 0;
+  }
+
+  #agents .agent-table td:not(:first-child)::before,
+  #users .agent-table td:not(:first-child)::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 0.68rem;
+    font-weight: 520;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  #agents .agent-table .agent-identity,
+  #users .agent-table .agent-identity {
+    align-items: center;
+  }
+
+  #agents .agent-table .table-actions,
+  #users .agent-table .table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  #agents .agent-table .table-actions .text-action,
+  #users .agent-table .table-actions .text-action {
+    min-height: 34px;
+    border: 1px solid var(--line);
+    border-radius: var(--button-radius);
+    background: var(--panel-soft);
+    padding: 0 10px;
+  }
+
   .metric-grid,
   .agent-summary,
   .transaction-summary {
