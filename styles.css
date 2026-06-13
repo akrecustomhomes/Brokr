@@ -6516,3 +6516,20 @@ body.sidebar-collapsed .sidebar-brokerage-logo {
   border-color: var(--brass);
   background: var(--menu-active);
 }
+
+button,
+.primary-action,
+.secondary-action,
+.danger-action,
+.file-link-button,
+.inbox-button,
+.tab-button,
+.schedule-view-button,
+.theme-option,
+.modal-actions button,
+input[type="file"]::file-selector-button,
+input[type="file"]::-webkit-file-upload-button,
+.file-upload-action,
+.form-grid .transaction-file-tile .file-upload-action {
+  font-weight: 420;
+}
