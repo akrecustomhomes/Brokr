@@ -1661,23 +1661,23 @@ function renderTransactions() {
     row.setAttribute("role", "button");
     row.setAttribute("aria-label", `Open transaction details for ${transaction.clientName}`);
     row.innerHTML = `
-      <td>
+      <td data-label="Client">
         <div class="agent-name">
           <strong>${transaction.clientName}</strong>
           <span>${transaction.side === "buyer" ? "Buyer" : "Seller"}</span>
         </div>
       </td>
-      <td>${getAgentName(transaction.agentId)}</td>
-      <td><span class="status-pill">${sideLabel}</span></td>
-      <td>
+      <td data-label="Agent">${getAgentName(transaction.agentId)}</td>
+      <td data-label="Side"><span class="status-pill">${sideLabel}</span></td>
+      <td data-label="Contact">
         <div class="agent-contact">${transaction.clientEmail || "No email on file"}<br />${transaction.clientPhone || "No phone on file"}</div>
       </td>
-      <td>${transaction.propertyAddress || "No property address yet"}</td>
-      <td>
+      <td data-label="Property">${transaction.propertyAddress || "No property address yet"}</td>
+      <td data-label="Files">
         <div>${fileSummary.uploadedCount}/${fileSummary.requiredDocs.length} files complete</div>
         <div class="license-detail">Contract ${formatDate(transaction.contractDate)} | ${fileSummary.missingCount ? `${fileSummary.missingCount} missing` : "Complete"}</div>
       </td>
-      <td><span class="status-pill ${statusLabel === "Review Needed" ? "warning" : ""}">${statusLabel}</span></td>
+      <td data-label="Status"><span class="status-pill ${statusLabel === "Review Needed" ? "warning" : ""}">${statusLabel}</span></td>
     `;
     transactionTableBody.appendChild(row);
   });

@@ -6977,30 +6977,35 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   }
 
   #agents .agent-table-wrap,
-  #users .agent-table-wrap {
+  #users .agent-table-wrap,
+  #transactions .agent-table-wrap {
     overflow: visible;
   }
 
   #agents .agent-table,
-  #users .agent-table {
+  #users .agent-table,
+  #transactions .agent-table {
     display: block;
     min-width: 0;
   }
 
   #agents .agent-table thead,
-  #users .agent-table thead {
+  #users .agent-table thead,
+  #transactions .agent-table thead {
     display: none;
   }
 
   #agents .agent-table tbody,
-  #users .agent-table tbody {
+  #users .agent-table tbody,
+  #transactions .agent-table tbody {
     display: grid;
     gap: 12px;
     padding: 12px;
   }
 
   #agents .agent-table tr,
-  #users .agent-table tr {
+  #users .agent-table tr,
+  #transactions .agent-table tr {
     display: grid;
     gap: 0;
     border: 1px solid var(--line);
@@ -7011,13 +7016,15 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   }
 
   #agents .agent-table tr:hover,
-  #users .agent-table tr:hover {
+  #users .agent-table tr:hover,
+  #transactions .agent-table tr:hover {
     background: var(--panel);
     transform: none;
   }
 
   #agents .agent-table td,
-  #users .agent-table td {
+  #users .agent-table td,
+  #transactions .agent-table td {
     display: grid;
     grid-template-columns: minmax(86px, 0.34fr) minmax(0, 1fr);
     gap: 12px;
@@ -7028,18 +7035,21 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   }
 
   #agents .agent-table td:first-child,
-  #users .agent-table td:first-child {
+  #users .agent-table td:first-child,
+  #transactions .agent-table td:first-child {
     display: block;
     padding: 14px;
   }
 
   #agents .agent-table td:last-child,
-  #users .agent-table td:last-child {
+  #users .agent-table td:last-child,
+  #transactions .agent-table td:last-child {
     border-bottom: 0;
   }
 
   #agents .agent-table td:not(:first-child)::before,
-  #users .agent-table td:not(:first-child)::before {
+  #users .agent-table td:not(:first-child)::before,
+  #transactions .agent-table td:not(:first-child)::before {
     content: attr(data-label);
     color: var(--muted);
     font-size: 0.68rem;
@@ -7051,6 +7061,31 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   #agents .agent-table .agent-identity,
   #users .agent-table .agent-identity {
     align-items: center;
+  }
+
+  #transactions .transaction-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    border-bottom: 0;
+    padding: 12px 12px 0;
+  }
+
+  #transactions .transaction-tabs .roster-tab {
+    min-width: 0;
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: var(--button-radius);
+    background: var(--panel-soft);
+    margin: 0;
+    padding: 0 10px;
+    box-shadow: var(--button-shadow);
+  }
+
+  #transactions .transaction-tabs .roster-tab.active {
+    border-color: var(--line);
+    background: var(--panel);
+    box-shadow: var(--surface-shadow);
   }
 
   #agents .agent-table .table-actions,
