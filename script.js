@@ -20,6 +20,13 @@ const authToggle = document.querySelector("#auth-toggle");
 const authStatus = document.querySelector("#auth-status");
 const authName = document.querySelector("#auth-name");
 const authAvatar = document.querySelector(".auth-avatar");
+const authActionText = document.querySelector("#auth-action-text");
+const accountMenu = document.querySelector(".account-menu");
+const accountDropdown = document.querySelector("#account-dropdown");
+const accountProfileButton = document.querySelector("#account-profile-button");
+const accountLogoutButton = document.querySelector("#account-logout-button");
+const accountMenuName = document.querySelector("#account-menu-name");
+const accountMenuEmail = document.querySelector("#account-menu-email");
 const authGate = document.querySelector("#auth-gate");
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
@@ -41,12 +48,17 @@ const accentColorInput = document.querySelector("#accent-color");
 const logoUpload = document.querySelector("#logo-upload");
 const iconUpload = document.querySelector("#icon-upload");
 const appFavicon = document.querySelector("#app-favicon");
+const appAppleTouchIcon = document.querySelector("#app-apple-touch-icon");
+const appAppleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
 const companyPreview = document.querySelector("#company-preview");
 const systemPreview = document.querySelector("#system-preview");
 const logoPreview = document.querySelector("#logo-preview");
-const overviewLogo = document.querySelector("#overview-logo");
-const overviewLogoImage = document.querySelector("#overview-logo-image");
+const sidebarLogo = document.querySelector("#sidebar-logo");
+const sidebarBrokerageLogo = document.querySelector("#sidebar-brokerage-logo");
+const sidebarBrokerageLogoImage = document.querySelector("#sidebar-brokerage-logo-image");
+const sidebarBrokerageLogoFallback = document.querySelector("#sidebar-brokerage-logo-fallback");
 const overviewDate = document.querySelector("#overview-date");
+const overviewWelcomeTitle = document.querySelector("#overview-welcome-title");
 const brokerContactForm = document.querySelector("#broker-contact-form");
 const brokerContactFields = {
   name: document.querySelector("#broker-contact-name"),
@@ -75,6 +87,8 @@ const overviewScheduleGrid = document.querySelector("#overview-schedule-grid");
 const overviewScheduleRange = document.querySelector("#overview-schedule-range");
 const overviewSchedulePrev = document.querySelector("#overview-schedule-prev");
 const overviewScheduleNext = document.querySelector("#overview-schedule-next");
+const officeListingsGrid = document.querySelector("#office-listings-grid");
+const officeListingsToggle = document.querySelector("#office-listings-toggle");
 const companyTaskList = document.querySelector("#company-task-list");
 const companyTaskOpenCount = document.querySelector("#company-task-open-count");
 const addCompanyTaskButton = document.querySelector("#add-company-task-button");
@@ -126,8 +140,12 @@ const transactionFields = {
   clientPhone: document.querySelector("#transaction-client-phone"),
   contractDate: document.querySelector("#transaction-contract-date"),
   listPrice: document.querySelector("#transaction-list-price"),
+  listingTitle: document.querySelector("#transaction-listing-title"),
+  listingPhoto: document.querySelector("#transaction-listing-photo"),
   contractPrice: document.querySelector("#transaction-contract-price"),
   listPriceField: document.querySelector("#transaction-list-price-field"),
+  listingTitleField: document.querySelector("#transaction-listing-title-field"),
+  listingPhotoField: document.querySelector("#transaction-listing-photo-field"),
   contractPriceField: document.querySelector("#transaction-contract-price-field"),
   commissionType: document.querySelector("#transaction-commission-type"),
   commissionRate: document.querySelector("#transaction-commission-rate"),
@@ -402,11 +420,104 @@ let transactions = [
   },
 ];
 transactions = JSON.parse(localStorage.getItem("brokr-transactions") || "null") || transactions;
+const sampleListings = [
+  {
+    id: 901,
+    agentId: 1,
+    side: "seller",
+    clientName: "Avery Collins",
+    listingTitle: "Forest View Modern Retreat",
+    listingPhotoSrc: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+    clientEmail: "avery.collins@example.com",
+    clientPhone: "(555) 431-2088",
+    propertyAddress: "2818 Forest View Lane, Evergreen, CO 80439",
+    contractDate: "",
+    listPrice: 1195000,
+    contractPrice: 0,
+    commissionType: "percent",
+    commissionRate: 2.8,
+    commissionFlatFee: 0,
+    deadlines: {},
+    fileNames: ["exclusive-right-to-sell-collins.pdf", "mls-input-evergreen.pdf"],
+    documents: {
+      "MLS Listing Input Form": "mls-input-evergreen.pdf",
+      "Exclusive Right To Sell": "exclusive-right-to-sell-collins.pdf",
+      "Wire Fraud Disclosure": "wire-fraud-collins.pdf",
+    },
+    additionalDocuments: [],
+    status: "New",
+  },
+  {
+    id: 902,
+    agentId: 2,
+    side: "seller",
+    clientName: "Nora Whitaker",
+    listingTitle: "Clay Street Bungalow",
+    listingPhotoSrc: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
+    clientEmail: "nora.whitaker@example.com",
+    clientPhone: "(555) 782-4109",
+    propertyAddress: "3940 Clay Street, Denver, CO 80211",
+    contractDate: "",
+    listPrice: 735000,
+    contractPrice: 0,
+    commissionType: "flat",
+    commissionRate: 0,
+    commissionFlatFee: 18500,
+    deadlines: {},
+    fileNames: ["seller-disclosures-whitaker.pdf"],
+    documents: {
+      "Seller Property Condition Disclosures": "seller-disclosures-whitaker.pdf",
+      "Wire Fraud Disclosure": "wire-fraud-whitaker.pdf",
+    },
+    additionalDocuments: [
+      {
+        id: 1,
+        type: "Disclosure",
+        name: "Lead-Based Paint Disclosure",
+        date: "2026-06-10",
+        fileName: "lead-based-paint-whitaker.pdf",
+        notes: "Added during listing prep.",
+      },
+    ],
+    status: "New",
+  },
+];
+
+if (!localStorage.getItem("brokr-sample-listings-v1")) {
+  const existingTransactionIds = new Set(transactions.map((transaction) => Number(transaction.id)));
+  const missingSampleListings = sampleListings.filter((listing) => !existingTransactionIds.has(Number(listing.id)));
+  if (missingSampleListings.length) {
+    transactions = [...missingSampleListings, ...transactions];
+    saveTransactions();
+  }
+  localStorage.setItem("brokr-sample-listings-v1", "true");
+}
+
+const sampleListingById = Object.fromEntries(sampleListings.map((listing) => [Number(listing.id), listing]));
+let sampleListingsUpdated = false;
+transactions = transactions.map((transaction) => {
+  const sampleListing = sampleListingById[Number(transaction.id)];
+  if (!sampleListing) return transaction;
+
+  const updatedTransaction = {
+    ...transaction,
+    listingTitle: transaction.listingTitle || sampleListing.listingTitle,
+    listingPhotoSrc: transaction.listingPhotoSrc || sampleListing.listingPhotoSrc,
+    additionalDocuments: transaction.additionalDocuments || sampleListing.additionalDocuments || [],
+  };
+  sampleListingsUpdated ||=
+    updatedTransaction.listingTitle !== transaction.listingTitle ||
+    updatedTransaction.listingPhotoSrc !== transaction.listingPhotoSrc;
+  return updatedTransaction;
+});
+if (sampleListingsUpdated) saveTransactions();
 let calendarView = "month";
 let calendarDate = new Date();
 calendarDate.setHours(0, 0, 0, 0);
 let overviewScheduleStartOffset = 0;
 const overviewScheduleWindowDays = 10;
+const officeListingsPreviewLimit = 8;
+let showAllOfficeListings = false;
 let editingUserId = null;
 let companyTasks = [
   {
@@ -617,6 +728,12 @@ function getAuthDisplayName(user) {
   return toDisplayNameFromEmail(user.email);
 }
 
+function getWelcomeMessage(displayName = "there") {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  return `${greeting}, ${displayName}.`;
+}
+
 function getAuthAvatarMarkup(user, displayName) {
   if (["Broker", "Admin"].includes(user?.role || currentUserRole) && brokerContact.profileImageSrc) {
     return `<img src="${brokerContact.profileImageSrc}" alt="${displayName}" />`;
@@ -643,11 +760,15 @@ function getAuthAvatarMarkup(user, displayName) {
 function renderAuthIdentity(user = currentUser) {
   const isLoggedIn = isSignedIn();
   const displayName = getAuthDisplayName(user);
+  const email = user?.email?.includes("@") ? user.email : brokerContact.email || "broker@lumerealestate.com";
 
   authStatus.textContent = isLoggedIn ? currentUserRole : "Signed out";
   authName.textContent = isLoggedIn ? displayName : "Guest";
   authAvatar.innerHTML = getAuthAvatarMarkup(user, displayName);
   authAvatar.classList.toggle("has-image", authAvatar.querySelector("img") !== null);
+  if (accountMenuName) accountMenuName.textContent = isLoggedIn ? displayName : "Guest";
+  if (accountMenuEmail) accountMenuEmail.textContent = isLoggedIn ? email : "Not signed in";
+  if (overviewWelcomeTitle) overviewWelcomeTitle.textContent = getWelcomeMessage(displayName);
 }
 
 function setAuthState(user = null, session = null) {
@@ -657,10 +778,58 @@ function setAuthState(user = null, session = null) {
   const isLoggedIn = isSignedIn();
 
   authToggle.setAttribute("aria-pressed", String(isLoggedIn));
-  authToggle.querySelector("span").textContent = isLoggedIn ? "Logout" : "Login";
+  if (authActionText) authActionText.textContent = isLoggedIn ? "Open account menu" : "Login";
+  closeAccountMenu();
   renderAuthIdentity(user);
   syncMenuAccess();
   renderAll();
+}
+
+function openAccountMenu() {
+  if (!isSignedIn()) {
+    openAuthGate();
+    return;
+  }
+
+  accountMenu?.classList.add("open");
+  authToggle.setAttribute("aria-expanded", "true");
+}
+
+function closeAccountMenu() {
+  accountMenu?.classList.remove("open");
+  authToggle.setAttribute("aria-expanded", "false");
+}
+
+async function logoutCurrentUser() {
+  closeAccountMenu();
+  if (!window.BrokrBackend?.isConfigured) {
+    setAuthState(null, null);
+    return;
+  }
+
+  await window.BrokrBackend.signOut();
+}
+
+function openProfileSettings() {
+  closeAccountMenu();
+  if (!isSignedIn()) {
+    openAuthGate();
+    return;
+  }
+
+  if (canAccessAdmin()) {
+    activatePage("admin");
+    document.querySelector(".broker-contact-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  activatePage("users");
+  const editableUser = users.find(
+    (user) =>
+      String(user.id) === String(currentUser?.id) ||
+      user.email?.toLowerCase() === currentUser?.email?.toLowerCase(),
+  );
+  if (editableUser) openUserModal(editableUser.id);
 }
 
 function setAuthMessage(message, type = "") {
@@ -710,7 +879,7 @@ async function refreshAuthUser(session = currentSession) {
   }
 
   if (!window.BrokrBackend?.isConfigured) {
-    setAuthState({ email: "Jared Alvey", role: "Broker", status: "Active" }, null);
+    setAuthState({ email: brokerContact.email, role: "Broker", status: "Active" }, null);
     closeAuthGate();
     return;
   }
@@ -756,18 +925,28 @@ async function initializeAuth() {
   });
 }
 
-authToggle.addEventListener("click", async () => {
+authToggle.addEventListener("click", (event) => {
+  event.stopPropagation();
   if (!window.BrokrBackend?.isConfigured) {
-    setAuthState(isSignedIn() ? null : { email: "Jared Alvey", role: "Broker", status: "Active" }, null);
+    if (!isSignedIn()) setAuthState({ email: brokerContact.email, role: "Broker", status: "Active" }, null);
+    openAccountMenu();
     return;
   }
 
-  if (isSignedIn()) {
-    await window.BrokrBackend.signOut();
-    return;
-  }
+  if (isSignedIn()) openAccountMenu();
+  else openAuthGate();
+});
 
-  openAuthGate();
+accountProfileButton?.addEventListener("click", openProfileSettings);
+accountLogoutButton?.addEventListener("click", logoutCurrentUser);
+
+document.addEventListener("click", (event) => {
+  if (accountMenu?.contains(event.target)) return;
+  closeAccountMenu();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeAccountMenu();
 });
 
 authForm.addEventListener("submit", async (event) => {
@@ -843,7 +1022,7 @@ passwordSetupForm.addEventListener("submit", async (event) => {
 });
 
 function setTheme(theme) {
-  if (!["light", "dark"].includes(theme)) theme = "light";
+  theme = "light";
   document.body.dataset.theme = theme;
   localStorage.setItem("brokr-theme", theme);
 
@@ -858,7 +1037,7 @@ themeOptions.forEach((option) => {
   option.addEventListener("click", () => setTheme(option.dataset.theme));
 });
 
-setTheme(localStorage.getItem("brokr-theme") || document.body.dataset.theme || "light");
+setTheme("light");
 restoreBrokerContact();
 restoreArchiveSettings();
 restoreBrokerContactFromBackend();
@@ -1319,6 +1498,58 @@ function getTransactionFileSummary(transaction) {
   };
 }
 
+function getActiveOfficeListings() {
+  return getVisibleTransactions({ includeCancelled: false }).filter(
+    (transaction) => transaction.side === "seller" && transaction.status === "New",
+  );
+}
+
+function getListingTitle(transaction) {
+  if (transaction.listingTitle) return transaction.listingTitle;
+  if (transaction.propertyAddress) return transaction.propertyAddress.split(",")[0];
+  return `${transaction.clientName} Listing`;
+}
+
+function renderOfficeListings() {
+  if (!officeListingsGrid) return;
+  const listings = getActiveOfficeListings();
+  const visibleListings = showAllOfficeListings ? listings : listings.slice(0, officeListingsPreviewLimit);
+
+  if (!listings.length) {
+    officeListingsGrid.innerHTML = '<p class="empty-panel-copy">No active office listings yet.</p>';
+    if (officeListingsToggle) officeListingsToggle.hidden = true;
+    return;
+  }
+
+  if (officeListingsToggle) {
+    officeListingsToggle.hidden = listings.length <= officeListingsPreviewLimit;
+    officeListingsToggle.textContent = showAllOfficeListings ? "Show Less" : `Show All (${listings.length})`;
+  }
+
+  officeListingsGrid.innerHTML = visibleListings
+    .map((listing) => {
+      const title = getListingTitle(listing);
+      const photo = listing.listingPhotoSrc
+        ? `<img src="${listing.listingPhotoSrc}" alt="${title}" />`
+        : `<div class="listing-photo-placeholder"><span>${title.slice(0, 1)}</span></div>`;
+
+      return `
+        <article class="office-listing-card" role="button" tabindex="0" data-listing-id="${listing.id}" aria-label="Open listing ${title}">
+          <div class="office-listing-photo">${photo}</div>
+          <div class="office-listing-copy">
+            <h4>${title}</h4>
+            <p>${listing.propertyAddress || "No property address"}</p>
+          </div>
+          <div class="office-listing-meta">
+            <span><i aria-hidden="true"></i>Active</span>
+            <strong>${formatCurrency(listing.listPrice || 0)}</strong>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function getTransactionCalendarEvents(sourceTransactions) {
   return sourceTransactions.flatMap((transaction) => {
     const events = [
@@ -1385,9 +1616,7 @@ function renderTransactions() {
 function renderOverviewMetrics() {
   const currentYear = new Date().getFullYear();
   const visibleTransactions = getVisibleTransactions({ includeCancelled: true });
-  const activeListings = visibleTransactions.filter(
-    (transaction) => transaction.side === "seller" && transaction.status === "New",
-  ).length;
+  const activeListings = getActiveOfficeListings().length;
   const pendingDeals = visibleTransactions.filter((transaction) => isUnderContractStatus(transaction.status)).length;
   const ytdTransactions = visibleTransactions.filter(
     (transaction) => transaction.status !== "Cancelled" && new Date(transaction.contractDate).getFullYear() === currentYear,
@@ -2133,10 +2362,17 @@ function updateTransactionPriceFields() {
   const isUnderContract = isUnderContractStatus(transactionFields.status.value);
 
   transactionFields.listPriceField.hidden = !isSeller;
+  transactionFields.listingTitleField.hidden = !isSeller;
+  transactionFields.listingPhotoField.hidden = !isSeller;
   transactionFields.contractPriceField.hidden = !isUnderContract;
   transactionFields.deadlinesField.hidden = !isUnderContract;
+  transactionFields.contractDate.required = isUnderContract;
 
-  if (!isSeller) transactionFields.listPrice.value = "";
+  if (!isSeller) {
+    transactionFields.listPrice.value = "";
+    transactionFields.listingTitle.value = "";
+    transactionFields.listingPhoto.value = "";
+  }
   if (!isUnderContract) {
     transactionFields.contractPrice.value = "";
     Object.values(transactionFields.deadlines).forEach((field) => {
@@ -2167,6 +2403,8 @@ function syncTransactionFormAccess(transaction) {
     transactionFields.clientPhone,
     transactionFields.contractDate,
     transactionFields.listPrice,
+    transactionFields.listingTitle,
+    transactionFields.listingPhoto,
     transactionFields.contractPrice,
     transactionFields.commissionType,
     transactionFields.commissionRate,
@@ -2288,6 +2526,8 @@ function openTransactionModal(transactionId = null) {
   transactionFields.clientPhone.value = transaction?.clientPhone || "";
   transactionFields.contractDate.value = transaction?.contractDate || toDateKey(new Date());
   transactionFields.listPrice.value = formatCurrencyInput(transaction?.listPrice || "");
+  transactionFields.listingTitle.value = transaction?.listingTitle || "";
+  transactionFields.listingPhoto.value = "";
   transactionFields.contractPrice.value = formatCurrencyInput(transaction?.contractPrice || "");
   transactionFields.commissionType.value = transaction?.commissionType || "percent";
   transactionFields.commissionRate.value = transaction?.commissionRate ?? 3;
@@ -2416,6 +2656,7 @@ function deleteTransaction(transactionId) {
   renderCalendar();
   renderCommissionRules();
   renderOverviewMetrics();
+  renderOfficeListings();
   renderOverviewSchedule();
   renderInbox();
   renderArchiveQueue();
@@ -2638,6 +2879,7 @@ function renderAll() {
   renderUsers();
   renderCommissionRules();
   renderOverviewMetrics();
+  renderOfficeListings();
   renderOverviewSchedule();
   renderCompanyTasks();
   renderInbox();
@@ -2662,6 +2904,10 @@ addTransactionButton.addEventListener("click", () => {
   }
 
   openTransactionModal();
+});
+officeListingsToggle?.addEventListener("click", () => {
+  showAllOfficeListings = !showAllOfficeListings;
+  renderOfficeListings();
 });
 headerInboxButton.addEventListener("click", openInbox);
 closeInboxDetailModal.addEventListener("click", closeInboxDetail);
@@ -2719,6 +2965,21 @@ attachPhoneFormatter(transactionFields.clientPhone);
   transactionFields.contractPrice,
   transactionFields.commissionFlatFee,
 ].forEach(attachCurrencyFormatter);
+
+officeListingsGrid?.addEventListener("click", (event) => {
+  const listingCard = event.target.closest("[data-listing-id]");
+  if (!listingCard) return;
+  openTransactionModal(Number(listingCard.dataset.listingId));
+});
+
+officeListingsGrid?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  const listingCard = event.target.closest("[data-listing-id]");
+  if (!listingCard) return;
+  event.preventDefault();
+  openTransactionModal(Number(listingCard.dataset.listingId));
+});
+
 transactionFileGrid.addEventListener("change", (event) => {
   const input = event.target.closest("input[type='file']");
   if (!input?.files[0]) return;
@@ -3028,6 +3289,10 @@ transactionForm.addEventListener("submit", async (event) => {
     : {};
   const selectedUploads = [];
   const transactionId = existingTransaction?.id || Date.now();
+  const listingPhotoSrc =
+    transactionFields.side.value === "seller"
+      ? (await readImageDataUrl(transactionFields.listingPhoto.files[0])) || existingTransaction?.listingPhotoSrc || ""
+      : "";
 
   try {
     for (const input of transactionFileGrid.querySelectorAll("input[type='file']")) {
@@ -3073,6 +3338,8 @@ transactionForm.addEventListener("submit", async (event) => {
     clientEmail: transactionFields.clientEmail.value.trim(),
     clientPhone: formatPhoneNumber(transactionFields.clientPhone.value),
     propertyAddress: transactionFields.propertyAddress.value.trim(),
+    listingTitle: transactionFields.side.value === "seller" ? transactionFields.listingTitle.value.trim() : "",
+    listingPhotoSrc,
     contractDate: transactionFields.contractDate.value,
     listPrice: transactionFields.side.value === "seller" ? parseCurrencyInput(transactionFields.listPrice.value) : 0,
     contractPrice: isUnderContractStatus(transactionFields.status.value)
@@ -3098,6 +3365,8 @@ transactionForm.addEventListener("submit", async (event) => {
       clientEmail: existingTransaction.clientEmail,
       clientPhone: existingTransaction.clientPhone,
       propertyAddress: existingTransaction.propertyAddress,
+      listingTitle: existingTransaction.listingTitle,
+      listingPhotoSrc: existingTransaction.listingPhotoSrc,
       contractDate: existingTransaction.contractDate,
       listPrice: existingTransaction.listPrice,
       contractPrice: existingTransaction.contractPrice,
@@ -3123,6 +3392,7 @@ transactionForm.addEventListener("submit", async (event) => {
   renderCalendar();
   renderCommissionRules();
   renderOverviewMetrics();
+  renderOfficeListings();
   renderOverviewSchedule();
   renderInbox();
   renderArchiveQueue();
@@ -3140,6 +3410,7 @@ cancelCalendarEventButton.addEventListener("click", () => {
   renderCalendar();
   renderCommissionRules();
   renderOverviewMetrics();
+  renderOfficeListings();
   renderOverviewSchedule();
   renderInbox();
   renderArchiveQueue();
@@ -3162,14 +3433,26 @@ function saveBrandingSetting(key, value) {
 let isRestoringBranding = false;
 const defaultFaviconHref = appFavicon?.getAttribute("href") || "";
 
+function setSidebarBrokerageLogo(src = "") {
+  if (!sidebarBrokerageLogo || !sidebarBrokerageLogoImage) return;
+
+  if (src) {
+    sidebarBrokerageLogoImage.src = src;
+    sidebarBrokerageLogo.classList.add("has-image");
+  } else {
+    sidebarBrokerageLogoImage.removeAttribute("src");
+    sidebarBrokerageLogo.classList.remove("has-image");
+  }
+}
+
 function getCurrentBrandingSettings() {
   return {
     companyName: companyInput.value.trim() || "Lume Real Estate",
     systemName: systemInput.value.trim() || "Brokr",
     primaryColor: primaryColorInput.value,
     accentColor: accentColorInput.value,
-    logoSrc: overviewLogoImage.getAttribute("src") || "",
-    iconSrc: brandMark.querySelector("img")?.getAttribute("src") || "",
+    logoSrc: sidebarBrokerageLogoImage?.getAttribute("src") || "",
+    iconSrc: iconPreview.querySelector("img")?.getAttribute("src") || localStorage.getItem("brokr-icon-src") || "",
   };
 }
 
@@ -3200,9 +3483,9 @@ function readImageDataUrl(file) {
 }
 
 function updateFavicon(src = "") {
-  if (!appFavicon) return;
+  if (appFavicon) appFavicon.href = src || defaultFaviconHref;
 
-  appFavicon.href = src || defaultFaviconHref;
+  if (appAppleTouchIcon) appAppleTouchIcon.href = src || defaultFaviconHref;
 }
 
 function syncBrandText() {
@@ -3211,8 +3494,11 @@ function syncBrandText() {
 
   companyPreview.textContent = companyName;
   systemPreview.textContent = systemName;
-  brandEyebrow.textContent = companyName;
-  brandTitle.textContent = systemName;
+  if (brandEyebrow) brandEyebrow.textContent = companyName;
+  if (brandTitle) brandTitle.textContent = systemName;
+  if (sidebarLogo) sidebarLogo.querySelector("span").textContent = "Brokr";
+  if (sidebarBrokerageLogoFallback) sidebarBrokerageLogoFallback.textContent = companyName;
+  if (appAppleTitle) appAppleTitle.content = systemName;
   saveBrandingSetting("brokr-company-name", companyName);
   saveBrandingSetting("brokr-system-name", systemName);
   saveBrandingToBackend();
@@ -3237,8 +3523,7 @@ logoUpload.addEventListener("change", () => {
   readImage(logoUpload.files[0], (src) => {
     logoPreview.src = src;
     logoPreview.classList.add("has-image");
-    overviewLogoImage.src = src;
-    overviewLogo.classList.add("has-image");
+    setSidebarBrokerageLogo(src);
     saveBrandingSetting("brokr-logo-src", src);
     saveBrandingToBackend();
   });
@@ -3248,7 +3533,7 @@ iconUpload.addEventListener("change", () => {
   readImage(iconUpload.files[0], (src) => {
     const iconImage = `<img src="${src}" alt="Brokr logo icon" />`;
     iconPreview.innerHTML = iconImage;
-    brandMark.innerHTML = iconImage;
+    if (brandMark) brandMark.innerHTML = iconImage;
     updateFavicon(src);
     saveBrandingSetting("brokr-icon-src", src);
     saveBrandingToBackend();
@@ -3276,14 +3561,13 @@ function restoreBrandingSettings() {
   if (savedLogoSrc) {
     logoPreview.src = savedLogoSrc;
     logoPreview.classList.add("has-image");
-    overviewLogoImage.src = savedLogoSrc;
-    overviewLogo.classList.add("has-image");
+    setSidebarBrokerageLogo(savedLogoSrc);
   }
 
   if (savedIconSrc) {
     const iconImage = `<img src="${savedIconSrc}" alt="Brokr logo icon" />`;
     iconPreview.innerHTML = iconImage;
-    brandMark.innerHTML = iconImage;
+    if (brandMark) brandMark.innerHTML = iconImage;
     updateFavicon(savedIconSrc);
   }
   isRestoringBranding = false;
@@ -3308,14 +3592,13 @@ async function restoreBrandingFromBackend() {
   if (savedBranding.logo_src) {
     logoPreview.src = savedBranding.logo_src;
     logoPreview.classList.add("has-image");
-    overviewLogoImage.src = savedBranding.logo_src;
-    overviewLogo.classList.add("has-image");
+    setSidebarBrokerageLogo(savedBranding.logo_src);
   }
 
   if (savedBranding.icon_src) {
     const iconImage = `<img src="${savedBranding.icon_src}" alt="Brokr logo icon" />`;
     iconPreview.innerHTML = iconImage;
-    brandMark.innerHTML = iconImage;
+    if (brandMark) brandMark.innerHTML = iconImage;
     updateFavicon(savedBranding.icon_src);
   }
   isRestoringBranding = false;
@@ -3338,10 +3621,9 @@ brandingForm.addEventListener("reset", () => {
     setColor(accentColorInput, "--brass");
     logoPreview.removeAttribute("src");
     logoPreview.classList.remove("has-image");
-    overviewLogoImage.removeAttribute("src");
-    overviewLogo.classList.remove("has-image");
+    setSidebarBrokerageLogo();
     iconPreview.textContent = "B";
-    brandMark.textContent = "B";
+    if (brandMark) brandMark.textContent = "B";
     updateFavicon();
   }, 0);
 });

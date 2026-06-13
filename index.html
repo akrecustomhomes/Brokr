@@ -3,25 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="apple-mobile-web-app-title" content="Brokr" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#bdb8b2" />
     <title>Brokr | Lume Real Estate</title>
     <link id="app-favicon" rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23bdb8b2"/><text x="32" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="500" fill="%232a251f">B</text></svg>' />
+    <link id="app-apple-touch-icon" rel="apple-touch-icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%23bdb8b2"/><text x="90" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="84" font-weight="500" fill="%232a251f">B</text></svg>' />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body class="overview-active" data-theme="light">
     <div class="app-shell">
       <aside class="sidebar" aria-label="Main navigation">
         <div class="brand">
-          <div class="brand-mark" aria-hidden="true">B</div>
-          <div>
-            <p class="eyebrow">Lume Real Estate</p>
-            <h1>Brokr</h1>
+          <div class="brand-logo" id="sidebar-logo">
+            <span>Brokr</span>
           </div>
+          <button class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true" title="Toggle sidebar">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="4.5" y="5" width="15" height="14" rx="1.8" />
+              <line x1="10" y1="5" x2="10" y2="19" />
+              <polyline points="15 8.5 11.5 12 15 15.5" />
+            </svg>
+            <span>Toggle sidebar</span>
+          </button>
         </div>
-
-        <button class="sidebar-toggle" type="button" aria-label="Collapse sidebar" aria-expanded="true">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3 13.3 4.9 6.2 12l7.1 7.1 1.4-1.4-4.7-4.7H20v-2H10l4.7-4.7Z" /></svg>
-          <span>Collapse</span>
-        </button>
 
         <nav class="menu" aria-label="Brokr sections">
           <button class="menu-item active" type="button" data-page="overview" aria-current="page">
@@ -68,22 +73,9 @@
           </button>
         </nav>
 
-        <div class="theme-toggle sidebar-theme" role="group" aria-label="Theme">
-          <button class="theme-option active" type="button" data-theme="light" data-short="L" aria-pressed="true">Light</button>
-          <button class="theme-option" type="button" data-theme="dark" data-short="D" aria-pressed="false">Dark</button>
-        </div>
-
-        <div class="auth-panel">
-          <div class="auth-user">
-            <span class="auth-avatar" aria-hidden="true">JA</span>
-            <div>
-              <p id="auth-status">Broker</p>
-              <strong id="auth-name">Jared Alvey</strong>
-            </div>
-          </div>
-          <button class="auth-toggle" id="auth-toggle" type="button" aria-pressed="true">
-            <span>Logout</span>
-          </button>
+        <div class="sidebar-brokerage-logo" id="sidebar-brokerage-logo">
+          <img id="sidebar-brokerage-logo-image" alt="Uploaded brokerage logo" />
+          <span id="sidebar-brokerage-logo-fallback">Lume Real Estate</span>
         </div>
 
       </aside>
@@ -91,33 +83,50 @@
       <main class="content">
         <header class="topbar">
           <button class="mobile-menu" type="button" aria-label="Open menu">Menu</button>
-          <div>
+          <label class="header-search" aria-label="Search Brokr">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.18 10.43l4.44 4.45-1.41 1.41-4.45-4.44A6.5 6.5 0 1 1 10.5 4Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z" /></svg>
+            <input id="header-search" type="search" placeholder="Search" />
+          </label>
+          <div class="page-heading">
             <p class="eyebrow">Brokerage operations</p>
             <h2 id="page-title">Overview</h2>
+          </div>
+          <div class="topbar-user-actions">
+            <button class="inbox-button" id="header-inbox-button" type="button" aria-label="Open inbox">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.6 2.6 0 0 0 2.45-1.75h-4.9A2.6 2.6 0 0 0 12 22Zm7-5h-1V11a6.02 6.02 0 0 0-5-5.92V3h-2v2.08A6.02 6.02 0 0 0 6 11v6H5v2h14v-2Zm-3 0H8v-6a4 4 0 0 1 8 0v6Z" /></svg>
+              <span id="inbox-count">0</span>
+            </button>
+            <div class="account-menu">
+              <button class="auth-toggle user-chip" id="auth-toggle" type="button" aria-pressed="true" aria-haspopup="true" aria-expanded="false">
+                <span class="auth-avatar" aria-hidden="true">JA</span>
+                <span class="auth-chip-copy">
+                  <strong id="auth-name">Jared Alvey</strong>
+                  <small id="auth-status">Broker</small>
+                </span>
+                <span class="sr-only" id="auth-action-text">Open account menu</span>
+              </button>
+              <div class="account-dropdown" id="account-dropdown">
+                <div class="account-dropdown-summary">
+                  <strong id="account-menu-name">Jared Alvey</strong>
+                  <span id="account-menu-email">broker@lumerealestate.com</span>
+                </div>
+                <button class="account-dropdown-action secondary" type="button" id="account-profile-button">Profile Settings</button>
+                <button class="account-dropdown-action signout" type="button" id="account-logout-button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17v-3H3v-4h7V7l5 5-5 5Zm1-15h9v20h-9v-2h7V4h-7V2Z" /></svg>
+                  <span>Sign out</span>
+                </button>
+              </div>
+            </div>
           </div>
         </header>
 
         <section class="page active" id="overview" aria-labelledby="overview-title">
-          <div class="visual-header">
-            <div class="visual-copy">
-              <div class="overview-logo" id="overview-logo">
-                <span>Logo</span>
-                <img id="overview-logo-image" alt="Uploaded company logo" />
-              </div>
-              <p id="overview-date">Today</p>
+          <div class="overview-welcome">
+            <div>
+              <h3 id="overview-welcome-title">Welcome back.</h3>
+              <p>Here's what's happening across your brokerage.</p>
+              <span id="overview-date">Today</span>
             </div>
-          </div>
-
-          <div class="overview-actions">
-            <label class="header-search" aria-label="Search Brokr">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 0 1 5.18 10.43l4.44 4.45-1.41 1.41-4.45-4.44A6.5 6.5 0 1 1 10.5 4Zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z" /></svg>
-              <input id="header-search" type="search" placeholder="Search" />
-            </label>
-            <button class="inbox-button" id="header-inbox-button" type="button" aria-label="Open inbox">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16l2 10v6H2v-6L4 4Zm1.6 2-1.2 6H8l1.4 2h5.2L16 12h3.6l-1.2-6H5.6ZM4 14v4h16v-4h-2.9l-1.4 2H8.3l-1.4-2H4Z" /></svg>
-              <span id="inbox-count">0</span>
-            </button>
-            <button class="primary-action" id="topbar-new-transaction" type="button">+ New Transaction</button>
           </div>
 
           <div class="metric-grid" aria-label="Overview metrics">
@@ -146,6 +155,20 @@
               <strong id="overview-ytd-transactions">--</strong>
             </article>
           </div>
+
+          <section class="office-listings-panel" aria-labelledby="office-listings-title">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Active inventory</p>
+                <h3 id="office-listings-title">Office Listings</h3>
+              </div>
+              <div class="office-listings-actions">
+                <button class="secondary-action" id="office-listings-toggle" type="button" hidden>Show All</button>
+                <button class="primary-action" id="topbar-new-transaction" type="button">+ New Transaction</button>
+              </div>
+            </div>
+            <div class="office-listings-grid" id="office-listings-grid"></div>
+          </section>
 
           <section class="overview-schedule-panel" aria-labelledby="overview-schedule-title">
             <div class="panel-header">
@@ -182,7 +205,7 @@
             <div class="section-toolbar">
               <div>
                 <p class="eyebrow">Roster</p>
-                <h3 class="sr-only" id="agents-title">Agents</h3>
+                <h3 id="agents-title">Agents</h3>
               </div>
             </div>
 
@@ -240,7 +263,7 @@
             <div class="section-toolbar">
               <div>
                 <p class="eyebrow">Real Estate Transactions</p>
-                <h3 class="sr-only" id="transactions-title">Transactions</h3>
+                <h3 id="transactions-title">Transactions</h3>
               </div>
             </div>
 
@@ -279,7 +302,7 @@
             <div class="section-toolbar schedule-toolbar">
               <div>
                 <p class="eyebrow">Calendar</p>
-                <h3 class="sr-only" id="schedule-title">Schedule</h3>
+                <h3 id="schedule-title">Schedule</h3>
               </div>
               <div class="calendar-controls">
                 <button class="secondary-action" id="calendar-prev" type="button">Back</button>
@@ -324,7 +347,7 @@
             <div class="section-toolbar">
               <div>
                 <p class="eyebrow">Notifications</p>
-                <h3 class="sr-only" id="inbox-title">Inbox</h3>
+                <h3 id="inbox-title">Inbox</h3>
               </div>
             </div>
 
@@ -343,7 +366,7 @@
             <div class="section-toolbar">
               <div>
                 <p class="eyebrow">Access</p>
-                <h3 class="sr-only" id="users-title">Users</h3>
+                <h3 id="users-title">Users</h3>
               </div>
               <button class="primary-action" id="add-user-button" type="button">+ User</button>
             </div>
@@ -374,12 +397,18 @@
         </section>
 
         <section class="page" id="admin" aria-labelledby="admin-title">
+          <div class="section-toolbar">
+            <div>
+              <p class="eyebrow">Global Settings</p>
+              <h3 id="admin-title">Admin</h3>
+            </div>
+          </div>
           <div class="admin-layout">
             <form class="branding-panel" aria-label="Branding settings">
               <div class="panel-header">
                 <div>
                   <p class="eyebrow">Style settings</p>
-                  <h3 id="admin-title">Branding</h3>
+                  <h3>Branding</h3>
                 </div>
                 <button class="secondary-action" type="reset">Reset Branding</button>
               </div>
@@ -705,6 +734,14 @@
                 <span aria-hidden="true">$</span>
                 <input id="transaction-list-price" name="listPrice" type="text" inputmode="decimal" placeholder="0.00" />
               </span>
+            </label>
+            <label id="transaction-listing-title-field" hidden>
+              Listing title
+              <input id="transaction-listing-title" name="listingTitle" type="text" placeholder="Willow Crest Spec Home" />
+            </label>
+            <label id="transaction-listing-photo-field" hidden>
+              Listing photo
+              <input id="transaction-listing-photo" name="listingPhoto" type="file" accept="image/*" />
             </label>
             <label id="transaction-contract-price-field" hidden>
               Contract price (USD)
