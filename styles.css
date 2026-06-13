@@ -6744,3 +6744,39 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     border-bottom: 0;
   }
 }
+
+.roster-panel {
+  overflow: visible;
+}
+
+.roster-tabs {
+  align-items: flex-end;
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 0 0;
+}
+
+.roster-tab {
+  position: relative;
+  min-height: 50px;
+  min-width: 136px;
+  border: 1px solid var(--line);
+  border-bottom-color: var(--line);
+  border-radius: var(--surface-radius) var(--surface-radius) 0 0;
+  background: var(--panel-soft);
+  color: var(--muted);
+  margin: 0 -1px -1px 0;
+  padding: 0 26px;
+  box-shadow: none;
+}
+
+.roster-tab.active {
+  z-index: 2;
+  border-bottom-color: var(--panel);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.roster-tab:not(.active):hover {
+  background: #f0ede8;
+}
