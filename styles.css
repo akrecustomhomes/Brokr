@@ -558,8 +558,8 @@ body.overview-active .topbar > div:not(.overview-actions) {
 #add-company-task-button:hover,
 #add-agent-button:hover,
 #add-user-button:hover {
-  border-color: #aaa39c;
-  background: #aaa39c;
+  border-color: var(--brass);
+  background: var(--brass);
 }
 
 #add-additional-document-button:hover {
