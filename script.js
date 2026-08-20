@@ -1022,14 +1022,28 @@ authCreateSuperButton?.addEventListener("click", async () => {
 });
 
 authResetButton.addEventListener("click", async () => {
-  if (!authEmail.reportValidity()) return;
+  const email = authEmail.value.trim();
+  if (!email) {
+    setAuthMessage("Enter your broker email first, then click Forgot password.", "error");
+    authEmail.focus();
+    return;
+  }
 
+  if (!authEmail.checkValidity()) {
+    setAuthMessage("Enter a valid email address, then click Forgot password.", "error");
+    authEmail.focus();
+    return;
+  }
+
+  authResetButton.disabled = true;
   setAuthMessage("Sending password reset email...");
   try {
-    await window.BrokrBackend.sendPasswordSetupEmail(authEmail.value.trim());
-    setAuthMessage("Password reset email sent. Check the inbox for that user.", "success");
+    await window.BrokrBackend.sendPasswordSetupEmail(email);
+    setAuthMessage(`Password reset email sent to ${email}. Check that inbox and spam folder.`, "success");
   } catch (error) {
     setAuthMessage(error.message || "Unable to send password reset email.", "error");
+  } finally {
+    authResetButton.disabled = false;
   }
 });
 
