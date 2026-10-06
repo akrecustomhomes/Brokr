@@ -618,39 +618,38 @@ const defaultLockboxes = [
   },
   {
     id: 4,
-    lockboxId: "",
+    lockboxId: "34439629",
     mlsNumber: "",
     address: "",
     agentName: "",
     dateAdded: "",
     status: "unassigned",
-    inventoryLabel: "Unassigned Lockbox 1",
   },
   {
     id: 5,
-    lockboxId: "",
+    lockboxId: "33274937",
     mlsNumber: "",
     address: "",
     agentName: "",
     dateAdded: "",
     status: "unassigned",
-    inventoryLabel: "Unassigned Lockbox 2",
-  },
-  {
-    id: 6,
-    lockboxId: "",
-    mlsNumber: "",
-    address: "",
-    agentName: "",
-    dateAdded: "",
-    status: "unassigned",
-    inventoryLabel: "Unassigned Lockbox 3",
   },
 ];
-let lockboxes = (JSON.parse(localStorage.getItem("brokr-lockboxes") || "null") || defaultLockboxes).map((lockbox) => ({
+const savedLockboxes = JSON.parse(localStorage.getItem("brokr-lockboxes") || "null");
+let lockboxes = (savedLockboxes || defaultLockboxes).map((lockbox) => ({
   ...lockbox,
   status: lockbox.status || (lockbox.address ? "assigned" : "unassigned"),
 }));
+const legacyBlankInventory = lockboxes.filter(
+  (lockbox) => lockbox.status === "unassigned" && !lockbox.lockboxId && /^Unassigned Lockbox [123]$/.test(lockbox.inventoryLabel || ""),
+);
+if (legacyBlankInventory.length === 3) {
+  lockboxes = [
+    ...lockboxes.filter((lockbox) => !legacyBlankInventory.includes(lockbox)),
+    ...defaultLockboxes.filter((lockbox) => lockbox.status === "unassigned"),
+  ];
+  localStorage.setItem("brokr-lockboxes", JSON.stringify(lockboxes));
+}
 let editingLockboxId = null;
 let brokerContact = {
   name: "Jared Alvey",
