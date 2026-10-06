@@ -7554,6 +7554,23 @@ body[data-theme="dark"] .task-status.overdue {
   color: #ffc5ad;
 }
 
+/* Collapsed Admin panels behave like full-width disclosure tiles. */
+#admin .is-collapsed > .panel-header {
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+#admin .is-collapsed > .panel-header:hover {
+  background: var(--panel-soft);
+}
+
+#admin .is-collapsed > .panel-header:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: -2px;
+}
+
 /* Admin lockbox inventory. */
 .lockbox-panel {
   overflow: hidden;
