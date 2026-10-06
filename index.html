@@ -1130,9 +1130,16 @@
               MLS #
               <input id="lockbox-mls" type="text" />
             </label>
+            <label>
+              Assignment status
+              <select id="lockbox-status" required>
+                <option value="assigned">Assigned to listing</option>
+                <option value="unassigned">Unassigned inventory</option>
+              </select>
+            </label>
             <label class="wide-field">
               Address
-              <input id="lockbox-address" type="text" required />
+              <input id="lockbox-address" type="text" />
             </label>
             <label>
               Agent using lockbox
@@ -1140,7 +1147,7 @@
             </label>
             <label>
               Date added to listing
-              <input id="lockbox-date-added" type="date" required />
+              <input id="lockbox-date-added" type="date" />
             </label>
           </div>
 

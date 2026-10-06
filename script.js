@@ -86,11 +86,13 @@ const lockboxList = document.querySelector("#lockbox-list");
 const addLockboxButton = document.querySelector("#add-lockbox-button");
 const lockboxModal = document.querySelector("#lockbox-modal");
 const lockboxForm = document.querySelector("#lockbox-form");
+const lockboxModalTitle = document.querySelector("#lockbox-modal-title");
 const closeLockboxModal = document.querySelector("#close-lockbox-modal");
 const cancelLockboxButton = document.querySelector("#cancel-lockbox-button");
 const lockboxFields = {
   lockboxId: document.querySelector("#lockbox-id"),
   mlsNumber: document.querySelector("#lockbox-mls"),
+  status: document.querySelector("#lockbox-status"),
   address: document.querySelector("#lockbox-address"),
   agentName: document.querySelector("#lockbox-agent"),
   dateAdded: document.querySelector("#lockbox-date-added"),
@@ -594,6 +596,7 @@ const defaultLockboxes = [
     address: "3165 S Tallow Tree DR, Washington, UT 84780",
     agentName: "Jared Alvey",
     dateAdded: "",
+    status: "assigned",
   },
   {
     id: 2,
@@ -602,6 +605,7 @@ const defaultLockboxes = [
     address: "2047 S Tagans Way, St. George, UT 84790",
     agentName: "Jared Alvey",
     dateAdded: "",
+    status: "assigned",
   },
   {
     id: 3,
@@ -610,9 +614,44 @@ const defaultLockboxes = [
     address: "3174 Walnut Canyon DR, Washington, UT 84780",
     agentName: "Jared Alvey",
     dateAdded: "",
+    status: "assigned",
+  },
+  {
+    id: 4,
+    lockboxId: "",
+    mlsNumber: "",
+    address: "",
+    agentName: "",
+    dateAdded: "",
+    status: "unassigned",
+    inventoryLabel: "Unassigned Lockbox 1",
+  },
+  {
+    id: 5,
+    lockboxId: "",
+    mlsNumber: "",
+    address: "",
+    agentName: "",
+    dateAdded: "",
+    status: "unassigned",
+    inventoryLabel: "Unassigned Lockbox 2",
+  },
+  {
+    id: 6,
+    lockboxId: "",
+    mlsNumber: "",
+    address: "",
+    agentName: "",
+    dateAdded: "",
+    status: "unassigned",
+    inventoryLabel: "Unassigned Lockbox 3",
   },
 ];
-let lockboxes = JSON.parse(localStorage.getItem("brokr-lockboxes") || "null") || defaultLockboxes;
+let lockboxes = (JSON.parse(localStorage.getItem("brokr-lockboxes") || "null") || defaultLockboxes).map((lockbox) => ({
+  ...lockbox,
+  status: lockbox.status || (lockbox.address ? "assigned" : "unassigned"),
+}));
+let editingLockboxId = null;
 let brokerContact = {
   name: "Jared Alvey",
   email: "broker@lumerealestate.com",
@@ -1993,23 +2032,28 @@ function renderLockboxes() {
         <article class="lockbox-row">
           <div class="lockbox-primary">
             <p class="eyebrow">Lockbox ID</p>
-            <strong>${escapeLockboxText(lockbox.lockboxId)}</strong>
-            <p>${escapeLockboxText(lockbox.address)}</p>
+            <strong>${lockbox.lockboxId ? escapeLockboxText(lockbox.lockboxId) : escapeLockboxText(lockbox.inventoryLabel || "Not entered")}</strong>
+            <p>${lockbox.address ? escapeLockboxText(lockbox.address) : "Available for a future listing"}</p>
           </div>
           <dl class="lockbox-details">
+            <div>
+              <dt>Status</dt>
+              <dd><span class="lockbox-status ${lockbox.status}">${lockbox.status === "assigned" ? "Assigned" : "Unassigned"}</span></dd>
+            </div>
             <div>
               <dt>MLS #</dt>
               <dd>${lockbox.mlsNumber ? escapeLockboxText(lockbox.mlsNumber) : "Not set"}</dd>
             </div>
             <div>
               <dt>Agent</dt>
-              <dd>${escapeLockboxText(lockbox.agentName)}</dd>
+              <dd>${lockbox.agentName ? escapeLockboxText(lockbox.agentName) : "Not assigned"}</dd>
             </div>
             <div>
               <dt>Date added to listing</dt>
               <dd>${lockbox.dateAdded ? formatDate(lockbox.dateAdded) : "Not set"}</dd>
             </div>
           </dl>
+          <button class="secondary-action lockbox-edit-button" type="button" data-lockbox-edit="${lockbox.id}" aria-label="Edit ${escapeLockboxText(lockbox.lockboxId || lockbox.inventoryLabel || "lockbox")}">Edit</button>
         </article>
       `,
     )
@@ -2027,17 +2071,39 @@ function renderLockboxAgentOptions() {
     .join("");
 }
 
-function openLockboxModal() {
+function openLockboxModal(lockboxId = null) {
+  editingLockboxId = lockboxId;
   lockboxForm.reset();
   renderLockboxAgentOptions();
-  lockboxFields.agentName.value = "Jared Alvey";
-  lockboxFields.dateAdded.value = toDateKey(new Date());
+  const lockbox = lockboxes.find((item) => item.id === lockboxId);
+  lockboxModalTitle.textContent = lockbox ? "Edit Lockbox" : "Add Lockbox";
+  lockboxFields.lockboxId.value = lockbox?.lockboxId || "";
+  lockboxFields.mlsNumber.value = lockbox?.mlsNumber || "";
+  lockboxFields.status.value = lockbox?.status || "assigned";
+  lockboxFields.address.value = lockbox?.address || "";
+  lockboxFields.agentName.value = lockbox?.agentName || "Jared Alvey";
+  lockboxFields.dateAdded.value = lockbox?.dateAdded || (lockbox ? "" : toDateKey(new Date()));
+  syncLockboxAssignmentFields();
   lockboxModal.hidden = false;
   lockboxFields.lockboxId.focus();
 }
 
+function syncLockboxAssignmentFields() {
+  const isAssigned = lockboxFields.status.value === "assigned";
+  lockboxFields.address.required = isAssigned;
+  lockboxFields.dateAdded.required = isAssigned;
+  lockboxFields.mlsNumber.disabled = !isAssigned;
+  lockboxFields.address.disabled = !isAssigned;
+  lockboxFields.agentName.disabled = !isAssigned;
+  lockboxFields.dateAdded.disabled = !isAssigned;
+  lockboxFields.mlsNumber.closest("label").classList.toggle("is-optional", !isAssigned);
+  lockboxFields.address.closest("label").classList.toggle("is-optional", !isAssigned);
+  lockboxFields.dateAdded.closest("label").classList.toggle("is-optional", !isAssigned);
+}
+
 function closeLockboxForm() {
   lockboxModal.hidden = true;
+  editingLockboxId = null;
 }
 
 function openCompanyTaskModal() {
@@ -3469,7 +3535,8 @@ companyTaskForm.addEventListener("submit", (event) => {
   closeCompanyTaskForm();
 });
 
-addLockboxButton.addEventListener("click", openLockboxModal);
+addLockboxButton.addEventListener("click", () => openLockboxModal());
+lockboxFields.status.addEventListener("change", syncLockboxAssignmentFields);
 closeLockboxModal.addEventListener("click", closeLockboxForm);
 cancelLockboxButton.addEventListener("click", closeLockboxForm);
 
@@ -3477,21 +3544,30 @@ lockboxModal.addEventListener("click", (event) => {
   if (event.target === lockboxModal) closeLockboxForm();
 });
 
+lockboxList.addEventListener("click", (event) => {
+  const editButton = event.target.closest("[data-lockbox-edit]");
+  if (!editButton) return;
+  openLockboxModal(Number(editButton.dataset.lockboxEdit));
+});
+
 lockboxForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (!lockboxForm.reportValidity()) return;
 
-  lockboxes = [
-    {
-      id: Date.now(),
-      lockboxId: lockboxFields.lockboxId.value.trim(),
-      mlsNumber: lockboxFields.mlsNumber.value.trim(),
-      address: lockboxFields.address.value.trim(),
-      agentName: lockboxFields.agentName.value,
-      dateAdded: lockboxFields.dateAdded.value,
-    },
-    ...lockboxes,
-  ];
+  const isAssigned = lockboxFields.status.value === "assigned";
+  const lockboxData = {
+    id: editingLockboxId || Date.now(),
+    lockboxId: lockboxFields.lockboxId.value.trim(),
+    mlsNumber: isAssigned ? lockboxFields.mlsNumber.value.trim() : "",
+    status: lockboxFields.status.value,
+    address: isAssigned ? lockboxFields.address.value.trim() : "",
+    agentName: isAssigned ? lockboxFields.agentName.value : "",
+    dateAdded: isAssigned ? lockboxFields.dateAdded.value : "",
+    inventoryLabel: lockboxes.find((lockbox) => lockbox.id === editingLockboxId)?.inventoryLabel || "",
+  };
+  lockboxes = editingLockboxId
+    ? lockboxes.map((lockbox) => (lockbox.id === editingLockboxId ? lockboxData : lockbox))
+    : [lockboxData, ...lockboxes];
   saveLockboxes();
   renderLockboxes();
   closeLockboxForm();
