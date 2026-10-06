@@ -577,6 +577,17 @@
               <p class="form-note">Closed transaction files wait here until the broker approves archive packaging and backup to the designated Google Drive folder.</p>
             </form>
 
+            <section class="lockbox-panel" aria-labelledby="lockbox-manager-title">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Listing access</p>
+                  <h3 id="lockbox-manager-title">Lockbox Manager</h3>
+                </div>
+                <button class="primary-action" id="add-lockbox-button" type="button">+ Lockbox</button>
+              </div>
+              <div class="lockbox-list" id="lockbox-list"></div>
+            </section>
+
             <section class="commission-panel" aria-labelledby="commission-rules-title">
               <div class="panel-header">
                 <div>
@@ -1093,6 +1104,51 @@
             <div>
               <button class="secondary-action" id="cancel-company-task-button" type="button">Cancel</button>
               <button class="primary-action" type="submit">Save Task</button>
+            </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="lockbox-modal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="lockbox-modal-title">
+        <form id="lockbox-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Listing access</p>
+              <h3 id="lockbox-modal-title">Add Lockbox</h3>
+            </div>
+            <button class="icon-button" id="close-lockbox-modal" type="button" aria-label="Close lockbox form">X</button>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              Lockbox ID
+              <input id="lockbox-id" type="text" inputmode="numeric" required />
+            </label>
+            <label>
+              MLS #
+              <input id="lockbox-mls" type="text" />
+            </label>
+            <label class="wide-field">
+              Address
+              <input id="lockbox-address" type="text" required />
+            </label>
+            <label>
+              Agent using lockbox
+              <select id="lockbox-agent" required></select>
+            </label>
+            <label>
+              Date added to listing
+              <input id="lockbox-date-added" type="date" required />
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <span></span>
+            <div>
+              <button class="secondary-action" id="cancel-lockbox-button" type="button">Cancel</button>
+              <button class="primary-action" type="submit">Save Lockbox</button>
             </div>
           </div>
         </form>

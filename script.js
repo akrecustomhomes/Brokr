@@ -42,7 +42,7 @@ const passwordSetupConfirm = document.querySelector("#password-setup-confirm");
 const passwordSetupMessage = document.querySelector("#password-setup-message");
 const themeOptions = document.querySelectorAll("button[data-theme]");
 const adminPanels = document.querySelectorAll(
-  "#admin .branding-panel, #admin .broker-contact-panel, #admin .archive-storage-panel, #admin .commission-panel",
+  "#admin .branding-panel, #admin .broker-contact-panel, #admin .archive-storage-panel, #admin .lockbox-panel, #admin .commission-panel",
 );
 const brandingForm = document.querySelector(".branding-panel");
 const companyInput = document.querySelector("#company-name");
@@ -82,6 +82,19 @@ const archiveStorageFields = {
 };
 const archiveQueueList = document.querySelector("#archive-queue-list");
 const archiveQueueCount = document.querySelector("#archive-queue-count");
+const lockboxList = document.querySelector("#lockbox-list");
+const addLockboxButton = document.querySelector("#add-lockbox-button");
+const lockboxModal = document.querySelector("#lockbox-modal");
+const lockboxForm = document.querySelector("#lockbox-form");
+const closeLockboxModal = document.querySelector("#close-lockbox-modal");
+const cancelLockboxButton = document.querySelector("#cancel-lockbox-button");
+const lockboxFields = {
+  lockboxId: document.querySelector("#lockbox-id"),
+  mlsNumber: document.querySelector("#lockbox-mls"),
+  address: document.querySelector("#lockbox-address"),
+  agentName: document.querySelector("#lockbox-agent"),
+  dateAdded: document.querySelector("#lockbox-date-added"),
+};
 const overviewMetrics = {
   activeListings: document.querySelector("#overview-active-listings"),
   pendingDeals: document.querySelector("#overview-pending-deals"),
@@ -573,6 +586,33 @@ let companyTasks = [
     completed: true,
   },
 ];
+const defaultLockboxes = [
+  {
+    id: 1,
+    lockboxId: "34439577",
+    mlsNumber: "26-275211",
+    address: "3165 S Tallow Tree DR, Washington, UT 84780",
+    agentName: "Jared Alvey",
+    dateAdded: "",
+  },
+  {
+    id: 2,
+    lockboxId: "34499015",
+    mlsNumber: "",
+    address: "2047 S Tagans Way, St. George, UT 84790",
+    agentName: "Jared Alvey",
+    dateAdded: "",
+  },
+  {
+    id: 3,
+    lockboxId: "34499026",
+    mlsNumber: "25-266109",
+    address: "3174 Walnut Canyon DR, Washington, UT 84780",
+    agentName: "Jared Alvey",
+    dateAdded: "",
+  },
+];
+let lockboxes = JSON.parse(localStorage.getItem("brokr-lockboxes") || "null") || defaultLockboxes;
 let brokerContact = {
   name: "Jared Alvey",
   email: "broker@lumerealestate.com",
@@ -1913,6 +1953,78 @@ function renderCompanyTasks() {
   companyTaskList.innerHTML = `${taskSection("Open company tasks", openTasks)}${taskSection("Completed", completedTasks)}`;
 }
 
+function escapeLockboxText(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function saveLockboxes() {
+  localStorage.setItem("brokr-lockboxes", JSON.stringify(lockboxes));
+}
+
+function renderLockboxes() {
+  if (!lockboxes.length) {
+    lockboxList.innerHTML = '<p class="lockbox-empty">No lockboxes are assigned to listings.</p>';
+    return;
+  }
+
+  lockboxList.innerHTML = lockboxes
+    .map(
+      (lockbox) => `
+        <article class="lockbox-row">
+          <div class="lockbox-primary">
+            <p class="eyebrow">Lockbox ID</p>
+            <strong>${escapeLockboxText(lockbox.lockboxId)}</strong>
+            <p>${escapeLockboxText(lockbox.address)}</p>
+          </div>
+          <dl class="lockbox-details">
+            <div>
+              <dt>MLS #</dt>
+              <dd>${lockbox.mlsNumber ? escapeLockboxText(lockbox.mlsNumber) : "Not set"}</dd>
+            </div>
+            <div>
+              <dt>Agent</dt>
+              <dd>${escapeLockboxText(lockbox.agentName)}</dd>
+            </div>
+            <div>
+              <dt>Date added to listing</dt>
+              <dd>${lockbox.dateAdded ? formatDate(lockbox.dateAdded) : "Not set"}</dd>
+            </div>
+          </dl>
+        </article>
+      `,
+    )
+    .join("");
+}
+
+function renderLockboxAgentOptions() {
+  const activeAgentNames = agents
+    .filter((agent) => !agent.archived)
+    .map((agent) => `${agent.firstName} ${agent.lastName}`.trim())
+    .filter(Boolean);
+  const agentNames = [...new Set(["Jared Alvey", ...activeAgentNames])];
+  lockboxFields.agentName.innerHTML = agentNames
+    .map((agentName) => `<option value="${escapeLockboxText(agentName)}">${escapeLockboxText(agentName)}</option>`)
+    .join("");
+}
+
+function openLockboxModal() {
+  lockboxForm.reset();
+  renderLockboxAgentOptions();
+  lockboxFields.agentName.value = "Jared Alvey";
+  lockboxFields.dateAdded.value = toDateKey(new Date());
+  lockboxModal.hidden = false;
+  lockboxFields.lockboxId.focus();
+}
+
+function closeLockboxForm() {
+  lockboxModal.hidden = true;
+}
+
 function openCompanyTaskModal() {
   companyTaskForm.reset();
   companyTaskFields.owner.value = "Admin";
@@ -3105,6 +3217,7 @@ function renderAll() {
   renderOfficeListings();
   renderOverviewSchedule();
   renderCompanyTasks();
+  renderLockboxes();
   renderInbox();
   renderArchiveQueue();
 }
@@ -3339,6 +3452,34 @@ companyTaskForm.addEventListener("submit", (event) => {
   ];
   renderCompanyTasks();
   closeCompanyTaskForm();
+});
+
+addLockboxButton.addEventListener("click", openLockboxModal);
+closeLockboxModal.addEventListener("click", closeLockboxForm);
+cancelLockboxButton.addEventListener("click", closeLockboxForm);
+
+lockboxModal.addEventListener("click", (event) => {
+  if (event.target === lockboxModal) closeLockboxForm();
+});
+
+lockboxForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!lockboxForm.reportValidity()) return;
+
+  lockboxes = [
+    {
+      id: Date.now(),
+      lockboxId: lockboxFields.lockboxId.value.trim(),
+      mlsNumber: lockboxFields.mlsNumber.value.trim(),
+      address: lockboxFields.address.value.trim(),
+      agentName: lockboxFields.agentName.value,
+      dateAdded: lockboxFields.dateAdded.value,
+    },
+    ...lockboxes,
+  ];
+  saveLockboxes();
+  renderLockboxes();
+  closeLockboxForm();
 });
 
 transactionTabs.forEach((tab) => {
