@@ -2755,6 +2755,7 @@ body.menu-open .sidebar {
     height: 54px;
   }
 }
+
 :root {
   --ink: #2a241c;
   --muted: #756a5b;
@@ -7725,5 +7726,48 @@ body[data-theme="dark"] .task-status.overdue {
 
   .lockbox-edit-button {
     width: 100%;
+  }
+}
+
+/* Responsive overview metrics: fluid on desktop, always two-up on phones. */
+.metric-grid {
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 1px;
+  background: var(--line);
+}
+
+.metric-card,
+.metric-card:last-child,
+.metric-card:nth-child(3n) {
+  min-width: 0;
+  border: 0;
+  background: var(--panel);
+}
+
+@media (max-width: 1180px) {
+  .metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-card {
+    min-height: 104px;
+    padding: 14px;
+  }
+
+  .metric-card p {
+    margin-bottom: 14px;
+    font-size: 0.76rem;
+    line-height: 1.25;
+  }
+
+  .metric-card strong {
+    font-size: clamp(1.08rem, 5vw, 1.4rem);
+    letter-spacing: -0.025em;
   }
 }
