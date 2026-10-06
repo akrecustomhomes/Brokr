@@ -1149,10 +1149,28 @@
               Date added to listing
               <input id="lockbox-date-added" type="date" />
             </label>
+            <label>
+              Shackle code
+              <input id="lockbox-shackle-code" type="password" inputmode="numeric" autocomplete="off" />
+            </label>
+            <label>
+              Key code
+              <input id="lockbox-key-code" type="password" inputmode="numeric" autocomplete="off" />
+            </label>
+            <label class="lockbox-code-toggle">
+              <input id="show-lockbox-codes" type="checkbox" />
+              Show codes while editing
+            </label>
+            <label class="lockbox-code-toggle">
+              <input id="apply-lockbox-codes-all" type="checkbox" />
+              Apply these codes to all lockboxes
+            </label>
           </div>
 
+          <p class="form-note lockbox-security-note">Access codes are masked and saved only in this browser.</p>
+
           <div class="modal-actions">
-            <span></span>
+            <button class="secondary-action danger-action" id="delete-lockbox-button" type="button" hidden>Delete Lockbox</button>
             <div>
               <button class="secondary-action" id="cancel-lockbox-button" type="button">Cancel</button>
               <button class="primary-action" type="submit">Save Lockbox</button>

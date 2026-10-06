@@ -89,6 +89,7 @@ const lockboxForm = document.querySelector("#lockbox-form");
 const lockboxModalTitle = document.querySelector("#lockbox-modal-title");
 const closeLockboxModal = document.querySelector("#close-lockbox-modal");
 const cancelLockboxButton = document.querySelector("#cancel-lockbox-button");
+const deleteLockboxButton = document.querySelector("#delete-lockbox-button");
 const lockboxFields = {
   lockboxId: document.querySelector("#lockbox-id"),
   mlsNumber: document.querySelector("#lockbox-mls"),
@@ -96,6 +97,10 @@ const lockboxFields = {
   address: document.querySelector("#lockbox-address"),
   agentName: document.querySelector("#lockbox-agent"),
   dateAdded: document.querySelector("#lockbox-date-added"),
+  shackleCode: document.querySelector("#lockbox-shackle-code"),
+  keyCode: document.querySelector("#lockbox-key-code"),
+  showCodes: document.querySelector("#show-lockbox-codes"),
+  applyCodesToAll: document.querySelector("#apply-lockbox-codes-all"),
 };
 const overviewMetrics = {
   activeListings: document.querySelector("#overview-active-listings"),
@@ -597,6 +602,8 @@ const defaultLockboxes = [
     agentName: "Jared Alvey",
     dateAdded: "",
     status: "assigned",
+    shackleCode: "",
+    keyCode: "",
   },
   {
     id: 2,
@@ -606,6 +613,8 @@ const defaultLockboxes = [
     agentName: "Jared Alvey",
     dateAdded: "",
     status: "assigned",
+    shackleCode: "",
+    keyCode: "",
   },
   {
     id: 3,
@@ -615,6 +624,8 @@ const defaultLockboxes = [
     agentName: "Jared Alvey",
     dateAdded: "",
     status: "assigned",
+    shackleCode: "",
+    keyCode: "",
   },
   {
     id: 4,
@@ -624,6 +635,8 @@ const defaultLockboxes = [
     agentName: "",
     dateAdded: "",
     status: "unassigned",
+    shackleCode: "",
+    keyCode: "",
   },
   {
     id: 5,
@@ -633,6 +646,8 @@ const defaultLockboxes = [
     agentName: "",
     dateAdded: "",
     status: "unassigned",
+    shackleCode: "",
+    keyCode: "",
   },
 ];
 const savedLockboxes = JSON.parse(localStorage.getItem("brokr-lockboxes") || "null");
@@ -2051,6 +2066,14 @@ function renderLockboxes() {
               <dt>Date added to listing</dt>
               <dd>${lockbox.dateAdded ? formatDate(lockbox.dateAdded) : "Not set"}</dd>
             </div>
+            <div>
+              <dt>Shackle code</dt>
+              <dd>${lockbox.shackleCode ? "Saved ••••" : "Not set"}</dd>
+            </div>
+            <div>
+              <dt>Key code</dt>
+              <dd>${lockbox.keyCode ? "Saved ••••" : "Not set"}</dd>
+            </div>
           </dl>
           <button class="secondary-action lockbox-edit-button" type="button" data-lockbox-edit="${lockbox.id}" aria-label="Edit ${escapeLockboxText(lockbox.lockboxId || lockbox.inventoryLabel || "lockbox")}">Edit</button>
         </article>
@@ -2076,12 +2099,19 @@ function openLockboxModal(lockboxId = null) {
   renderLockboxAgentOptions();
   const lockbox = lockboxes.find((item) => item.id === lockboxId);
   lockboxModalTitle.textContent = lockbox ? "Edit Lockbox" : "Add Lockbox";
+  deleteLockboxButton.hidden = !lockbox;
   lockboxFields.lockboxId.value = lockbox?.lockboxId || "";
   lockboxFields.mlsNumber.value = lockbox?.mlsNumber || "";
   lockboxFields.status.value = lockbox?.status || "assigned";
   lockboxFields.address.value = lockbox?.address || "";
   lockboxFields.agentName.value = lockbox?.agentName || "Jared Alvey";
   lockboxFields.dateAdded.value = lockbox?.dateAdded || (lockbox ? "" : toDateKey(new Date()));
+  lockboxFields.shackleCode.value = lockbox?.shackleCode || "";
+  lockboxFields.keyCode.value = lockbox?.keyCode || "";
+  lockboxFields.showCodes.checked = false;
+  lockboxFields.applyCodesToAll.checked = false;
+  lockboxFields.shackleCode.type = "password";
+  lockboxFields.keyCode.type = "password";
   syncLockboxAssignmentFields();
   lockboxModal.hidden = false;
   lockboxFields.lockboxId.focus();
@@ -3536,8 +3566,23 @@ companyTaskForm.addEventListener("submit", (event) => {
 
 addLockboxButton.addEventListener("click", () => openLockboxModal());
 lockboxFields.status.addEventListener("change", syncLockboxAssignmentFields);
+lockboxFields.showCodes.addEventListener("change", () => {
+  const inputType = lockboxFields.showCodes.checked ? "text" : "password";
+  lockboxFields.shackleCode.type = inputType;
+  lockboxFields.keyCode.type = inputType;
+});
 closeLockboxModal.addEventListener("click", closeLockboxForm);
 cancelLockboxButton.addEventListener("click", closeLockboxForm);
+deleteLockboxButton.addEventListener("click", () => {
+  const lockbox = lockboxes.find((item) => item.id === editingLockboxId);
+  if (!lockbox) return;
+  const lockboxName = lockbox.lockboxId || lockbox.inventoryLabel || "this lockbox";
+  if (!window.confirm(`Delete lockbox ${lockboxName} from inventory? This cannot be undone.`)) return;
+  lockboxes = lockboxes.filter((item) => item.id !== editingLockboxId);
+  saveLockboxes();
+  renderLockboxes();
+  closeLockboxForm();
+});
 
 lockboxModal.addEventListener("click", (event) => {
   if (event.target === lockboxModal) closeLockboxForm();
@@ -3562,11 +3607,20 @@ lockboxForm.addEventListener("submit", (event) => {
     address: isAssigned ? lockboxFields.address.value.trim() : "",
     agentName: isAssigned ? lockboxFields.agentName.value : "",
     dateAdded: isAssigned ? lockboxFields.dateAdded.value : "",
+    shackleCode: lockboxFields.shackleCode.value.trim(),
+    keyCode: lockboxFields.keyCode.value.trim(),
     inventoryLabel: lockboxes.find((lockbox) => lockbox.id === editingLockboxId)?.inventoryLabel || "",
   };
   lockboxes = editingLockboxId
     ? lockboxes.map((lockbox) => (lockbox.id === editingLockboxId ? lockboxData : lockbox))
     : [lockboxData, ...lockboxes];
+  if (lockboxFields.applyCodesToAll.checked) {
+    lockboxes = lockboxes.map((lockbox) => ({
+      ...lockbox,
+      shackleCode: lockboxData.shackleCode,
+      keyCode: lockboxData.keyCode,
+    }));
+  }
   saveLockboxes();
   renderLockboxes();
   closeLockboxForm();
