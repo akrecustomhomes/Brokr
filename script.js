@@ -1863,10 +1863,20 @@ function getVisibleCompanyTasks() {
   });
 }
 
+function isCompanyTaskOverdue(task) {
+  if (task.completed || !task.deadline) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const deadline = new Date(`${task.deadline}T00:00:00`);
+  return !Number.isNaN(deadline.getTime()) && deadline < today;
+}
+
 function renderCompanyTasks() {
   const visibleTasks = getVisibleCompanyTasks();
   const openTasks = visibleTasks.filter((task) => !task.completed);
   const completedTasks = visibleTasks.filter((task) => task.completed);
+  const overdueTaskCount = openTasks.filter(isCompanyTaskOverdue).length;
   const taskSection = (label, tasks) => `
     <div class="company-task-section">
       <p class="task-section-label">${label}</p>
@@ -1874,17 +1884,21 @@ function renderCompanyTasks() {
         tasks.length
           ? tasks
               .map(
-                (task) => `
-                  <label class="company-task-row ${task.completed ? "completed" : ""}">
+                (task) => {
+                  const isOverdue = isCompanyTaskOverdue(task);
+                  const statusLabel = isOverdue ? "Overdue" : task.status;
+                  return `
+                  <label class="company-task-row ${task.completed ? "completed" : ""} ${isOverdue ? "overdue" : ""}">
                     <input type="checkbox" data-company-task="${task.id}" ${task.completed ? "checked" : ""} />
                     <span class="task-checkbox" aria-hidden="true"></span>
                     <span class="task-copy">
                       <strong>${task.title}</strong>
-                      <span>${task.owner}${task.deadline ? ` | Due ${formatDate(task.deadline)}` : ""}</span>
+                      <span>${task.owner}${task.deadline ? ` | ${isOverdue ? "Overdue" : "Due"} ${formatDate(task.deadline)}` : ""}</span>
                     </span>
-                    <span class="task-status ${task.status === "High" ? "high" : ""}">${task.status}</span>
+                    <span class="task-status ${isOverdue ? "overdue" : task.status === "High" ? "high" : ""}">${statusLabel}</span>
                   </label>
-                `,
+                `;
+                },
               )
               .join("")
           : '<p class="task-empty">No tasks in this section</p>'
@@ -1892,7 +1906,9 @@ function renderCompanyTasks() {
     </div>
   `;
 
-  companyTaskOpenCount.textContent = `${openTasks.length} open`;
+  companyTaskOpenCount.textContent = overdueTaskCount
+    ? `${openTasks.length} open · ${overdueTaskCount} overdue`
+    : `${openTasks.length} open`;
   addCompanyTaskButton.hidden = isAgentUser();
   companyTaskList.innerHTML = `${taskSection("Open company tasks", openTasks)}${taskSection("Completed", completedTasks)}`;
 }

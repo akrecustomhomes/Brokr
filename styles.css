@@ -7537,3 +7537,19 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     padding-left: 56px;
   }
 }
+
+/* Keep overdue brokerage work visible until it is completed. */
+.company-task-row.overdue .task-copy > span {
+  color: var(--clay);
+  font-weight: 520;
+}
+
+.task-status.overdue {
+  background: #f8e7df;
+  color: #8f3f24;
+}
+
+body[data-theme="dark"] .task-status.overdue {
+  background: #4b2a20;
+  color: #ffc5ad;
+}
