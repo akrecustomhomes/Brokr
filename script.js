@@ -1262,24 +1262,23 @@ function setupAdminPanelToggles() {
       panel.classList.toggle("is-collapsed", isCollapsed);
       toggle.setAttribute("aria-expanded", String(!isCollapsed));
       toggle.textContent = isCollapsed ? "Expand" : "Collapse";
-      header.tabIndex = isCollapsed ? 0 : -1;
+      header.tabIndex = 0;
       header.setAttribute("aria-expanded", String(!isCollapsed));
       header.setAttribute("aria-controls", body.id);
-      header.setAttribute("aria-label", `${panel.querySelector("h3")?.textContent || "Admin panel"}: ${isCollapsed ? "expand" : "expanded"}`);
+      header.setAttribute("aria-label", `${panel.querySelector("h3")?.textContent || "Admin panel"}: ${isCollapsed ? "expand" : "collapse"}`);
     };
 
     setCollapsed(true);
     toggle.addEventListener("click", () => setCollapsed(!panel.classList.contains("is-collapsed")));
     header.addEventListener("click", (event) => {
-      if (!panel.classList.contains("is-collapsed")) return;
       if (event.target.closest("button, a, input, select, textarea")) return;
-      setCollapsed(false);
+      setCollapsed(!panel.classList.contains("is-collapsed"));
     });
     header.addEventListener("keydown", (event) => {
-      if (!panel.classList.contains("is-collapsed") || event.target !== header) return;
+      if (event.target !== header) return;
       if (event.key !== "Enter" && event.key !== " ") return;
       event.preventDefault();
-      setCollapsed(false);
+      setCollapsed(!panel.classList.contains("is-collapsed"));
     });
   });
 }
