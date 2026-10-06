@@ -2145,6 +2145,61 @@ img.agent-avatar,
   font-weight: 480;
 }
 
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.admin-panel-body {
+  display: block;
+}
+
+.branding-panel.is-collapsed .admin-panel-body,
+.broker-contact-panel.is-collapsed .admin-panel-body,
+.archive-storage-panel.is-collapsed .admin-panel-body,
+.commission-panel.is-collapsed .admin-panel-body {
+  display: none;
+}
+
+.branding-panel.is-collapsed .panel-header,
+.broker-contact-panel.is-collapsed .panel-header,
+.archive-storage-panel.is-collapsed .panel-header,
+.commission-panel.is-collapsed .panel-header {
+  border-bottom: 0;
+}
+
+.panel-toggle-button {
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--input-bg);
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0 13px;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 430;
+  box-shadow: var(--button-shadow);
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.panel-toggle-button:hover {
+  background: var(--panel-soft);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.panel-toggle-button:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+}
+
 .secondary-action:disabled {
   cursor: not-allowed;
   color: var(--muted);

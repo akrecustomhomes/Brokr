@@ -41,6 +41,9 @@ const passwordSetupNew = document.querySelector("#password-setup-new");
 const passwordSetupConfirm = document.querySelector("#password-setup-confirm");
 const passwordSetupMessage = document.querySelector("#password-setup-message");
 const themeOptions = document.querySelectorAll("button[data-theme]");
+const adminPanels = document.querySelectorAll(
+  "#admin .branding-panel, #admin .broker-contact-panel, #admin .archive-storage-panel, #admin .commission-panel",
+);
 const brandingForm = document.querySelector(".branding-panel");
 const companyInput = document.querySelector("#company-name");
 const systemInput = document.querySelector("#system-name");
@@ -1096,6 +1099,7 @@ themeOptions.forEach((option) => {
 });
 
 setTheme("light");
+setupAdminPanelToggles();
 restoreBrokerContact();
 restoreArchiveSettings();
 restoreBrokerContactFromBackend();
@@ -1131,6 +1135,46 @@ archiveStorageForm.addEventListener("submit", (event) => {
   event.preventDefault();
   syncArchiveSettings();
 });
+
+function setupAdminPanelToggles() {
+  adminPanels.forEach((panel, index) => {
+    const header = panel.querySelector(":scope > .panel-header");
+    if (!header) return;
+
+    const body = document.createElement("div");
+    body.className = "admin-panel-body";
+    body.id = `admin-panel-body-${index + 1}`;
+
+    while (header.nextSibling) {
+      body.appendChild(header.nextSibling);
+    }
+
+    panel.appendChild(body);
+
+    const actions = document.createElement("div");
+    actions.className = "panel-header-actions";
+
+    Array.from(header.children)
+      .slice(1)
+      .forEach((child) => actions.appendChild(child));
+
+    const toggle = document.createElement("button");
+    toggle.className = "panel-toggle-button";
+    toggle.type = "button";
+    toggle.setAttribute("aria-controls", body.id);
+    actions.appendChild(toggle);
+    header.appendChild(actions);
+
+    const setCollapsed = (isCollapsed) => {
+      panel.classList.toggle("is-collapsed", isCollapsed);
+      toggle.setAttribute("aria-expanded", String(!isCollapsed));
+      toggle.textContent = isCollapsed ? "Expand" : "Collapse";
+    };
+
+    setCollapsed(true);
+    toggle.addEventListener("click", () => setCollapsed(!panel.classList.contains("is-collapsed")));
+  });
+}
 
 function getLicenseStatus(expirationDate) {
   const today = new Date();
