@@ -10,7 +10,7 @@ function isFinderArea(row, column, size) {
 }
 
 function styledQrSvg(value, style) {
-  const qr = QRCode.create(value, { errorCorrectionLevel: "H" });
+  const qr = QRCode.create(value, { errorCorrectionLevel: "Q" });
   const size = qr.modules.size;
   const margin = 2;
   const viewSize = size + margin * 2;
@@ -39,7 +39,7 @@ module.exports = async function qrImage(request, response) {
 
   const protocol = request.headers["x-forwarded-proto"] || "https";
   const host = request.headers["x-forwarded-host"] || request.headers.host || "app.lumerealestate.com";
-  const scanUrl = `${protocol}://${host}/api/scan/${slug}`;
+  const scanUrl = `${protocol}://${host}/q/${slug}`;
   const adminClient = getAdminClient();
   let style = "classic";
   if (adminClient) {

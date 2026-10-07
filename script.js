@@ -2112,7 +2112,7 @@ async function qrApi(path = "", options = {}) {
 }
 
 function qrScanUrl(code) {
-  return `${window.location.origin}/api/scan/${encodeURIComponent(code.slug)}`;
+  return `${window.location.origin}/q/${encodeURIComponent(code.slug)}`;
 }
 
 function renderQrCodes() {
