@@ -2059,10 +2059,13 @@ function renderLockboxes() {
     .map(
       (lockbox) => `
         <article class="lockbox-row">
-          <div class="lockbox-primary">
-            <p class="eyebrow">Lockbox ID</p>
-            <strong>${lockbox.lockboxId ? escapeLockboxText(lockbox.lockboxId) : escapeLockboxText(lockbox.inventoryLabel || "Not entered")}</strong>
-            <p>${lockbox.address ? escapeLockboxText(lockbox.address) : "Available for a future listing"}</p>
+          <div class="lockbox-row-main">
+            <div class="lockbox-primary">
+              <p class="eyebrow">Lockbox ID</p>
+              <strong>${lockbox.lockboxId ? escapeLockboxText(lockbox.lockboxId) : escapeLockboxText(lockbox.inventoryLabel || "Not entered")}</strong>
+              <p>${lockbox.address ? escapeLockboxText(lockbox.address) : "Available for a future listing"}</p>
+            </div>
+            <button class="secondary-action lockbox-edit-button" type="button" data-lockbox-edit="${lockbox.id}" aria-label="Edit ${escapeLockboxText(lockbox.lockboxId || lockbox.inventoryLabel || "lockbox")}">Edit</button>
           </div>
           <dl class="lockbox-details">
             <div>
@@ -2090,7 +2093,6 @@ function renderLockboxes() {
               <dd>${lockbox.keyCode ? "Saved ••••" : "Not set"}</dd>
             </div>
           </dl>
-          <button class="secondary-action lockbox-edit-button" type="button" data-lockbox-edit="${lockbox.id}" aria-label="Edit ${escapeLockboxText(lockbox.lockboxId || lockbox.inventoryLabel || "lockbox")}">Edit</button>
         </article>
       `,
     )
@@ -2133,24 +2135,27 @@ function renderQrCodes() {
         : "Never";
       return `
         <article class="qr-code-card ${code.is_active ? "" : "is-paused"}">
-          <div class="qr-code-image-wrap">
-            <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
-          </div>
-          <div class="qr-code-content">
-            <div class="qr-code-copy">
-              <div class="qr-code-title-row">
-                <p class="eyebrow">${code.is_active ? "Active" : "Paused"}</p>
-                <h4>${escapeLockboxText(code.name)}</h4>
-                <p class="qr-style-label">${code.style === "dots" ? "Round dots" : code.style === "rounded" ? "Soft rounded" : "Classic squares"}</p>
-              </div>
-              <a class="qr-destination" href="${escapeLockboxText(code.destination_url)}" target="_blank" rel="noopener">${escapeLockboxText(code.destination_url)}</a>
+          <div class="qr-code-main">
+            <div class="qr-code-image-wrap">
+              <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
             </div>
-            <dl class="qr-code-stats">
-              <div><dt>Scans</dt><dd>${Number(code.scan_count || 0).toLocaleString()}</dd></div>
-              <div><dt>Approx. visitors</dt><dd>${Number(code.unique_visitor_count || 0).toLocaleString()}</dd></div>
-              <div><dt>Last scan</dt><dd>${escapeLockboxText(lastScan)}</dd></div>
-            </dl>
-            <div class="qr-code-actions">
+            <div class="qr-code-content">
+              <div class="qr-code-copy">
+                <div class="qr-code-title-row">
+                  <p class="eyebrow">${code.is_active ? "Active" : "Paused"}</p>
+                  <h4>${escapeLockboxText(code.name)}</h4>
+                  <p class="qr-style-label">${code.style === "dots" ? "Round dots" : code.style === "rounded" ? "Soft rounded" : "Classic squares"}</p>
+                </div>
+                <a class="qr-destination" href="${escapeLockboxText(code.destination_url)}" target="_blank" rel="noopener">${escapeLockboxText(code.destination_url)}</a>
+              </div>
+              <dl class="qr-code-stats">
+                <div><dt>Scans</dt><dd>${Number(code.scan_count || 0).toLocaleString()}</dd></div>
+                <div><dt>Approx. visitors</dt><dd>${Number(code.unique_visitor_count || 0).toLocaleString()}</dd></div>
+                <div><dt>Last scan</dt><dd>${escapeLockboxText(lastScan)}</dd></div>
+              </dl>
+            </div>
+          </div>
+          <div class="qr-code-actions">
               <label class="qr-style-control">
                 Style
                 <select data-qr-style="${code.id}">
@@ -2164,7 +2169,6 @@ function renderQrCodes() {
               <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
               <button class="secondary-action danger-action" type="button" data-qr-delete="${code.id}">Delete</button>
-            </div>
           </div>
         </article>`;
     })
@@ -2779,12 +2783,15 @@ function renderCommissionRules() {
 
       return `
         <button class="commission-row" type="button" data-commission-agent="${agent.id}">
-          <div class="agent-identity">
-            ${renderAgentAvatar(agent)}
-            <div class="agent-name">
-              <strong>${agent.firstName} ${agent.lastName}</strong>
-              <span>${agent.email}</span>
+          <div class="commission-row-main">
+            <div class="agent-identity">
+              ${renderAgentAvatar(agent)}
+              <div class="agent-name">
+                <strong>${agent.firstName} ${agent.lastName}</strong>
+                <span>${agent.email}</span>
+              </div>
             </div>
+            <span class="commission-edit-label">Edit rule</span>
           </div>
           <div class="commission-split">
             <span>${agentSplit}% Agent</span>
