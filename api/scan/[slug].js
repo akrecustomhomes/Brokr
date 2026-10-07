@@ -7,6 +7,15 @@ function deviceType(userAgent) {
   return "Desktop";
 }
 
+function decodeHeader(value, maxLength) {
+  const text = String(value || "").slice(0, maxLength);
+  try {
+    return decodeURIComponent(text.replaceAll("+", " ")) || null;
+  } catch {
+    return text || null;
+  }
+}
+
 module.exports = async function scan(request, response) {
   if (request.method !== "GET") return response.status(405).end("Method not allowed.");
   const adminClient = getAdminClient();
@@ -31,8 +40,8 @@ module.exports = async function scan(request, response) {
     user_agent: userAgent || null,
     referrer: String(request.headers.referer || "").slice(0, 1000) || null,
     country: String(request.headers["x-vercel-ip-country"] || "").slice(0, 2) || null,
-    region: String(request.headers["x-vercel-ip-country-region"] || "").slice(0, 100) || null,
-    city: String(request.headers["x-vercel-ip-city"] || "").slice(0, 150) || null,
+    region: decodeHeader(request.headers["x-vercel-ip-country-region"], 100),
+    city: decodeHeader(request.headers["x-vercel-ip-city"], 150),
   };
   const { error: insertError } = await adminClient.from("qr_scan_events").insert(event);
   if (insertError) console.error("Unable to record QR scan", insertError.message);

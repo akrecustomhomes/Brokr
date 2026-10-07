@@ -7979,15 +7979,35 @@ body[data-theme="dark"] .task-status.overdue {
 }
 
 .qr-scan-modal-panel {
-  width: min(860px, calc(100vw - 32px));
-  max-height: min(760px, calc(100vh - 32px));
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(680px, calc(100vh - 32px));
   overflow: auto;
+}
+
+.qr-scan-modal-panel > .modal-header {
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 20px 24px;
+}
+
+.qr-scan-modal-panel > .modal-header h3 {
+  margin-top: 4px;
+  font-size: clamp(1.25rem, 3vw, 1.55rem);
+}
+
+.qr-scan-modal-panel > .modal-header .icon-button {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
 }
 
 .qr-scan-privacy {
   margin: 0;
   border-bottom: 1px solid var(--line);
-  padding: 16px 24px;
+  background: var(--panel-soft);
+  padding: 13px 24px;
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .qr-scan-list {
@@ -8005,7 +8025,7 @@ body[data-theme="dark"] .task-status.overdue {
   grid-template-columns: minmax(190px, 1fr) minmax(180px, 1fr) minmax(150px, 0.8fr);
   gap: 20px;
   border-bottom: 1px solid var(--line);
-  padding: 15px 24px;
+  padding: 16px 24px;
 }
 
 .qr-scan-row:last-child {
@@ -8026,6 +8046,12 @@ body[data-theme="dark"] .task-status.overdue {
   overflow-wrap: anywhere;
   font-size: 0.9rem;
   font-weight: 520;
+}
+
+.qr-scan-modal-panel > .modal-actions {
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding: 14px 24px;
 }
 
 @media (max-width: 1180px) {

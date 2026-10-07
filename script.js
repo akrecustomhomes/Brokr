@@ -2216,7 +2216,10 @@ async function openQrScanDetails(code) {
     qrScanList.innerHTML = payload.scans
       .map((scan) => {
         const scannedAt = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(scan.scanned_at));
-        const location = [scan.city, scan.region, scan.country].filter(Boolean).join(", ") || "Location unavailable";
+        const decodeLocation = (value) => {
+          try { return decodeURIComponent(String(value || "").replaceAll("+", " ")); } catch { return String(value || ""); }
+        };
+        const location = [scan.city, scan.region, scan.country].map(decodeLocation).filter(Boolean).join(", ") || "Location unavailable";
         let referrer = "Direct / camera scan";
         if (scan.referrer) {
           try { referrer = new URL(scan.referrer).hostname; } catch { referrer = scan.referrer; }
