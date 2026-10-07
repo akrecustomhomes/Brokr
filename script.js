@@ -112,6 +112,11 @@ const qrCodeStyle = document.querySelector("#qr-code-style");
 const qrCodeFormMessage = document.querySelector("#qr-code-form-message");
 const closeQrCodeModal = document.querySelector("#close-qr-code-modal");
 const cancelQrCodeButton = document.querySelector("#cancel-qr-code-button");
+const qrScanModal = document.querySelector("#qr-scan-modal");
+const qrScanModalTitle = document.querySelector("#qr-scan-modal-title");
+const qrScanList = document.querySelector("#qr-scan-list");
+const closeQrScanModal = document.querySelector("#close-qr-scan-modal");
+const doneQrScanButton = document.querySelector("#done-qr-scan-button");
 const overviewMetrics = {
   activeListings: document.querySelector("#overview-active-listings"),
   pendingDeals: document.querySelector("#overview-pending-deals"),
@@ -2155,6 +2160,7 @@ function renderQrCodes() {
                 </select>
               </label>
               <button class="secondary-action" type="button" data-qr-copy="${code.id}">Copy link</button>
+              <button class="secondary-action" type="button" data-qr-scans="${code.id}">Scan details</button>
               <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
               <button class="secondary-action danger-action" type="button" data-qr-delete="${code.id}">Delete</button>
@@ -2191,6 +2197,40 @@ function openQrCodeForm() {
 
 function closeQrCodeForm() {
   qrCodeModal.hidden = true;
+}
+
+function closeQrScanDetails() {
+  qrScanModal.hidden = true;
+}
+
+async function openQrScanDetails(code) {
+  qrScanModalTitle.textContent = `${code.name} Scan Details`;
+  qrScanList.innerHTML = '<p class="qr-scan-empty">Loading recent scans…</p>';
+  qrScanModal.hidden = false;
+  try {
+    const payload = await qrApi(`?id=${encodeURIComponent(code.id)}`);
+    if (!payload.scans.length) {
+      qrScanList.innerHTML = '<p class="qr-scan-empty">No scans recorded yet.</p>';
+      return;
+    }
+    qrScanList.innerHTML = payload.scans
+      .map((scan) => {
+        const scannedAt = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(scan.scanned_at));
+        const location = [scan.city, scan.region, scan.country].filter(Boolean).join(", ") || "Location unavailable";
+        let referrer = "Direct / camera scan";
+        if (scan.referrer) {
+          try { referrer = new URL(scan.referrer).hostname; } catch { referrer = scan.referrer; }
+        }
+        return `<article class="qr-scan-row">
+          <div><strong>${escapeLockboxText(scannedAt)}</strong><span>${escapeLockboxText(scan.device_type || "Unknown device")}</span></div>
+          <div><span>Approx. location</span><strong>${escapeLockboxText(location)}</strong></div>
+          <div><span>Source</span><strong>${escapeLockboxText(referrer)}</strong></div>
+        </article>`;
+      })
+      .join("");
+  } catch (error) {
+    qrScanList.innerHTML = `<p class="qr-scan-empty">${escapeLockboxText(error.message)}</p>`;
+  }
 }
 
 function renderLockboxAgentOptions() {
@@ -3711,6 +3751,7 @@ qrCodeList.addEventListener("click", async (event) => {
   const copyButton = event.target.closest("[data-qr-copy]");
   const toggleButton = event.target.closest("[data-qr-toggle]");
   const deleteButton = event.target.closest("[data-qr-delete]");
+  const scansButton = event.target.closest("[data-qr-scans]");
   if (copyButton) {
     const code = qrCodes.find((item) => item.id === copyButton.dataset.qrCopy);
     if (!code) return;
@@ -3718,6 +3759,10 @@ qrCodeList.addEventListener("click", async (event) => {
     const originalText = copyButton.textContent;
     copyButton.textContent = "Copied";
     setTimeout(() => { copyButton.textContent = originalText; }, 1400);
+  }
+  if (scansButton) {
+    const code = qrCodes.find((item) => item.id === scansButton.dataset.qrScans);
+    if (code) openQrScanDetails(code);
   }
   if (toggleButton) {
     const code = qrCodes.find((item) => item.id === toggleButton.dataset.qrToggle);
@@ -3743,6 +3788,11 @@ qrCodeList.addEventListener("click", async (event) => {
       deleteButton.disabled = false;
     }
   }
+});
+closeQrScanModal.addEventListener("click", closeQrScanDetails);
+doneQrScanButton.addEventListener("click", closeQrScanDetails);
+qrScanModal.addEventListener("click", (event) => {
+  if (event.target === qrScanModal) closeQrScanDetails();
 });
 qrCodeList.addEventListener("change", async (event) => {
   const styleSelect = event.target.closest("[data-qr-style]");

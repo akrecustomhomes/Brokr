@@ -1234,6 +1234,24 @@
       </section>
     </div>
 
+    <div class="modal-backdrop" id="qr-scan-modal" hidden>
+      <section class="modal qr-scan-modal-panel" role="dialog" aria-modal="true" aria-labelledby="qr-scan-modal-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Recent activity</p>
+            <h3 id="qr-scan-modal-title">QR Scan Details</h3>
+          </div>
+          <button class="icon-button" id="close-qr-scan-modal" type="button" aria-label="Close scan details">X</button>
+        </div>
+        <p class="form-note qr-scan-privacy">Locations are approximate. Scanner names are not collected unless the destination page asks the visitor to identify themselves.</p>
+        <div class="qr-scan-list" id="qr-scan-list"></div>
+        <div class="modal-actions">
+          <span></span>
+          <button class="secondary-action" id="done-qr-scan-button" type="button">Done</button>
+        </div>
+      </section>
+    </div>
+
     <div class="modal-backdrop auth-gate" id="auth-gate" hidden>
       <section class="modal auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-gate-title">
         <form id="auth-form">

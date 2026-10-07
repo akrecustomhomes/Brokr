@@ -21,6 +21,22 @@ module.exports = async function qrCodes(request, response) {
   const { adminClient, authUser } = auth;
 
   if (request.method === "GET") {
+    const codeId = String(request.query?.id || "");
+    if (codeId) {
+      const [{ data: code, error: codeError }, { data: scans, error: scansError }] = await Promise.all([
+        adminClient.from("qr_codes").select("id,name").eq("id", codeId).maybeSingle(),
+        adminClient
+          .from("qr_scan_events")
+          .select("id,scanned_at,device_type,referrer,country,region,city")
+          .eq("qr_code_id", codeId)
+          .order("scanned_at", { ascending: false })
+          .limit(100),
+      ]);
+      if (codeError || scansError) return sendJson(response, 400, { error: codeError?.message || scansError?.message });
+      if (!code) return sendJson(response, 404, { error: "QR code not found." });
+      return sendJson(response, 200, { code, scans: scans || [] });
+    }
+
     const { data: summary, error: summaryError } = await adminClient
       .from("qr_code_summary")
       .select("*")
