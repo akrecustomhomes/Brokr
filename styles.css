@@ -8365,3 +8365,41 @@ body[data-theme="dark"] .task-status.overdue {
     justify-self: stretch;
   }
 }
+
+/* Join the create and panel-toggle actions while keeping create emphasized. */
+.lockbox-panel .panel-header-actions,
+.qr-manager-panel .panel-header-actions {
+  display: inline-flex;
+  grid-template-columns: none;
+  gap: 0;
+  width: auto;
+}
+
+.lockbox-panel .panel-header-actions .primary-action,
+.qr-manager-panel .panel-header-actions .primary-action {
+  width: auto;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.lockbox-panel .panel-header-actions .panel-toggle-button,
+.qr-manager-panel .panel-header-actions .panel-toggle-button {
+  width: auto;
+  border-left-width: 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  box-shadow: var(--button-shadow);
+}
+
+@media (max-width: 620px) {
+  .lockbox-panel .panel-header-actions,
+  .qr-manager-panel .panel-header-actions {
+    display: flex;
+    width: 100%;
+  }
+
+  .lockbox-panel .panel-header-actions .primary-action,
+  .qr-manager-panel .panel-header-actions .primary-action,
+  .lockbox-panel .panel-header-actions .panel-toggle-button,
+  .qr-manager-panel .panel-header-actions .panel-toggle-button {
+    width: 50%;
+  }
+}
