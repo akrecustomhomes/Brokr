@@ -2049,6 +2049,10 @@ function saveLockboxes() {
   localStorage.setItem("brokr-lockboxes", JSON.stringify(lockboxes));
 }
 
+const expandedLockboxIds = new Set();
+const expandedQrCodeIds = new Set();
+const expandedCommissionAgentIds = new Set();
+
 function renderLockboxes() {
   if (!lockboxes.length) {
     lockboxList.innerHTML = '<p class="lockbox-empty">No lockboxes are assigned to listings.</p>';
@@ -2057,15 +2061,20 @@ function renderLockboxes() {
 
   lockboxList.innerHTML = lockboxes
     .map(
-      (lockbox) => `
-        <article class="lockbox-row">
+      (lockbox) => {
+        const isExpanded = expandedLockboxIds.has(lockbox.id);
+        return `
+        <article class="lockbox-row ${isExpanded ? "is-expanded" : "is-collapsed"}">
           <div class="lockbox-row-main">
             <div class="lockbox-primary">
               <p class="eyebrow">Lockbox ID</p>
               <strong>${lockbox.lockboxId ? escapeLockboxText(lockbox.lockboxId) : escapeLockboxText(lockbox.inventoryLabel || "Not entered")}</strong>
               <p>${lockbox.address ? escapeLockboxText(lockbox.address) : "Available for a future listing"}</p>
             </div>
-            <button class="secondary-action lockbox-edit-button" type="button" data-lockbox-edit="${lockbox.id}" aria-label="Edit ${escapeLockboxText(lockbox.lockboxId || lockbox.inventoryLabel || "lockbox")}">Edit</button>
+            <div class="lockbox-card-actions split-card-actions" role="group" aria-label="Lockbox actions">
+              <button class="secondary-action lockbox-edit-button" type="button" data-lockbox-edit="${lockbox.id}" aria-label="Edit ${escapeLockboxText(lockbox.lockboxId || lockbox.inventoryLabel || "lockbox")}">Edit</button>
+              <button class="secondary-action lockbox-expand-button" type="button" data-lockbox-toggle="${lockbox.id}" aria-expanded="${isExpanded}" aria-label="${isExpanded ? "Collapse" : "Expand"} ${escapeLockboxText(lockbox.lockboxId || lockbox.inventoryLabel || "lockbox")}">${isExpanded ? "Collapse" : "Expand"}</button>
+            </div>
           </div>
           <dl class="lockbox-details">
             <div>
@@ -2094,7 +2103,8 @@ function renderLockboxes() {
             </div>
           </dl>
         </article>
-      `,
+      `;
+      },
     )
     .join("");
 }
@@ -2130,11 +2140,12 @@ function renderQrCodes() {
 
   qrCodeList.innerHTML = qrCodes
     .map((code) => {
+      const isExpanded = expandedQrCodeIds.has(code.id);
       const lastScan = code.last_scanned_at
         ? new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(code.last_scanned_at))
         : "Never";
       return `
-        <article class="qr-code-card ${code.is_active ? "" : "is-paused"}">
+        <article class="qr-code-card ${code.is_active ? "" : "is-paused"} ${isExpanded ? "is-expanded" : "is-collapsed"}">
           <div class="qr-code-main">
             <div class="qr-code-image-wrap">
               <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
@@ -2147,6 +2158,10 @@ function renderQrCodes() {
                   <p class="qr-style-label">${code.style === "dots" ? "Round dots" : code.style === "rounded" ? "Soft rounded" : "Classic squares"}</p>
                 </div>
                 <a class="qr-destination" href="${escapeLockboxText(code.destination_url)}" target="_blank" rel="noopener">${escapeLockboxText(code.destination_url)}</a>
+              </div>
+              <div class="qr-card-actions split-card-actions" role="group" aria-label="QR code actions">
+                <button class="secondary-action" type="button" data-qr-copy="${code.id}">Copy link</button>
+                <button class="secondary-action" type="button" data-qr-expand="${code.id}" aria-expanded="${isExpanded}">${isExpanded ? "Collapse" : "Expand"}</button>
               </div>
               <dl class="qr-code-stats">
                 <div><dt>Scans</dt><dd>${Number(code.scan_count || 0).toLocaleString()}</dd></div>
@@ -2780,9 +2795,10 @@ function renderCommissionRules() {
       const agentSplit = getCommissionSplit(agent);
       const brokerageSplit = 100 - agentSplit;
       const production = getAgentProduction(agent.id);
+      const isExpanded = expandedCommissionAgentIds.has(agent.id);
 
       return `
-        <button class="commission-row" type="button" data-commission-agent="${agent.id}">
+        <article class="commission-row ${isExpanded ? "is-expanded" : "is-collapsed"}">
           <div class="commission-row-main">
             <div class="agent-identity">
               ${renderAgentAvatar(agent)}
@@ -2791,7 +2807,10 @@ function renderCommissionRules() {
                 <span>${agent.email}</span>
               </div>
             </div>
-            <span class="commission-edit-label">Edit rule</span>
+            <div class="commission-card-actions split-card-actions" role="group" aria-label="Commission rule actions">
+              <button class="secondary-action" type="button" data-commission-edit="${agent.id}">Edit</button>
+              <button class="secondary-action" type="button" data-commission-expand="${agent.id}" aria-expanded="${isExpanded}">${isExpanded ? "Collapse" : "Expand"}</button>
+            </div>
           </div>
           <div class="commission-split">
             <span>${agentSplit}% Agent</span>
@@ -2799,7 +2818,7 @@ function renderCommissionRules() {
             <span>${formatCurrency(production.volume)} Volume</span>
             <span>${formatCurrency(production.commission)} Agent Commission</span>
           </div>
-        </button>
+        </article>
       `;
     })
     .join("");
@@ -3759,9 +3778,17 @@ qrCodeForm.addEventListener("submit", async (event) => {
 });
 qrCodeList.addEventListener("click", async (event) => {
   const copyButton = event.target.closest("[data-qr-copy]");
+  const expandButton = event.target.closest("[data-qr-expand]");
   const toggleButton = event.target.closest("[data-qr-toggle]");
   const deleteButton = event.target.closest("[data-qr-delete]");
   const scansButton = event.target.closest("[data-qr-scans]");
+  if (expandButton) {
+    const codeId = expandButton.dataset.qrExpand;
+    if (expandedQrCodeIds.has(codeId)) expandedQrCodeIds.delete(codeId);
+    else expandedQrCodeIds.add(codeId);
+    renderQrCodes();
+    return;
+  }
   if (copyButton) {
     const code = qrCodes.find((item) => item.id === copyButton.dataset.qrCopy);
     if (!code) return;
@@ -3844,8 +3871,17 @@ lockboxModal.addEventListener("click", (event) => {
 
 lockboxList.addEventListener("click", (event) => {
   const editButton = event.target.closest("[data-lockbox-edit]");
-  if (!editButton) return;
-  openLockboxModal(Number(editButton.dataset.lockboxEdit));
+  const toggleButton = event.target.closest("[data-lockbox-toggle]");
+  if (editButton) {
+    openLockboxModal(Number(editButton.dataset.lockboxEdit));
+    return;
+  }
+  if (toggleButton) {
+    const lockboxId = Number(toggleButton.dataset.lockboxToggle);
+    if (expandedLockboxIds.has(lockboxId)) expandedLockboxIds.delete(lockboxId);
+    else expandedLockboxIds.add(lockboxId);
+    renderLockboxes();
+  }
 });
 
 lockboxForm.addEventListener("submit", (event) => {
@@ -3932,8 +3968,18 @@ userFields.lastName.addEventListener("input", () => {
 });
 
 commissionList.addEventListener("click", (event) => {
-  const row = event.target.closest("[data-commission-agent]");
-  if (row) openCommissionModal(Number(row.dataset.commissionAgent));
+  const editButton = event.target.closest("[data-commission-edit]");
+  const expandButton = event.target.closest("[data-commission-expand]");
+  if (editButton) {
+    openCommissionModal(Number(editButton.dataset.commissionEdit));
+    return;
+  }
+  if (expandButton) {
+    const agentId = Number(expandButton.dataset.commissionExpand);
+    if (expandedCommissionAgentIds.has(agentId)) expandedCommissionAgentIds.delete(agentId);
+    else expandedCommissionAgentIds.add(agentId);
+    renderCommissionRules();
+  }
 });
 
 closeCommissionModal.addEventListener("click", closeCommissionForm);

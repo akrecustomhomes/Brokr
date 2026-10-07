@@ -8280,3 +8280,88 @@ body[data-theme="dark"] .task-status.overdue {
     padding: 12px 15px;
   }
 }
+
+/* Compact inventory cards with joined primary and expand controls. */
+.split-card-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+}
+
+.split-card-actions .secondary-action {
+  min-width: 92px;
+  margin: 0;
+  border-radius: 0;
+}
+
+.split-card-actions .secondary-action:first-child {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.split-card-actions .secondary-action:last-child {
+  border-left-width: 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.lockbox-row.is-collapsed .lockbox-details,
+.qr-code-card.is-collapsed .qr-code-stats,
+.qr-code-card.is-collapsed > .qr-code-actions,
+.commission-row.is-collapsed .commission-split {
+  display: none;
+}
+
+.qr-code-content {
+  grid-template-columns: minmax(180px, 1fr) auto minmax(310px, auto);
+}
+
+.qr-card-actions {
+  justify-self: end;
+}
+
+.commission-card-actions {
+  margin-left: auto;
+}
+
+.commission-row {
+  color: var(--ink);
+  text-align: left;
+}
+
+@media (max-width: 1040px) {
+  .qr-code-content {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .qr-code-stats {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .lockbox-row-main,
+  .commission-row-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .split-card-actions {
+    width: 100%;
+  }
+
+  .split-card-actions .secondary-action {
+    min-width: 0;
+    width: 50%;
+  }
+
+  .qr-code-main {
+    align-items: start;
+  }
+
+  .qr-code-content {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .qr-card-actions {
+    justify-self: stretch;
+  }
+}
