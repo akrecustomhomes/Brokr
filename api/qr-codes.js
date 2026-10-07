@@ -88,5 +88,13 @@ module.exports = async function qrCodes(request, response) {
     return sendJson(response, 200, { code: data });
   }
 
+  if (request.method === "DELETE") {
+    const id = String(body.id || "");
+    if (!id) return sendJson(response, 400, { error: "QR code ID is required." });
+    const { error } = await adminClient.from("qr_codes").delete().eq("id", id);
+    if (error) return sendJson(response, 400, { error: error.message });
+    return sendJson(response, 200, { deleted: true });
+  }
+
   return sendJson(response, 405, { error: "Method not allowed." });
 };

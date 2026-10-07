@@ -2132,16 +2132,16 @@ function renderQrCodes() {
             <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
           </div>
           <div class="qr-code-content">
-            <div class="qr-code-title-row">
-              <div>
+            <div class="qr-code-copy">
+              <div class="qr-code-title-row">
                 <p class="eyebrow">${code.is_active ? "Active" : "Paused"}</p>
                 <h4>${escapeLockboxText(code.name)}</h4>
                 <p class="qr-style-label">${code.style === "dots" ? "Round dots" : code.style === "rounded" ? "Soft rounded" : "Classic squares"}</p>
               </div>
-              <span class="qr-scan-total">${Number(code.scan_count || 0).toLocaleString()} scans</span>
+              <a class="qr-destination" href="${escapeLockboxText(code.destination_url)}" target="_blank" rel="noopener">${escapeLockboxText(code.destination_url)}</a>
             </div>
-            <a class="qr-destination" href="${escapeLockboxText(code.destination_url)}" target="_blank" rel="noopener">${escapeLockboxText(code.destination_url)}</a>
             <dl class="qr-code-stats">
+              <div><dt>Scans</dt><dd>${Number(code.scan_count || 0).toLocaleString()}</dd></div>
               <div><dt>Approx. visitors</dt><dd>${Number(code.unique_visitor_count || 0).toLocaleString()}</dd></div>
               <div><dt>Last scan</dt><dd>${escapeLockboxText(lastScan)}</dd></div>
             </dl>
@@ -2157,6 +2157,7 @@ function renderQrCodes() {
               <button class="secondary-action" type="button" data-qr-copy="${code.id}">Copy link</button>
               <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
+              <button class="secondary-action danger-action" type="button" data-qr-delete="${code.id}">Delete</button>
             </div>
           </div>
         </article>`;
@@ -3709,6 +3710,7 @@ qrCodeForm.addEventListener("submit", async (event) => {
 qrCodeList.addEventListener("click", async (event) => {
   const copyButton = event.target.closest("[data-qr-copy]");
   const toggleButton = event.target.closest("[data-qr-toggle]");
+  const deleteButton = event.target.closest("[data-qr-delete]");
   if (copyButton) {
     const code = qrCodes.find((item) => item.id === copyButton.dataset.qrCopy);
     if (!code) return;
@@ -3727,6 +3729,18 @@ qrCodeList.addEventListener("click", async (event) => {
     } catch (error) {
       window.alert(error.message);
       toggleButton.disabled = false;
+    }
+  }
+  if (deleteButton) {
+    const code = qrCodes.find((item) => item.id === deleteButton.dataset.qrDelete);
+    if (!code || !window.confirm(`Delete the QR code “${code.name}” and all of its scan history? This cannot be undone.`)) return;
+    deleteButton.disabled = true;
+    try {
+      await qrApi("", { method: "DELETE", body: JSON.stringify({ id: code.id }) });
+      await loadQrCodes();
+    } catch (error) {
+      window.alert(error.message);
+      deleteButton.disabled = false;
     }
   }
 });
