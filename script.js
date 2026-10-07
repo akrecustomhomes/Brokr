@@ -2064,7 +2064,7 @@ function renderLockboxes() {
       (lockbox) => {
         const isExpanded = expandedLockboxIds.has(lockbox.id);
         return `
-        <article class="lockbox-row ${isExpanded ? "is-expanded" : "is-collapsed"}">
+        <article class="lockbox-row ${isExpanded ? "is-expanded" : "is-collapsed"}" data-lockbox-card="${lockbox.id}" tabindex="0" aria-expanded="${isExpanded}">
           <div class="lockbox-row-main">
             <div class="lockbox-primary">
               <p class="eyebrow">Lockbox ID</p>
@@ -2145,7 +2145,7 @@ function renderQrCodes() {
         ? new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(code.last_scanned_at))
         : "Never";
       return `
-        <article class="qr-code-card ${code.is_active ? "" : "is-paused"} ${isExpanded ? "is-expanded" : "is-collapsed"}">
+        <article class="qr-code-card ${code.is_active ? "" : "is-paused"} ${isExpanded ? "is-expanded" : "is-collapsed"}" data-qr-card="${code.id}" tabindex="0" aria-expanded="${isExpanded}">
           <div class="qr-code-main">
             <div class="qr-code-image-wrap">
               <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
@@ -2798,7 +2798,7 @@ function renderCommissionRules() {
       const isExpanded = expandedCommissionAgentIds.has(agent.id);
 
       return `
-        <article class="commission-row ${isExpanded ? "is-expanded" : "is-collapsed"}">
+        <article class="commission-row ${isExpanded ? "is-expanded" : "is-collapsed"}" data-commission-card="${agent.id}" tabindex="0" aria-expanded="${isExpanded}">
           <div class="commission-row-main">
             <div class="agent-identity">
               ${renderAgentAvatar(agent)}
@@ -3782,6 +3782,7 @@ qrCodeList.addEventListener("click", async (event) => {
   const toggleButton = event.target.closest("[data-qr-toggle]");
   const deleteButton = event.target.closest("[data-qr-delete]");
   const scansButton = event.target.closest("[data-qr-scans]");
+  const card = event.target.closest("[data-qr-card]");
   if (expandButton) {
     const codeId = expandButton.dataset.qrExpand;
     if (expandedQrCodeIds.has(codeId)) expandedQrCodeIds.delete(codeId);
@@ -3825,6 +3826,21 @@ qrCodeList.addEventListener("click", async (event) => {
       deleteButton.disabled = false;
     }
   }
+  if (card && !event.target.closest("button, a, input, select, textarea, label")) {
+    const codeId = card.dataset.qrCard;
+    if (expandedQrCodeIds.has(codeId)) expandedQrCodeIds.delete(codeId);
+    else expandedQrCodeIds.add(codeId);
+    renderQrCodes();
+  }
+});
+qrCodeList.addEventListener("keydown", (event) => {
+  const card = event.target.closest("[data-qr-card]");
+  if (!card || event.target !== card || (event.key !== "Enter" && event.key !== " ")) return;
+  event.preventDefault();
+  const codeId = card.dataset.qrCard;
+  if (expandedQrCodeIds.has(codeId)) expandedQrCodeIds.delete(codeId);
+  else expandedQrCodeIds.add(codeId);
+  renderQrCodes();
 });
 closeQrScanModal.addEventListener("click", closeQrScanDetails);
 doneQrScanButton.addEventListener("click", closeQrScanDetails);
@@ -3872,6 +3888,7 @@ lockboxModal.addEventListener("click", (event) => {
 lockboxList.addEventListener("click", (event) => {
   const editButton = event.target.closest("[data-lockbox-edit]");
   const toggleButton = event.target.closest("[data-lockbox-toggle]");
+  const card = event.target.closest("[data-lockbox-card]");
   if (editButton) {
     openLockboxModal(Number(editButton.dataset.lockboxEdit));
     return;
@@ -3881,7 +3898,23 @@ lockboxList.addEventListener("click", (event) => {
     if (expandedLockboxIds.has(lockboxId)) expandedLockboxIds.delete(lockboxId);
     else expandedLockboxIds.add(lockboxId);
     renderLockboxes();
+    return;
   }
+  if (card && !event.target.closest("button, a, input, select, textarea, label")) {
+    const lockboxId = Number(card.dataset.lockboxCard);
+    if (expandedLockboxIds.has(lockboxId)) expandedLockboxIds.delete(lockboxId);
+    else expandedLockboxIds.add(lockboxId);
+    renderLockboxes();
+  }
+});
+lockboxList.addEventListener("keydown", (event) => {
+  const card = event.target.closest("[data-lockbox-card]");
+  if (!card || event.target !== card || (event.key !== "Enter" && event.key !== " ")) return;
+  event.preventDefault();
+  const lockboxId = Number(card.dataset.lockboxCard);
+  if (expandedLockboxIds.has(lockboxId)) expandedLockboxIds.delete(lockboxId);
+  else expandedLockboxIds.add(lockboxId);
+  renderLockboxes();
 });
 
 lockboxForm.addEventListener("submit", (event) => {
@@ -3970,6 +4003,7 @@ userFields.lastName.addEventListener("input", () => {
 commissionList.addEventListener("click", (event) => {
   const editButton = event.target.closest("[data-commission-edit]");
   const expandButton = event.target.closest("[data-commission-expand]");
+  const card = event.target.closest("[data-commission-card]");
   if (editButton) {
     openCommissionModal(Number(editButton.dataset.commissionEdit));
     return;
@@ -3979,7 +4013,23 @@ commissionList.addEventListener("click", (event) => {
     if (expandedCommissionAgentIds.has(agentId)) expandedCommissionAgentIds.delete(agentId);
     else expandedCommissionAgentIds.add(agentId);
     renderCommissionRules();
+    return;
   }
+  if (card && !event.target.closest("button, a, input, select, textarea, label")) {
+    const agentId = Number(card.dataset.commissionCard);
+    if (expandedCommissionAgentIds.has(agentId)) expandedCommissionAgentIds.delete(agentId);
+    else expandedCommissionAgentIds.add(agentId);
+    renderCommissionRules();
+  }
+});
+commissionList.addEventListener("keydown", (event) => {
+  const card = event.target.closest("[data-commission-card]");
+  if (!card || event.target !== card || (event.key !== "Enter" && event.key !== " ")) return;
+  event.preventDefault();
+  const agentId = Number(card.dataset.commissionCard);
+  if (expandedCommissionAgentIds.has(agentId)) expandedCommissionAgentIds.delete(agentId);
+  else expandedCommissionAgentIds.add(agentId);
+  renderCommissionRules();
 });
 
 closeCommissionModal.addEventListener("click", closeCommissionForm);
