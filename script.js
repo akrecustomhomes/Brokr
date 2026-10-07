@@ -2179,7 +2179,6 @@ function renderQrCodes() {
                   <option value="dots" ${code.style === "dots" ? "selected" : ""}>Round dots</option>
                 </select>
               </label>
-              <button class="secondary-action" type="button" data-qr-copy="${code.id}">Copy link</button>
               <button class="secondary-action" type="button" data-qr-scans="${code.id}">Scan details</button>
               <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
