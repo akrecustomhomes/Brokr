@@ -6,6 +6,8 @@ Brokr is prepared for Vercel hosting and Supabase migration. The current app sti
 
 Create fresh Brokr projects in both Supabase and Vercel. Do not reuse the AkreGC Supabase URL, anon key, storage buckets, or Vercel environment values. This keeps Brokr data, files, users, and future email/archive jobs isolated from AkreGC.
 
+Production database: Supabase project `Brokr` (`egvdlcficyyizwcwgrxp`). Do not apply Brokr migrations to the `AkreGC` project (`xhlriijwsapiayoffnnm`).
+
 ## Local Preview
 
 ```bash
@@ -46,6 +48,7 @@ The Supabase schema now includes:
 - Transaction files and broker review status
 - Company tasks
 - Inbox notifications and handled states
+- Trackable QR codes and privacy-limited scan analytics
 
 ## Current Integration
 
@@ -57,6 +60,7 @@ Currently wired to Supabase:
 - Branding load/save when Supabase config exists
 - Required broker contact load/save when Supabase config exists
 - Google Drive archive settings load/save when Supabase config exists
+- Broker/Admin QR code management, tracked redirects, and scan reporting
 
 Still browser/local-state until the next backend wiring pass:
 
