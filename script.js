@@ -2145,7 +2145,7 @@ function renderQrCodes() {
             </dl>
             <div class="qr-code-actions">
               <button class="secondary-action" type="button" data-qr-copy="${code.id}">Copy link</button>
-              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download</a>
+              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
             </div>
           </div>
