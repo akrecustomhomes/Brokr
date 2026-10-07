@@ -284,6 +284,10 @@ alter table public.qr_scan_events enable row level security;
 revoke all on public.qr_codes from anon, authenticated;
 revoke all on public.qr_scan_events from anon, authenticated;
 revoke all on public.qr_code_summary from anon, authenticated;
+grant select, insert, update, delete on public.qr_codes to service_role;
+grant select, insert, update, delete on public.qr_scan_events to service_role;
+grant select on public.qr_code_summary to service_role;
+grant usage, select on sequence public.qr_scan_events_id_seq to service_role;
 
 drop policy if exists "server only qr codes" on public.qr_codes;
 create policy "server only qr codes" on public.qr_codes

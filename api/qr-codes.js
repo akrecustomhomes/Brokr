@@ -20,9 +20,34 @@ module.exports = async function qrCodes(request, response) {
   const { adminClient, authUser } = auth;
 
   if (request.method === "GET") {
-    const { data: codes, error } = await adminClient.from("qr_code_summary").select("*").order("created_at", { ascending: false });
-    if (error) return sendJson(response, 400, { error: error.message });
-    return sendJson(response, 200, { codes: codes || [] });
+    const { data: summary, error: summaryError } = await adminClient
+      .from("qr_code_summary")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!summaryError) return sendJson(response, 200, { codes: summary || [] });
+
+    // A newly created PostgREST view can take time to enter the schema cache.
+    // Fall back to the secured source tables so the Admin panel remains usable.
+    const [{ data: codes, error: codesError }, { data: scans, error: scansError }] = await Promise.all([
+      adminClient.from("qr_codes").select("*").order("created_at", { ascending: false }),
+      adminClient.from("qr_scan_events").select("qr_code_id,scanned_at,visitor_hash"),
+    ]);
+    if (codesError || scansError) return sendJson(response, 400, { error: codesError?.message || scansError?.message });
+    const summaries = (codes || []).map((code) => {
+      const codeScans = (scans || []).filter((scan) => scan.qr_code_id === code.id);
+      const visitors = new Set(codeScans.map((scan) => scan.visitor_hash).filter(Boolean));
+      const lastScan = codeScans.reduce(
+        (latest, scan) => (!latest || scan.scanned_at > latest ? scan.scanned_at : latest),
+        null,
+      );
+      return {
+        ...code,
+        scan_count: codeScans.length,
+        unique_visitor_count: visitors.size,
+        last_scanned_at: lastScan,
+      };
+    });
+    return sendJson(response, 200, { codes: summaries });
   }
 
   const body = typeof request.body === "string" ? JSON.parse(request.body || "{}") : request.body || {};
