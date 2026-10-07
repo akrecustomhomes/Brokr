@@ -42,7 +42,7 @@ const passwordSetupConfirm = document.querySelector("#password-setup-confirm");
 const passwordSetupMessage = document.querySelector("#password-setup-message");
 const themeOptions = document.querySelectorAll("button[data-theme]");
 const adminPanels = document.querySelectorAll(
-  "#admin .branding-panel, #admin .broker-contact-panel, #admin .archive-storage-panel, #admin .lockbox-panel, #admin .commission-panel",
+  "#admin .branding-panel, #admin .broker-contact-panel, #admin .archive-storage-panel, #admin .lockbox-panel, #admin .qr-manager-panel, #admin .commission-panel",
 );
 const brandingForm = document.querySelector(".branding-panel");
 const companyInput = document.querySelector("#company-name");
@@ -102,6 +102,15 @@ const lockboxFields = {
   showCodes: document.querySelector("#show-lockbox-codes"),
   applyCodesToAll: document.querySelector("#apply-lockbox-codes-all"),
 };
+const qrCodeList = document.querySelector("#qr-code-list");
+const addQrCodeButton = document.querySelector("#add-qr-code-button");
+const qrCodeModal = document.querySelector("#qr-code-modal");
+const qrCodeForm = document.querySelector("#qr-code-form");
+const qrCodeName = document.querySelector("#qr-code-name");
+const qrCodeDestination = document.querySelector("#qr-code-destination");
+const qrCodeFormMessage = document.querySelector("#qr-code-form-message");
+const closeQrCodeModal = document.querySelector("#close-qr-code-modal");
+const cancelQrCodeButton = document.querySelector("#cancel-qr-code-button");
 const overviewMetrics = {
   activeListings: document.querySelector("#overview-active-listings"),
   pendingDeals: document.querySelector("#overview-pending-deals"),
@@ -804,6 +813,7 @@ function activatePage(pageId) {
   document.body.classList.remove("menu-open");
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   document.querySelector(".content")?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+  if (pageId === "admin") loadQrCodes();
 }
 
 menuItems.forEach((item) => {
@@ -2079,6 +2089,97 @@ function renderLockboxes() {
       `,
     )
     .join("");
+}
+
+let qrCodes = [];
+let qrCodesLoading = false;
+
+async function qrApi(path = "", options = {}) {
+  const session = await window.BrokrBackend?.getSession();
+  if (!session?.access_token) throw new Error("Sign in as Broker or Admin to manage QR codes.");
+  const response = await fetch(`/api/qr-codes${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+      ...(options.headers || {}),
+    },
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "Unable to update QR codes.");
+  return payload;
+}
+
+function qrScanUrl(code) {
+  return `${window.location.origin}/api/scan/${encodeURIComponent(code.slug)}`;
+}
+
+function renderQrCodes() {
+  if (!qrCodes.length) {
+    qrCodeList.innerHTML = '<p class="qr-empty">No QR codes yet. Create one for a listing, sign, flyer, or campaign.</p>';
+    return;
+  }
+
+  qrCodeList.innerHTML = qrCodes
+    .map((code) => {
+      const lastScan = code.last_scanned_at
+        ? new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(new Date(code.last_scanned_at))
+        : "Never";
+      return `
+        <article class="qr-code-card ${code.is_active ? "" : "is-paused"}">
+          <div class="qr-code-image-wrap">
+            <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
+          </div>
+          <div class="qr-code-content">
+            <div class="qr-code-title-row">
+              <div>
+                <p class="eyebrow">${code.is_active ? "Active" : "Paused"}</p>
+                <h4>${escapeLockboxText(code.name)}</h4>
+              </div>
+              <span class="qr-scan-total">${Number(code.scan_count || 0).toLocaleString()} scans</span>
+            </div>
+            <a class="qr-destination" href="${escapeLockboxText(code.destination_url)}" target="_blank" rel="noopener">${escapeLockboxText(code.destination_url)}</a>
+            <dl class="qr-code-stats">
+              <div><dt>Approx. visitors</dt><dd>${Number(code.unique_visitor_count || 0).toLocaleString()}</dd></div>
+              <div><dt>Last scan</dt><dd>${escapeLockboxText(lastScan)}</dd></div>
+            </dl>
+            <div class="qr-code-actions">
+              <button class="secondary-action" type="button" data-qr-copy="${code.id}">Copy link</button>
+              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download</a>
+              <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
+            </div>
+          </div>
+        </article>`;
+    })
+    .join("");
+}
+
+async function loadQrCodes() {
+  if (qrCodesLoading || !canAccessAdmin()) return;
+  qrCodesLoading = true;
+  qrCodeList.setAttribute("aria-busy", "true");
+  try {
+    const payload = await qrApi();
+    qrCodes = payload.codes || [];
+    renderQrCodes();
+  } catch (error) {
+    qrCodeList.innerHTML = `<p class="qr-empty">${escapeLockboxText(error.message)}</p>`;
+  } finally {
+    qrCodesLoading = false;
+    qrCodeList.removeAttribute("aria-busy");
+  }
+}
+
+function openQrCodeForm() {
+  qrCodeForm.reset();
+  qrCodeFormMessage.textContent = "You can change the destination later without reprinting the QR code.";
+  qrCodeFormMessage.classList.remove("error");
+  qrCodeModal.hidden = false;
+  qrCodeName.focus();
+}
+
+function closeQrCodeForm() {
+  qrCodeModal.hidden = true;
 }
 
 function renderLockboxAgentOptions() {
@@ -3564,6 +3665,57 @@ companyTaskForm.addEventListener("submit", (event) => {
 });
 
 addLockboxButton.addEventListener("click", () => openLockboxModal());
+addQrCodeButton.addEventListener("click", openQrCodeForm);
+closeQrCodeModal.addEventListener("click", closeQrCodeForm);
+cancelQrCodeButton.addEventListener("click", closeQrCodeForm);
+qrCodeModal.addEventListener("click", (event) => {
+  if (event.target === qrCodeModal) closeQrCodeForm();
+});
+qrCodeForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!qrCodeForm.reportValidity()) return;
+  const submitButton = qrCodeForm.querySelector('[type="submit"]');
+  submitButton.disabled = true;
+  qrCodeFormMessage.textContent = "Creating QR code…";
+  qrCodeFormMessage.classList.remove("error");
+  try {
+    await qrApi("", {
+      method: "POST",
+      body: JSON.stringify({ name: qrCodeName.value.trim(), destinationUrl: qrCodeDestination.value.trim() }),
+    });
+    closeQrCodeForm();
+    await loadQrCodes();
+  } catch (error) {
+    qrCodeFormMessage.textContent = error.message;
+    qrCodeFormMessage.classList.add("error");
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+qrCodeList.addEventListener("click", async (event) => {
+  const copyButton = event.target.closest("[data-qr-copy]");
+  const toggleButton = event.target.closest("[data-qr-toggle]");
+  if (copyButton) {
+    const code = qrCodes.find((item) => item.id === copyButton.dataset.qrCopy);
+    if (!code) return;
+    await navigator.clipboard.writeText(qrScanUrl(code));
+    const originalText = copyButton.textContent;
+    copyButton.textContent = "Copied";
+    setTimeout(() => { copyButton.textContent = originalText; }, 1400);
+  }
+  if (toggleButton) {
+    const code = qrCodes.find((item) => item.id === toggleButton.dataset.qrToggle);
+    if (!code) return;
+    toggleButton.disabled = true;
+    try {
+      await qrApi("", { method: "PATCH", body: JSON.stringify({ id: code.id, isActive: !code.is_active }) });
+      await loadQrCodes();
+    } catch (error) {
+      window.alert(error.message);
+      toggleButton.disabled = false;
+    }
+  }
+});
 lockboxFields.status.addEventListener("change", syncLockboxAssignmentFields);
 lockboxFields.showCodes.addEventListener("change", () => {
   const inputType = lockboxFields.showCodes.checked ? "text" : "password";

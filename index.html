@@ -588,6 +588,23 @@
               <div class="lockbox-list" id="lockbox-list"></div>
             </section>
 
+            <section class="qr-manager-panel" aria-labelledby="qr-manager-title">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Marketing analytics</p>
+                  <h3 id="qr-manager-title">QR Code Manager</h3>
+                </div>
+                <button class="primary-action" id="add-qr-code-button" type="button">+ QR Code</button>
+              </div>
+              <div class="qr-manager-intro">
+                <p>Create a trackable QR code for a listing, sign, flyer, or campaign.</p>
+                <p class="form-note">Tracks scan totals, approximate unique visitors, time, device type, and coarse location when available. It does not identify a person by name unless the destination asks them to sign in or submit a form.</p>
+              </div>
+              <div class="qr-code-list" id="qr-code-list">
+                <p class="qr-empty">Open this panel to load your QR codes.</p>
+              </div>
+            </section>
+
             <section class="commission-panel" aria-labelledby="commission-rules-title">
               <div class="panel-header">
                 <div>
@@ -1175,6 +1192,35 @@
               <button class="secondary-action" id="cancel-lockbox-button" type="button">Cancel</button>
               <button class="primary-action" type="submit">Save Lockbox</button>
             </div>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="qr-code-modal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="qr-code-modal-title">
+        <form id="qr-code-form">
+          <div class="modal-header">
+            <div>
+              <p class="eyebrow">Trackable link</p>
+              <h3 id="qr-code-modal-title">Create QR Code</h3>
+            </div>
+            <button class="icon-button" id="close-qr-code-modal" type="button" aria-label="Close QR code form">X</button>
+          </div>
+          <div class="form-grid">
+            <label>
+              QR code name
+              <input id="qr-code-name" type="text" placeholder="123 Main Street flyer" required />
+            </label>
+            <label>
+              Destination URL
+              <input id="qr-code-destination" type="url" placeholder="https://lumerealestate.com/listing" required />
+            </label>
+          </div>
+          <p class="form-note" id="qr-code-form-message">You can change the destination later without reprinting the QR code.</p>
+          <div class="modal-actions">
+            <button class="secondary-action" id="cancel-qr-code-button" type="button">Cancel</button>
+            <button class="primary-action" type="submit">Create QR Code</button>
           </div>
         </form>
       </section>
