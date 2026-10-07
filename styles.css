@@ -7897,6 +7897,12 @@ body[data-theme="dark"] .task-status.overdue {
   font-weight: 540;
 }
 
+.qr-style-label {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .qr-scan-total {
   flex: 0 0 auto;
   border-radius: 999px;
@@ -7948,6 +7954,21 @@ body[data-theme="dark"] .task-status.overdue {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+}
+
+.qr-style-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.qr-style-control select {
+  min-height: 38px;
+  width: auto;
+  padding: 0 34px 0 10px;
 }
 
 #qr-code-form-message.error {

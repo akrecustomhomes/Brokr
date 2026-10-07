@@ -137,6 +137,7 @@ create table if not exists public.qr_codes (
   name text not null,
   slug text not null unique,
   destination_url text not null,
+  style text not null default 'classic' check (style in ('classic', 'rounded', 'dots')),
   is_active boolean not null default true,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
@@ -173,7 +174,8 @@ select
   code.updated_at,
   count(scan.id)::bigint as scan_count,
   count(distinct scan.visitor_hash)::bigint as unique_visitor_count,
-  max(scan.scanned_at) as last_scanned_at
+  max(scan.scanned_at) as last_scanned_at,
+  code.style
 from public.qr_codes code
 left join public.qr_scan_events scan on scan.qr_code_id = code.id
 group by code.id;

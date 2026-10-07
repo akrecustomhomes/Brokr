@@ -1,5 +1,6 @@
 const crypto = require("node:crypto");
 const { requireAdmin, sendJson } = require("./_admin");
+const allowedStyles = new Set(["classic", "rounded", "dots"]);
 
 function cleanUrl(value) {
   try {
@@ -58,7 +59,13 @@ module.exports = async function qrCodes(request, response) {
 
     const { data, error } = await adminClient
       .from("qr_codes")
-      .insert({ name, destination_url: destinationUrl, slug: makeSlug(), created_by: authUser.id })
+      .insert({
+        name,
+        destination_url: destinationUrl,
+        slug: makeSlug(),
+        style: allowedStyles.has(body.style) ? body.style : "classic",
+        created_by: authUser.id,
+      })
       .select("*")
       .single();
     if (error) return sendJson(response, 400, { error: error.message });
@@ -74,6 +81,7 @@ module.exports = async function qrCodes(request, response) {
       if (!updates.destination_url) return sendJson(response, 400, { error: "Enter a valid destination URL." });
     }
     if (body.isActive !== undefined) updates.is_active = Boolean(body.isActive);
+    if (body.style !== undefined && allowedStyles.has(body.style)) updates.style = body.style;
     if (!id || !Object.keys(updates).length) return sendJson(response, 400, { error: "Nothing to update." });
     const { data, error } = await adminClient.from("qr_codes").update(updates).eq("id", id).select("*").single();
     if (error) return sendJson(response, 400, { error: error.message });

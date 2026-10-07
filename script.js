@@ -108,6 +108,7 @@ const qrCodeModal = document.querySelector("#qr-code-modal");
 const qrCodeForm = document.querySelector("#qr-code-form");
 const qrCodeName = document.querySelector("#qr-code-name");
 const qrCodeDestination = document.querySelector("#qr-code-destination");
+const qrCodeStyle = document.querySelector("#qr-code-style");
 const qrCodeFormMessage = document.querySelector("#qr-code-form-message");
 const closeQrCodeModal = document.querySelector("#close-qr-code-modal");
 const cancelQrCodeButton = document.querySelector("#cancel-qr-code-button");
@@ -2128,13 +2129,14 @@ function renderQrCodes() {
       return `
         <article class="qr-code-card ${code.is_active ? "" : "is-paused"}">
           <div class="qr-code-image-wrap">
-            <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
+            <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
           </div>
           <div class="qr-code-content">
             <div class="qr-code-title-row">
               <div>
                 <p class="eyebrow">${code.is_active ? "Active" : "Paused"}</p>
                 <h4>${escapeLockboxText(code.name)}</h4>
+                <p class="qr-style-label">${code.style === "dots" ? "Round dots" : code.style === "rounded" ? "Soft rounded" : "Classic squares"}</p>
               </div>
               <span class="qr-scan-total">${Number(code.scan_count || 0).toLocaleString()} scans</span>
             </div>
@@ -2144,8 +2146,16 @@ function renderQrCodes() {
               <div><dt>Last scan</dt><dd>${escapeLockboxText(lastScan)}</dd></div>
             </dl>
             <div class="qr-code-actions">
+              <label class="qr-style-control">
+                Style
+                <select data-qr-style="${code.id}">
+                  <option value="classic" ${code.style === "classic" || !code.style ? "selected" : ""}>Classic squares</option>
+                  <option value="rounded" ${code.style === "rounded" ? "selected" : ""}>Soft rounded</option>
+                  <option value="dots" ${code.style === "dots" ? "selected" : ""}>Round dots</option>
+                </select>
+              </label>
               <button class="secondary-action" type="button" data-qr-copy="${code.id}">Copy link</button>
-              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
+              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
             </div>
           </div>
@@ -3681,7 +3691,11 @@ qrCodeForm.addEventListener("submit", async (event) => {
   try {
     await qrApi("", {
       method: "POST",
-      body: JSON.stringify({ name: qrCodeName.value.trim(), destinationUrl: qrCodeDestination.value.trim() }),
+      body: JSON.stringify({
+        name: qrCodeName.value.trim(),
+        destinationUrl: qrCodeDestination.value.trim(),
+        style: qrCodeStyle.value,
+      }),
     });
     closeQrCodeForm();
     await loadQrCodes();
@@ -3714,6 +3728,21 @@ qrCodeList.addEventListener("click", async (event) => {
       window.alert(error.message);
       toggleButton.disabled = false;
     }
+  }
+});
+qrCodeList.addEventListener("change", async (event) => {
+  const styleSelect = event.target.closest("[data-qr-style]");
+  if (!styleSelect) return;
+  styleSelect.disabled = true;
+  try {
+    await qrApi("", {
+      method: "PATCH",
+      body: JSON.stringify({ id: styleSelect.dataset.qrStyle, style: styleSelect.value }),
+    });
+    await loadQrCodes();
+  } catch (error) {
+    window.alert(error.message);
+    styleSelect.disabled = false;
   }
 });
 lockboxFields.status.addEventListener("change", syncLockboxAssignmentFields);
