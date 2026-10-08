@@ -13,7 +13,7 @@ const eyeStyles = {
   square: { frame: "square", center: "square" },
   rounded: { frame: "extra-rounded", center: "dot" },
   circle: { frame: "dot", center: "dot" },
-  classy: { frame: "classy-rounded", center: "classy-rounded" },
+  classy: { frame: "classy-rounded", center: "square" },
 };
 
 async function styledQrSvg(value, style = "classic", eyeStyle = "rounded") {

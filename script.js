@@ -2184,7 +2184,7 @@ function qrScanUrl(code) {
 }
 
 function qrBodyStyleLabel(style) {
-  return { classic: "Classic", rounded: "Clean rounded", dots: "Dots", flow: "Designer flow" }[style] || "Classic";
+  return { classic: "Classic", rounded: "Clean rounded", dots: "Dots", flow: "Designer" }[style] || "Classic";
 }
 
 function qrEyeStyleLabel(style) {
@@ -2235,7 +2235,7 @@ function renderQrCodes() {
                 <select data-qr-style="${code.id}">
                   <option value="classic" ${code.style === "classic" || !code.style ? "selected" : ""}>Classic</option>
                   <option value="rounded" ${code.style === "rounded" ? "selected" : ""}>Clean rounded</option>
-                  <option value="flow" ${code.style === "flow" ? "selected" : ""}>Designer flow</option>
+                  <option value="flow" ${code.style === "flow" ? "selected" : ""}>Designer</option>
                   <option value="dots" ${code.style === "dots" ? "selected" : ""}>Dots</option>
                 </select>
               </label>
@@ -3845,6 +3845,9 @@ qrCodeForm.addEventListener("submit", async (event) => {
     submitButton.disabled = false;
   }
 });
+qrCodeStyle.addEventListener("change", () => {
+  if (qrCodeStyle.value === "flow") qrCodeEyeStyle.value = "classy";
+});
 qrCodeList.addEventListener("click", async (event) => {
   const copyButton = event.target.closest("[data-qr-copy]");
   const expandButton = event.target.closest("[data-qr-expand]");
@@ -3926,7 +3929,11 @@ qrCodeList.addEventListener("change", async (event) => {
     await qrApi("", {
       method: "PATCH",
       body: JSON.stringify(styleSelect
-        ? { id: styleSelect.dataset.qrStyle, style: styleSelect.value }
+        ? {
+            id: styleSelect.dataset.qrStyle,
+            style: styleSelect.value,
+            ...(styleSelect.value === "flow" ? { eyeStyle: "classy" } : {}),
+          }
         : { id: eyeStyleSelect.dataset.qrEyeStyle, eyeStyle: eyeStyleSelect.value }),
     });
     await loadQrCodes();
