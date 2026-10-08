@@ -8341,8 +8341,12 @@ body[data-theme="dark"] .task-status.overdue {
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 18px;
-  align-items: center;
+  align-items: start;
   padding: 14px 18px;
+}
+
+.qr-code-main .qr-code-image-wrap {
+  align-self: start;
 }
 
 .qr-code-content {
