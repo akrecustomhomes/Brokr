@@ -1,6 +1,6 @@
 const crypto = require("node:crypto");
 const { requireAdmin, sendJson } = require("./_admin");
-const allowedStyles = new Set(["classic", "rounded", "dots"]);
+const allowedStyles = new Set(["classic", "rounded", "dots", "flow"]);
 
 function cleanUrl(value) {
   try {

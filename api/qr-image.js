@@ -22,7 +22,10 @@ function roundedFinderPatterns(size, margin) {
 }
 
 function styledQrSvg(value, style) {
-  const qr = QRCode.create(value, { errorCorrectionLevel: "Q" });
+  // Flow uses balanced correction to reduce the module count and keep the
+  // organic pattern visually open while retaining solid print reliability.
+  const errorCorrectionLevel = style === "flow" ? "M" : "Q";
+  const qr = QRCode.create(value, { errorCorrectionLevel });
   const size = qr.modules.size;
   const margin = 2;
   const viewSize = size + margin * 2;
@@ -38,6 +41,8 @@ function styledQrSvg(value, style) {
         modules.push(`<rect x="${x}" y="${y}" width="1" height="1"/>`);
       } else if (style === "dots") {
         modules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.41"/>`);
+      } else if (style === "flow") {
+        modules.push(`<rect x="${x}" y="${y}" width="1" height="1" rx="0.38"/>`);
       } else {
         modules.push(`<rect x="${x + 0.05}" y="${y + 0.05}" width="0.9" height="0.9" rx="0.42"/>`);
       }
@@ -58,7 +63,7 @@ module.exports = async function qrImage(request, response) {
   let style = "classic";
   if (adminClient) {
     const { data } = await adminClient.from("qr_codes").select("style").eq("slug", slug).maybeSingle();
-    if (["classic", "rounded", "dots"].includes(data?.style)) style = data.style;
+    if (["classic", "rounded", "dots", "flow"].includes(data?.style)) style = data.style;
   }
   const svg = styledQrSvg(scanUrl, style);
   response.status(200).setHeader("Content-Type", "image/svg+xml; charset=utf-8");

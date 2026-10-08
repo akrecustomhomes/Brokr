@@ -2198,14 +2198,14 @@ function renderQrCodes() {
         <article class="qr-code-card ${code.is_active ? "" : "is-paused"} ${isExpanded ? "is-expanded" : "is-collapsed"}" data-qr-card="${code.id}" tabindex="0" aria-expanded="${isExpanded}">
           <div class="qr-code-main">
             <div class="qr-code-image-wrap">
-              <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-2-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
+              <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-4-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
             </div>
             <div class="qr-code-content">
               <div class="qr-code-copy">
                 <div class="qr-code-title-row">
                   <p class="eyebrow">${code.is_active ? "Active" : "Paused"}</p>
                   <h4>${escapeLockboxText(code.name)}</h4>
-                  <p class="qr-style-label">${code.style === "dots" ? "Round dots" : code.style === "rounded" ? "Soft rounded" : "Classic squares"}</p>
+                  <p class="qr-style-label">${code.style === "dots" ? "Round dots" : code.style === "rounded" ? "Soft rounded" : code.style === "flow" ? "Flow rounded" : "Classic squares"}</p>
                 </div>
                 <a class="qr-destination" href="${escapeLockboxText(code.destination_url)}" target="_blank" rel="noopener">${escapeLockboxText(code.destination_url)}</a>
               </div>
@@ -2227,10 +2227,11 @@ function renderQrCodes() {
                   <option value="classic" ${code.style === "classic" || !code.style ? "selected" : ""}>Classic squares</option>
                   <option value="rounded" ${code.style === "rounded" ? "selected" : ""}>Soft rounded</option>
                   <option value="dots" ${code.style === "dots" ? "selected" : ""}>Round dots</option>
+                  <option value="flow" ${code.style === "flow" ? "selected" : ""}>Flow rounded</option>
                 </select>
               </label>
               <button class="secondary-action" type="button" data-qr-scans="${code.id}">Scan details</button>
-              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-2-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
+              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-4-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
               <button class="secondary-action danger-action" type="button" data-qr-delete="${code.id}">Delete</button>
           </div>
