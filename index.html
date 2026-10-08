@@ -126,6 +126,7 @@
                   <span id="account-menu-email">broker@lumerealestate.com</span>
                 </div>
                 <button class="account-dropdown-action secondary" type="button" id="account-profile-button">Profile Settings</button>
+                <button class="account-dropdown-action secondary" type="button" id="account-passkey-button">Set up Face ID / Passkey</button>
                 <button class="account-dropdown-action signout" type="button" id="account-logout-button">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17v-3H3v-4h7V7l5 5-5 5Zm1-15h9v20h-9v-2h7V4h-7V2Z" /></svg>
                   <span>Sign out</span>
@@ -1267,13 +1268,25 @@
               Email
               <input id="auth-email" type="email" autocomplete="email" required />
             </label>
-            <label class="wide-field">
-              Password
-              <input id="auth-password" type="password" autocomplete="current-password" minlength="6" required />
-            </label>
+            <div class="wide-field auth-password-field">
+              <label for="auth-password">Password</label>
+              <div class="password-input-wrap">
+                <input id="auth-password" type="password" autocomplete="current-password" minlength="6" required />
+                <button class="password-visibility-toggle" id="auth-password-toggle" type="button" aria-label="Show password" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 12s3.6-6 9.8-6 9.8 6 9.8 6-3.6 6-9.8 6-9.8-6-9.8-6Z"/><circle cx="12" cy="12" r="2.75"/></svg>
+                </button>
+              </div>
+            </div>
           </div>
 
+          <label class="auth-remember-control">
+            <input id="auth-remember-login" type="checkbox" checked />
+            <span>Remember me on this device</span>
+          </label>
+
           <p class="form-note" id="auth-message">Sign in with your Brokr account to continue.</p>
+
+          <button class="secondary-action auth-passkey-signin" id="auth-passkey-signin" type="button">Sign in with Face ID / Passkey</button>
 
           <div class="auth-actions">
             <button class="text-action auth-reset-link" id="auth-reset-button" type="button">Forgot password?</button>

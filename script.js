@@ -25,6 +25,7 @@ const authActionText = document.querySelector("#auth-action-text");
 const accountMenu = document.querySelector(".account-menu");
 const accountDropdown = document.querySelector("#account-dropdown");
 const accountProfileButton = document.querySelector("#account-profile-button");
+const accountPasskeyButton = document.querySelector("#account-passkey-button");
 const accountLogoutButton = document.querySelector("#account-logout-button");
 const accountMenuName = document.querySelector("#account-menu-name");
 const accountMenuEmail = document.querySelector("#account-menu-email");
@@ -32,6 +33,9 @@ const authGate = document.querySelector("#auth-gate");
 const authForm = document.querySelector("#auth-form");
 const authEmail = document.querySelector("#auth-email");
 const authPassword = document.querySelector("#auth-password");
+const authPasswordToggle = document.querySelector("#auth-password-toggle");
+const authRememberLogin = document.querySelector("#auth-remember-login");
+const authPasskeySignin = document.querySelector("#auth-passkey-signin");
 const authMessage = document.querySelector("#auth-message");
 const authResetButton = document.querySelector("#auth-reset-button");
 const authCreateSuperButton = document.querySelector("#auth-create-super-button");
@@ -1003,6 +1007,9 @@ function openAuthGate(message = "Sign in with your Brokr account to continue.", 
   authGate.hidden = false;
   setAuthMessage(message, type);
   authPassword.value = "";
+  authPassword.type = "password";
+  authPasswordToggle.setAttribute("aria-label", "Show password");
+  authPasswordToggle.setAttribute("aria-pressed", "false");
   authEmail.focus();
 }
 
@@ -1059,6 +1066,11 @@ async function refreshAuthUser(session = currentSession) {
 }
 
 async function initializeAuth() {
+  authRememberLogin.checked = window.BrokrBackend?.getRememberLogin?.() ?? true;
+  const supportsPasskeys = Boolean(window.PublicKeyCredential && navigator.credentials);
+  authPasskeySignin.hidden = !supportsPasskeys;
+  if (accountPasskeyButton) accountPasskeyButton.hidden = !supportsPasskeys;
+
   if (!window.BrokrBackend?.isConfigured) {
     await refreshAuthUser(null);
     return;
@@ -1094,7 +1106,29 @@ authToggle.addEventListener("click", (event) => {
 });
 
 accountProfileButton?.addEventListener("click", openProfileSettings);
+accountPasskeyButton?.addEventListener("click", async () => {
+  closeAccountMenu();
+  accountPasskeyButton.disabled = true;
+  try {
+    await window.BrokrBackend.registerPasskey();
+    window.alert("Face ID / passkey sign-in is ready on this device.");
+  } catch (error) {
+    window.alert(error.code === "passkey_disabled"
+      ? "Passkey sign-in still needs to be enabled for this Brokr account."
+      : error.message || "Unable to set up Face ID / passkey sign-in.");
+  } finally {
+    accountPasskeyButton.disabled = false;
+  }
+});
 accountLogoutButton?.addEventListener("click", logoutCurrentUser);
+
+authPasswordToggle.addEventListener("click", () => {
+  const showPassword = authPassword.type === "password";
+  authPassword.type = showPassword ? "text" : "password";
+  authPasswordToggle.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+  authPasswordToggle.setAttribute("aria-pressed", String(showPassword));
+  authPassword.focus();
+});
 
 document.addEventListener("click", (event) => {
   if (accountMenu?.contains(event.target)) return;
@@ -1110,10 +1144,25 @@ authForm.addEventListener("submit", async (event) => {
   setAuthMessage("Signing in...");
 
   try {
-    const session = await window.BrokrBackend.signIn(authEmail.value.trim(), authPassword.value);
+    const session = await window.BrokrBackend.signIn(authEmail.value.trim(), authPassword.value, authRememberLogin.checked);
     await refreshAuthUser(session);
   } catch (error) {
     setAuthMessage(error.message || "Unable to sign in.", "error");
+  }
+});
+
+authPasskeySignin.addEventListener("click", async () => {
+  authPasskeySignin.disabled = true;
+  setAuthMessage("Waiting for Face ID or your device passkey...");
+  try {
+    const session = await window.BrokrBackend.signInWithPasskey(authRememberLogin.checked);
+    await refreshAuthUser(session);
+  } catch (error) {
+    setAuthMessage(error.code === "passkey_disabled"
+      ? "Face ID / passkey sign-in is not enabled yet. Sign in with your password for now."
+      : error.message || "Unable to sign in with Face ID / passkey.", "error");
+  } finally {
+    authPasskeySignin.disabled = false;
   }
 });
 
@@ -1122,6 +1171,7 @@ authCreateSuperButton?.addEventListener("click", async () => {
 
   setAuthMessage("Creating broker super admin...");
   try {
+    window.BrokrBackend.setRememberLogin(authRememberLogin.checked);
     const session = await window.BrokrBackend.createBrokerSuperAdmin(authEmail.value.trim(), authPassword.value);
     if (session) {
       await refreshAuthUser(session);

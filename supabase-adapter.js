@@ -1,13 +1,61 @@
 (function () {
   const config = window.BROKR_CONFIG || {};
   const hasSupabase = Boolean(config.supabaseUrl && config.supabaseAnonKey);
+  const rememberLoginKey = "brokr-remember-login";
   let clientPromise;
+
+  function getRememberLogin() {
+    return window.localStorage.getItem(rememberLoginKey) !== "false";
+  }
+
+  function setRememberLogin(rememberLogin) {
+    const shouldRemember = Boolean(rememberLogin);
+    window.localStorage.setItem(rememberLoginKey, String(shouldRemember));
+
+    const source = shouldRemember ? window.sessionStorage : window.localStorage;
+    const destination = shouldRemember ? window.localStorage : window.sessionStorage;
+    const authKeys = [];
+    for (let index = 0; index < source.length; index += 1) {
+      const key = source.key(index);
+      if (key?.startsWith("sb-") && key.includes("-auth-token")) authKeys.push(key);
+    }
+    authKeys.forEach((key) => {
+      const value = source.getItem(key);
+      if (value !== null) destination.setItem(key, value);
+      source.removeItem(key);
+    });
+  }
+
+  const authStorage = {
+    getItem(key) {
+      const primary = getRememberLogin() ? window.localStorage : window.sessionStorage;
+      const fallback = getRememberLogin() ? window.sessionStorage : window.localStorage;
+      return primary.getItem(key) ?? fallback.getItem(key);
+    },
+    setItem(key, value) {
+      const destination = getRememberLogin() ? window.localStorage : window.sessionStorage;
+      const fallback = getRememberLogin() ? window.sessionStorage : window.localStorage;
+      destination.setItem(key, value);
+      fallback.removeItem(key);
+    },
+    removeItem(key) {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    },
+  };
 
   async function getClient() {
     if (!hasSupabase) return null;
     if (!clientPromise) {
-      clientPromise = import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm").then(({ createClient }) =>
-        createClient(config.supabaseUrl, config.supabaseAnonKey),
+      clientPromise = import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.0/+esm").then(({ createClient }) =>
+        createClient(config.supabaseUrl, config.supabaseAnonKey, {
+          auth: {
+            autoRefreshToken: true,
+            persistSession: true,
+            storage: authStorage,
+            experimental: { passkey: true },
+          },
+        }),
       );
     }
     return clientPromise;
@@ -95,13 +143,35 @@
     return data.session;
   }
 
-  async function signIn(email, password) {
+  async function signIn(email, password, rememberLogin = true) {
+    setRememberLogin(rememberLogin);
     const client = await getClient();
     if (!client) throw new Error("Supabase is not configured.");
 
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data.session;
+  }
+
+  async function signInWithPasskey(rememberLogin = true) {
+    setRememberLogin(rememberLogin);
+    const client = await getClient();
+    if (!client) throw new Error("Supabase is not configured.");
+    if (!client.auth.signInWithPasskey) throw new Error("Passkey sign-in is not available in this browser.");
+
+    const { data, error } = await client.auth.signInWithPasskey();
+    if (error) throw error;
+    return data.session;
+  }
+
+  async function registerPasskey() {
+    const client = await getClient();
+    if (!client) throw new Error("Supabase is not configured.");
+    if (!client.auth.registerPasskey) throw new Error("Passkey setup is not available in this browser.");
+
+    const { data, error } = await client.auth.registerPasskey();
+    if (error) throw error;
+    return data;
   }
 
   async function signOut() {
@@ -430,8 +500,12 @@
 
   window.BrokrBackend = {
     isConfigured: hasSupabase,
+    getRememberLogin,
+    setRememberLogin,
     getSession,
     signIn,
+    signInWithPasskey,
+    registerPasskey,
     signOut,
     createBrokerSuperAdmin,
     sendPasswordSetupEmail,
