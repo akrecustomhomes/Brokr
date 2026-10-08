@@ -2198,7 +2198,7 @@ function renderQrCodes() {
         <article class="qr-code-card ${code.is_active ? "" : "is-paused"} ${isExpanded ? "is-expanded" : "is-collapsed"}" data-qr-card="${code.id}" tabindex="0" aria-expanded="${isExpanded}">
           <div class="qr-code-main">
             <div class="qr-code-image-wrap">
-              <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
+              <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-2-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
             </div>
             <div class="qr-code-content">
               <div class="qr-code-copy">
@@ -2230,7 +2230,7 @@ function renderQrCodes() {
                 </select>
               </label>
               <button class="secondary-action" type="button" data-qr-scans="${code.id}">Scan details</button>
-              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
+              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-2-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
               <button class="secondary-action danger-action" type="button" data-qr-delete="${code.id}">Delete</button>
           </div>

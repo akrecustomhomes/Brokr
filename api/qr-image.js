@@ -1,12 +1,24 @@
 const QRCode = require("qrcode");
 const { getAdminClient } = require("./_admin");
 
-function isFinderArea(row, column, size) {
+function isFinderPattern(row, column, size) {
   return (
-    (row <= 8 && column <= 8) ||
-    (row <= 8 && column >= size - 9) ||
-    (row >= size - 9 && column <= 8)
+    (row < 7 && column < 7) ||
+    (row < 7 && column >= size - 7) ||
+    (row >= size - 7 && column < 7)
   );
+}
+
+function roundedFinderPatterns(size, margin) {
+  return [
+    [margin, margin],
+    [margin + size - 7, margin],
+    [margin, margin + size - 7],
+  ].map(([x, y]) => `
+    <rect x="${x}" y="${y}" width="7" height="7" rx="1.05"/>
+    <rect x="${x + 1}" y="${y + 1}" width="5" height="5" rx="0.72" fill="#fff"/>
+    <rect x="${x + 2}" y="${y + 2}" width="3" height="3" rx="0.52"/>
+  `).join("");
 }
 
 function styledQrSvg(value, style) {
@@ -18,19 +30,21 @@ function styledQrSvg(value, style) {
   for (let row = 0; row < size; row += 1) {
     for (let column = 0; column < size; column += 1) {
       if (!qr.modules.get(row, column)) continue;
+      if (style !== "classic" && isFinderPattern(row, column, size)) continue;
       const x = column + margin;
       const y = row + margin;
-      const keepSquare = style === "classic" || isFinderArea(row, column, size);
+      const keepSquare = style === "classic";
       if (keepSquare) {
         modules.push(`<rect x="${x}" y="${y}" width="1" height="1"/>`);
       } else if (style === "dots") {
         modules.push(`<circle cx="${x + 0.5}" cy="${y + 0.5}" r="0.41"/>`);
       } else {
-        modules.push(`<rect x="${x + 0.06}" y="${y + 0.06}" width="0.88" height="0.88" rx="0.28"/>`);
+        modules.push(`<rect x="${x + 0.05}" y="${y + 0.05}" width="0.9" height="0.9" rx="0.42"/>`);
       }
     }
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewSize} ${viewSize}" shape-rendering="geometricPrecision"><rect width="100%" height="100%" fill="#fff"/><g fill="#24221f">${modules.join("")}</g></svg>`;
+  const finderPatterns = style === "classic" ? "" : roundedFinderPatterns(size, margin);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewSize} ${viewSize}" shape-rendering="geometricPrecision"><rect width="100%" height="100%" fill="#fff"/><g fill="#24221f">${finderPatterns}${modules.join("")}</g></svg>`;
 }
 
 module.exports = async function qrImage(request, response) {
@@ -51,3 +65,5 @@ module.exports = async function qrImage(request, response) {
   response.setHeader("Cache-Control", "public, max-age=3600");
   response.end(svg);
 };
+
+module.exports.styledQrSvg = styledQrSvg;
