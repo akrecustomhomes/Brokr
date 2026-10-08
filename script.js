@@ -113,6 +113,7 @@ const qrCodeForm = document.querySelector("#qr-code-form");
 const qrCodeName = document.querySelector("#qr-code-name");
 const qrCodeDestination = document.querySelector("#qr-code-destination");
 const qrCodeStyle = document.querySelector("#qr-code-style");
+const qrCodeEyeStyle = document.querySelector("#qr-code-eye-style");
 const qrCodeFormMessage = document.querySelector("#qr-code-form-message");
 const closeQrCodeModal = document.querySelector("#close-qr-code-modal");
 const cancelQrCodeButton = document.querySelector("#cancel-qr-code-button");
@@ -2182,6 +2183,14 @@ function qrScanUrl(code) {
   return `${window.location.origin}/q/${encodeURIComponent(code.slug)}`;
 }
 
+function qrBodyStyleLabel(style) {
+  return { classic: "Classic", rounded: "Clean rounded", dots: "Dots", flow: "Designer flow" }[style] || "Classic";
+}
+
+function qrEyeStyleLabel(style) {
+  return { square: "Square", rounded: "Rounded", circle: "Circle", classy: "Designer" }[style] || "Rounded";
+}
+
 function renderQrCodes() {
   if (!qrCodes.length) {
     qrCodeList.innerHTML = '<p class="qr-empty">No QR codes yet. Create one for a listing, sign, flyer, or campaign.</p>';
@@ -2198,14 +2207,14 @@ function renderQrCodes() {
         <article class="qr-code-card ${code.is_active ? "" : "is-paused"} ${isExpanded ? "is-expanded" : "is-collapsed"}" data-qr-card="${code.id}" tabindex="0" aria-expanded="${isExpanded}">
           <div class="qr-code-main">
             <div class="qr-code-image-wrap">
-              <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-4-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
+              <img src="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=styling-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" alt="QR code for ${escapeLockboxText(code.name)}" loading="lazy" />
             </div>
             <div class="qr-code-content">
               <div class="qr-code-copy">
                 <div class="qr-code-title-row">
                   <p class="eyebrow">${code.is_active ? "Active" : "Paused"}</p>
                   <h4>${escapeLockboxText(code.name)}</h4>
-                  <p class="qr-style-label">${code.style === "dots" ? "Round dots" : code.style === "rounded" ? "Soft rounded" : code.style === "flow" ? "Flow rounded" : "Classic squares"}</p>
+                  <p class="qr-style-label">${qrBodyStyleLabel(code.style)} · ${qrEyeStyleLabel(code.eye_style)} eyes</p>
                 </div>
                 <a class="qr-destination" href="${escapeLockboxText(code.destination_url)}" target="_blank" rel="noopener">${escapeLockboxText(code.destination_url)}</a>
               </div>
@@ -2224,14 +2233,23 @@ function renderQrCodes() {
               <label class="qr-style-control">
                 Style
                 <select data-qr-style="${code.id}">
-                  <option value="classic" ${code.style === "classic" || !code.style ? "selected" : ""}>Classic squares</option>
-                  <option value="rounded" ${code.style === "rounded" ? "selected" : ""}>Soft rounded</option>
-                  <option value="dots" ${code.style === "dots" ? "selected" : ""}>Round dots</option>
-                  <option value="flow" ${code.style === "flow" ? "selected" : ""}>Flow rounded</option>
+                  <option value="classic" ${code.style === "classic" || !code.style ? "selected" : ""}>Classic</option>
+                  <option value="rounded" ${code.style === "rounded" ? "selected" : ""}>Clean rounded</option>
+                  <option value="flow" ${code.style === "flow" ? "selected" : ""}>Designer flow</option>
+                  <option value="dots" ${code.style === "dots" ? "selected" : ""}>Dots</option>
+                </select>
+              </label>
+              <label class="qr-style-control">
+                Eyes
+                <select data-qr-eye-style="${code.id}">
+                  <option value="rounded" ${code.eye_style === "rounded" || !code.eye_style ? "selected" : ""}>Rounded</option>
+                  <option value="classy" ${code.eye_style === "classy" ? "selected" : ""}>Designer</option>
+                  <option value="circle" ${code.eye_style === "circle" ? "selected" : ""}>Circle</option>
+                  <option value="square" ${code.eye_style === "square" ? "selected" : ""}>Square</option>
                 </select>
               </label>
               <button class="secondary-action" type="button" data-qr-scans="${code.id}">Scan details</button>
-              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=compact-4-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
+              <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=styling-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
               <button class="secondary-action danger-action" type="button" data-qr-delete="${code.id}">Delete</button>
           </div>
@@ -3815,6 +3833,7 @@ qrCodeForm.addEventListener("submit", async (event) => {
         name: qrCodeName.value.trim(),
         destinationUrl: qrCodeDestination.value.trim(),
         style: qrCodeStyle.value,
+        eyeStyle: qrCodeEyeStyle.value,
       }),
     });
     closeQrCodeForm();
@@ -3899,17 +3918,21 @@ qrScanModal.addEventListener("click", (event) => {
 });
 qrCodeList.addEventListener("change", async (event) => {
   const styleSelect = event.target.closest("[data-qr-style]");
-  if (!styleSelect) return;
-  styleSelect.disabled = true;
+  const eyeStyleSelect = event.target.closest("[data-qr-eye-style]");
+  const select = styleSelect || eyeStyleSelect;
+  if (!select) return;
+  select.disabled = true;
   try {
     await qrApi("", {
       method: "PATCH",
-      body: JSON.stringify({ id: styleSelect.dataset.qrStyle, style: styleSelect.value }),
+      body: JSON.stringify(styleSelect
+        ? { id: styleSelect.dataset.qrStyle, style: styleSelect.value }
+        : { id: eyeStyleSelect.dataset.qrEyeStyle, eyeStyle: eyeStyleSelect.value }),
     });
     await loadQrCodes();
   } catch (error) {
     window.alert(error.message);
-    styleSelect.disabled = false;
+    select.disabled = false;
   }
 });
 lockboxFields.status.addEventListener("change", syncLockboxAssignmentFields);

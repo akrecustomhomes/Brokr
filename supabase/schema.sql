@@ -138,6 +138,7 @@ create table if not exists public.qr_codes (
   slug text not null unique,
   destination_url text not null,
   style text not null default 'classic' check (style in ('classic', 'rounded', 'dots', 'flow')),
+  eye_style text not null default 'rounded' check (eye_style in ('square', 'rounded', 'circle', 'classy')),
   is_active boolean not null default true,
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),

@@ -1,6 +1,7 @@
 const crypto = require("node:crypto");
 const { requireAdmin, sendJson } = require("./_admin");
 const allowedStyles = new Set(["classic", "rounded", "dots", "flow"]);
+const allowedEyeStyles = new Set(["square", "rounded", "circle", "classy"]);
 
 function cleanUrl(value) {
   try {
@@ -80,6 +81,7 @@ module.exports = async function qrCodes(request, response) {
         destination_url: destinationUrl,
         slug: makeSlug(),
         style: allowedStyles.has(body.style) ? body.style : "classic",
+        eye_style: allowedEyeStyles.has(body.eyeStyle) ? body.eyeStyle : "rounded",
         created_by: authUser.id,
       })
       .select("*")
@@ -98,6 +100,7 @@ module.exports = async function qrCodes(request, response) {
     }
     if (body.isActive !== undefined) updates.is_active = Boolean(body.isActive);
     if (body.style !== undefined && allowedStyles.has(body.style)) updates.style = body.style;
+    if (body.eyeStyle !== undefined && allowedEyeStyles.has(body.eyeStyle)) updates.eye_style = body.eyeStyle;
     if (!id || !Object.keys(updates).length) return sendJson(response, 400, { error: "Nothing to update." });
     const { data, error } = await adminClient.from("qr_codes").update(updates).eq("id", id).select("*").single();
     if (error) return sendJson(response, 400, { error: error.message });
