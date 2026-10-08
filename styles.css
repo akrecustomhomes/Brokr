@@ -8480,6 +8480,10 @@ body[data-theme="dark"] .task-status.overdue {
   justify-self: end;
 }
 
+.qr-code-card.is-collapsed .qr-code-content {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .commission-card-actions {
   margin-left: auto;
 }
