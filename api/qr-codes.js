@@ -93,7 +93,10 @@ module.exports = async function qrCodes(request, response) {
   if (request.method === "PATCH") {
     const id = String(body.id || "");
     const updates = {};
-    if (body.name !== undefined) updates.name = String(body.name).trim();
+    if (body.name !== undefined) {
+      updates.name = String(body.name).trim();
+      if (!updates.name) return sendJson(response, 400, { error: "QR code name is required." });
+    }
     if (body.destinationUrl !== undefined) {
       updates.destination_url = cleanUrl(body.destinationUrl);
       if (!updates.destination_url) return sendJson(response, 400, { error: "Enter a valid destination URL." });

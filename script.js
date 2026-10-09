@@ -110,11 +110,16 @@ const qrCodeList = document.querySelector("#qr-code-list");
 const addQrCodeButton = document.querySelector("#add-qr-code-button");
 const qrCodeModal = document.querySelector("#qr-code-modal");
 const qrCodeForm = document.querySelector("#qr-code-form");
+const qrCodeModalTitle = document.querySelector("#qr-code-modal-title");
 const qrCodeName = document.querySelector("#qr-code-name");
 const qrCodeDestination = document.querySelector("#qr-code-destination");
+const qrCodeDestinationField = document.querySelector("#qr-code-destination-field");
 const qrCodeStyle = document.querySelector("#qr-code-style");
+const qrCodeStyleField = document.querySelector("#qr-code-style-field");
 const qrCodeEyeStyle = document.querySelector("#qr-code-eye-style");
+const qrCodeEyeStyleField = document.querySelector("#qr-code-eye-style-field");
 const qrCodeFormMessage = document.querySelector("#qr-code-form-message");
+const qrCodeSubmitButton = document.querySelector("#qr-code-submit-button");
 const closeQrCodeModal = document.querySelector("#close-qr-code-modal");
 const cancelQrCodeButton = document.querySelector("#cancel-qr-code-button");
 const qrScanModal = document.querySelector("#qr-scan-modal");
@@ -2162,6 +2167,7 @@ function renderLockboxes() {
 
 let qrCodes = [];
 let qrCodesLoading = false;
+let editingQrCodeId = null;
 
 async function qrApi(path = "", options = {}) {
   const session = await window.BrokrBackend?.getSession();
@@ -2248,6 +2254,7 @@ function renderQrCodes() {
                   <option value="square" ${code.eye_style === "square" ? "selected" : ""}>Square</option>
                 </select>
               </label>
+              <button class="secondary-action" type="button" data-qr-edit="${code.id}">Edit name</button>
               <button class="secondary-action" type="button" data-qr-scans="${code.id}">Scan details</button>
               <a class="secondary-action" href="/api/qr-image?slug=${encodeURIComponent(code.slug)}&v=styling-1-${encodeURIComponent(code.updated_at || code.style || "classic")}" download="${escapeLockboxText(code.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase())}-qr.svg">Download SVG (Vector)</a>
               <button class="secondary-action" type="button" data-qr-toggle="${code.id}">${code.is_active ? "Pause" : "Resume"}</button>
@@ -2275,15 +2282,41 @@ async function loadQrCodes() {
 }
 
 function openQrCodeForm() {
+  editingQrCodeId = null;
   qrCodeForm.reset();
-  qrCodeFormMessage.textContent = "You can change the destination later without reprinting the QR code.";
+  qrCodeModalTitle.textContent = "Create QR Code";
+  qrCodeDestination.disabled = false;
+  qrCodeDestinationField.hidden = false;
+  qrCodeStyleField.hidden = false;
+  qrCodeEyeStyleField.hidden = false;
+  qrCodeSubmitButton.textContent = "Create QR Code";
+  qrCodeFormMessage.textContent = "The tracked link stays attached to this QR code after it is created.";
   qrCodeFormMessage.classList.remove("error");
   qrCodeModal.hidden = false;
   qrCodeName.focus();
 }
 
+function openQrCodeEditForm(code) {
+  editingQrCodeId = code.id;
+  qrCodeForm.reset();
+  qrCodeModalTitle.textContent = "Edit QR Code Name";
+  qrCodeName.value = code.name;
+  qrCodeDestination.value = qrScanUrl(code);
+  qrCodeDestination.disabled = true;
+  qrCodeDestinationField.hidden = false;
+  qrCodeStyleField.hidden = true;
+  qrCodeEyeStyleField.hidden = true;
+  qrCodeSubmitButton.textContent = "Save Name";
+  qrCodeFormMessage.textContent = "Only the display name will change. The QR code and its tracked link will remain the same.";
+  qrCodeFormMessage.classList.remove("error");
+  qrCodeModal.hidden = false;
+  qrCodeName.focus();
+  qrCodeName.select();
+}
+
 function closeQrCodeForm() {
   qrCodeModal.hidden = true;
+  editingQrCodeId = null;
 }
 
 function closeQrScanDetails() {
@@ -3824,18 +3857,23 @@ qrCodeForm.addEventListener("submit", async (event) => {
   if (!qrCodeForm.reportValidity()) return;
   const submitButton = qrCodeForm.querySelector('[type="submit"]');
   submitButton.disabled = true;
-  qrCodeFormMessage.textContent = "Creating QR code…";
+  qrCodeFormMessage.textContent = editingQrCodeId ? "Saving name…" : "Creating QR code…";
   qrCodeFormMessage.classList.remove("error");
   try {
-    await qrApi("", {
-      method: "POST",
-      body: JSON.stringify({
-        name: qrCodeName.value.trim(),
-        destinationUrl: qrCodeDestination.value.trim(),
-        style: qrCodeStyle.value,
-        eyeStyle: qrCodeEyeStyle.value,
-      }),
-    });
+    await qrApi("", editingQrCodeId
+      ? {
+          method: "PATCH",
+          body: JSON.stringify({ id: editingQrCodeId, name: qrCodeName.value.trim() }),
+        }
+      : {
+          method: "POST",
+          body: JSON.stringify({
+            name: qrCodeName.value.trim(),
+            destinationUrl: qrCodeDestination.value.trim(),
+            style: qrCodeStyle.value,
+            eyeStyle: qrCodeEyeStyle.value,
+          }),
+        });
     closeQrCodeForm();
     await loadQrCodes();
   } catch (error) {
@@ -3850,11 +3888,17 @@ qrCodeStyle.addEventListener("change", () => {
 });
 qrCodeList.addEventListener("click", async (event) => {
   const copyButton = event.target.closest("[data-qr-copy]");
+  const editButton = event.target.closest("[data-qr-edit]");
   const expandButton = event.target.closest("[data-qr-expand]");
   const toggleButton = event.target.closest("[data-qr-toggle]");
   const deleteButton = event.target.closest("[data-qr-delete]");
   const scansButton = event.target.closest("[data-qr-scans]");
   const card = event.target.closest("[data-qr-card]");
+  if (editButton) {
+    const code = qrCodes.find((item) => item.id === editButton.dataset.qrEdit);
+    if (code) openQrCodeEditForm(code);
+    return;
+  }
   if (expandButton) {
     const codeId = expandButton.dataset.qrExpand;
     if (expandedQrCodeIds.has(codeId)) expandedQrCodeIds.delete(codeId);

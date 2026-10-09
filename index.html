@@ -1213,11 +1213,11 @@
               QR code name
               <input id="qr-code-name" type="text" placeholder="123 Main Street flyer" required />
             </label>
-            <label>
+            <label id="qr-code-destination-field">
               Destination URL
               <input id="qr-code-destination" type="url" placeholder="https://lumerealestate.com/listing" required />
             </label>
-            <label>
+            <label id="qr-code-style-field">
               QR style
               <select id="qr-code-style" required>
                 <option value="classic">Classic</option>
@@ -1226,7 +1226,7 @@
                 <option value="dots">Dots</option>
               </select>
             </label>
-            <label>
+            <label id="qr-code-eye-style-field">
               Eye style
               <select id="qr-code-eye-style" required>
                 <option value="rounded">Rounded</option>
@@ -1239,7 +1239,7 @@
           <p class="form-note" id="qr-code-form-message">You can change the destination later without reprinting the QR code.</p>
           <div class="modal-actions">
             <button class="secondary-action" id="cancel-qr-code-button" type="button">Cancel</button>
-            <button class="primary-action" type="submit">Create QR Code</button>
+            <button class="primary-action" id="qr-code-submit-button" type="submit">Create QR Code</button>
           </div>
         </form>
       </section>
