@@ -1806,8 +1806,19 @@ async function sendAgentContractWithDocusign() {
     return;
   }
 
+  const buttons = [sendAgentContractButton, contractDocusignButton];
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.textContent = "Sending…";
+  });
   const connection = await ensureDocusignConnection();
-  if (!connection) return;
+  if (!connection) {
+    buttons.forEach((button) => {
+      button.disabled = false;
+      button.textContent = "Create DocuSign Draft";
+    });
+    return;
+  }
   const docusignWindow = window.open("", "brokr-docusign-draft");
   if (docusignWindow) {
     docusignWindow.document.title = "Opening DocuSign draft…";
@@ -1815,11 +1826,6 @@ async function sendAgentContractWithDocusign() {
   }
   renderAgentContract(agent);
   const session = await window.BrokrBackend?.getSession();
-  const buttons = [sendAgentContractButton, contractDocusignButton];
-  buttons.forEach((button) => {
-    button.disabled = true;
-    button.textContent = "Creating…";
-  });
   try {
     const response = await fetch("/api/docusign/send-envelope", {
       method: "POST",

@@ -51,13 +51,13 @@ function signer({ email, name, recipientId, routingOrder, signatureAnchor, dateA
         anchorString: signatureAnchor,
         anchorUnits: "pixels",
         anchorXOffset: "0",
-        anchorYOffset: "12",
+        anchorYOffset: "0",
       }],
       dateSignedTabs: [{
         anchorString: dateAnchor,
         anchorUnits: "pixels",
         anchorXOffset: "0",
-        anchorYOffset: "12",
+        anchorYOffset: "0",
       }],
       initialHereTabs: [{
         anchorString: initialsAnchor,
@@ -91,8 +91,8 @@ module.exports = async function sendDocusignEnvelope(request, response) {
       h2{font-size:24pt;margin:14px 0} h4{font-size:14pt;margin:20px 0 8px}
       section{margin-top:18px}section h4{break-after:avoid-page}.contract-party-grid,.contract-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px}
       .contract-compensation{border:1px solid #bdb6ae;padding:14px;margin:12px 0;break-inside:avoid-page}.contract-compensation:not(.selected){display:none}
-      .contract-signatures>div{break-inside:avoid-page}
-      .contract-signature-field{min-height:52px;border-bottom:1px solid #27231f}.docusign-anchor{font-size:2px;color:#fff}
+      .contract-signatures>div{break-inside:avoid-page}.contract-signatures>div>p:not(.contract-signature-field){margin-bottom:20px}
+      .contract-signature-field{position:relative;min-height:88px;margin:18px 0 0;border:0}.contract-signature-field>span:first-child{display:block}.contract-signature-line{position:absolute;right:0;bottom:0;left:0;border-bottom:1px solid #27231f}.contract-signature-field .docusign-anchor{position:absolute;left:0;bottom:42px;font-size:2px;color:#fff}
       ul{padding-left:22px}p{margin:7px 0}.contract-document-wordmark span{font-size:24pt;letter-spacing:.18em}.contract-document-wordmark small{display:block;letter-spacing:.25em}
     </style></head><body>${documentHtml}</body></html>`;
 
