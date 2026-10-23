@@ -3274,6 +3274,10 @@ img.uploaded-contract-preview {
   border-bottom: 1px solid currentColor;
 }
 
+.docusign-anchor {
+  display: none;
+}
+
 .contract-compensation + .contract-compensation { margin-top: 10px; }
 .contract-compensation.selected { border-color: var(--forest); background: #f6f8f5; }
 

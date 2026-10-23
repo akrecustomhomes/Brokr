@@ -1680,6 +1680,7 @@ function getAgentContractDraft() {
     ...(savedAgent || {}),
     firstName: agentFields.firstName.value.trim() || savedAgent?.firstName || "",
     lastName: agentFields.lastName.value.trim() || savedAgent?.lastName || "",
+    email: agentFields.email.value.trim() || savedAgent?.email || "",
     licenseNumber: agentFields.licenseNumber.value.trim() || savedAgent?.licenseNumber || "",
     contractEffectiveDate: agentFields.contractEffectiveDate.value,
     compensationOption: agentFields.compensationOption.value,
@@ -1732,7 +1733,7 @@ function renderAgentContract(agent) {
     ${section("13. Indemnification", "<p>Agent agrees to indemnify and hold harmless Brokerage, Broker, employees, and affiliates from claims, damages, liabilities, or expenses arising from Agent's negligence, misconduct, or violation of law.</p>")}
     ${section("14. Entire Agreement", "<p>This Agreement constitutes the entire understanding between the Parties and supersedes all prior agreements. Any modification must be in writing and signed by both Parties.</p>")}
     ${section("15. Governing Law", "<p>This Agreement shall be governed by the laws of the State of Utah.</p>")}
-    <section><h4>Signatures</h4><div class="contract-signatures"><div><strong>Lume Real Estate</strong><p>Jared Alvey, Principal Broker</p><p class="contract-signature-field"><span>Broker Signature</span><span class="contract-signature-line" aria-hidden="true"></span></p><p class="contract-signature-field"><span>Date</span><span class="contract-signature-line" aria-hidden="true"></span></p></div><div><strong>${escapeLockboxText(name)}</strong><p class="contract-signature-field"><span>Agent Signature</span><span class="contract-signature-line" aria-hidden="true"></span></p><p class="contract-signature-field"><span>Date</span><span class="contract-signature-line" aria-hidden="true"></span></p></div></div></section>
+    <section><h4>Signatures</h4><div class="contract-signatures"><div><strong>Lume Real Estate</strong><p>Jared Alvey, Principal Broker</p><p class="contract-signature-field"><span>Broker Signature</span><span class="docusign-anchor">[[BROKER_SIGNATURE]]</span><span class="contract-signature-line" aria-hidden="true"></span></p><p class="contract-signature-field"><span>Date</span><span class="docusign-anchor">[[BROKER_DATE]]</span><span class="contract-signature-line" aria-hidden="true"></span></p></div><div><strong>${escapeLockboxText(name)}</strong><p class="contract-signature-field"><span>Agent Signature</span><span class="docusign-anchor">[[AGENT_SIGNATURE]]</span><span class="contract-signature-line" aria-hidden="true"></span></p><p class="contract-signature-field"><span>Date</span><span class="docusign-anchor">[[AGENT_DATE]]</span><span class="contract-signature-line" aria-hidden="true"></span></p></div></div></section>
   `;
 }
 
@@ -1771,7 +1772,7 @@ function closeAgentContract() {
   agentContractModal.hidden = true;
 }
 
-async function promptDocusignConnection() {
+async function ensureDocusignConnection() {
   try {
     const session = await window.BrokrBackend?.getSession();
     if (!session?.access_token) throw new Error("Sign in as Broker or Admin before connecting DocuSign.");
@@ -1779,16 +1780,64 @@ async function promptDocusignConnection() {
     const statusResponse = await fetch("/api/docusign/status", { headers });
     const status = await statusResponse.json();
     if (statusResponse.ok && status.connected) {
-      window.alert(`DocuSign is connected${status.accountName ? ` to ${status.accountName}` : ""}. Envelope sending will use this authorized account.`);
-      return;
+      return status;
     }
 
     const response = await fetch("/api/docusign/connect", { headers });
     const data = await response.json();
     if (!response.ok || !data.authorizationUrl) throw new Error(data.error || "DocuSign connection could not start.");
     window.location.assign(data.authorizationUrl);
+    return null;
   } catch (error) {
     window.alert(error.message || "DocuSign connection could not start.");
+    return null;
+  }
+}
+
+async function sendAgentContractWithDocusign() {
+  const agent = getAgentContractDraft();
+  const agentName = `${agent.firstName || ""} ${agent.lastName || ""}`.trim();
+  if (!agentName || !agent.email) {
+    window.alert("Add the agent's name and email before sending the contract.");
+    return;
+  }
+  if (agentFields.contractFile.files[0] || agent.contractFileName) {
+    window.alert("The DocuSign workflow currently sends the generated Brokr contract. Delete the uploaded contract first if you want to generate and send a new agreement.");
+    return;
+  }
+
+  const connection = await ensureDocusignConnection();
+  if (!connection) return;
+  renderAgentContract(agent);
+  const session = await window.BrokrBackend?.getSession();
+  const buttons = [sendAgentContractButton, contractDocusignButton];
+  buttons.forEach((button) => {
+    button.disabled = true;
+    button.textContent = "Sending…";
+  });
+  try {
+    const response = await fetch("/api/docusign/send-envelope", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session?.access_token || ""}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        agentName,
+        agentEmail: agent.email,
+        documentHtml: agentContractDocument.innerHTML,
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || "DocuSign could not send the contract.");
+    window.alert(`DocuSign envelope sent to ${agentName}. Envelope ID: ${result.envelopeId}`);
+  } catch (error) {
+    window.alert(error.message || "DocuSign could not send the contract.");
+  } finally {
+    sendAgentContractButton.disabled = false;
+    contractDocusignButton.disabled = false;
+    sendAgentContractButton.textContent = "Send with DocuSign";
+    contractDocusignButton.textContent = "Send with DocuSign";
   }
 }
 
@@ -3972,16 +4021,13 @@ agentModal.addEventListener("click", (event) => {
   if (event.target === agentModal) closeModal();
 });
 previewAgentContractButton.addEventListener("click", () => openAgentContract());
-sendAgentContractButton.addEventListener("click", () => {
-  openAgentContract();
-  promptDocusignConnection();
-});
+sendAgentContractButton.addEventListener("click", sendAgentContractWithDocusign);
 closeAgentContractModal.addEventListener("click", closeAgentContract);
 agentContractModal.addEventListener("click", (event) => {
   if (event.target === agentContractModal) closeAgentContract();
 });
 printAgentContractButton.addEventListener("click", () => window.print());
-contractDocusignButton.addEventListener("click", promptDocusignConnection);
+contractDocusignButton.addEventListener("click", sendAgentContractWithDocusign);
 
 rosterTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
