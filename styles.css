@@ -1817,7 +1817,10 @@ img.agent-avatar,
 }
 
 .broker-contact-panel > .form-note,
-.archive-storage-panel > .form-note {
+.archive-storage-panel > .form-note,
+.broker-contact-panel .admin-panel-body > .form-note,
+.archive-storage-panel .admin-panel-body > .form-note,
+#admin .admin-panel-body > .form-note {
   margin: 0;
   padding: 0 24px 24px;
 }
