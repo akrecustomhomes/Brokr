@@ -1794,13 +1794,17 @@ async function ensureDocusignConnection() {
   }
 }
 
-async function sendAgentContractWithDocusign() {
-  const agent = getAgentContractDraft();
+const DOCUSIGN_PENDING_DRAFT_KEY = "brokr-docusign-pending-agent-contract";
+
+async function sendAgentContractWithDocusign(agentOverride = null) {
+  const agent = agentOverride?.firstName ? agentOverride : getAgentContractDraft();
   const agentName = `${agent.firstName || ""} ${agent.lastName || ""}`.trim();
   if (!agentName || !agent.email) {
     window.alert("Add the agent's name and email before sending the contract.");
     return;
   }
+
+  sessionStorage.setItem(DOCUSIGN_PENDING_DRAFT_KEY, JSON.stringify(agent));
   if (agentFields.contractFile.files[0] || agent.contractFileName) {
     window.alert("The DocuSign workflow currently sends the generated Brokr contract. Delete the uploaded contract first if you want to generate and send a new agreement.");
     return;
@@ -1841,6 +1845,7 @@ async function sendAgentContractWithDocusign() {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "DocuSign could not send the contract.");
+    sessionStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
     if (result.senderViewUrl) {
       if (docusignWindow) {
         docusignWindow.location.replace(result.senderViewUrl);
@@ -1852,6 +1857,7 @@ async function sendAgentContractWithDocusign() {
       window.alert(`DocuSign draft created for ${agentName}, but its review window could not be opened. Envelope ID: ${result.envelopeId}`);
     }
   } catch (error) {
+    sessionStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
     docusignWindow?.close();
     window.alert(error.message || "DocuSign could not send the contract.");
   } finally {
@@ -1862,6 +1868,17 @@ async function sendAgentContractWithDocusign() {
   }
 }
 
+async function resumePendingDocusignDraft() {
+  const pendingDraft = sessionStorage.getItem(DOCUSIGN_PENDING_DRAFT_KEY);
+  if (!pendingDraft) return;
+  sessionStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
+  try {
+    await sendAgentContractWithDocusign(JSON.parse(pendingDraft));
+  } catch (error) {
+    window.alert(error.message || "DocuSign could not resume the contract draft.");
+  }
+}
+
 const docusignResult = new URLSearchParams(window.location.search).get("docusign");
 if (docusignResult) {
   const resultUrl = new URL(window.location.href);
@@ -1869,9 +1886,11 @@ if (docusignResult) {
   resultUrl.searchParams.delete("docusign");
   resultUrl.searchParams.delete("message");
   window.history.replaceState({}, "", resultUrl);
-  window.setTimeout(() => {
-    window.alert(docusignResult === "connected" ? "DocuSign connected successfully." : message || "DocuSign connection failed.");
-  }, 250);
+  if (docusignResult !== "connected" || !sessionStorage.getItem(DOCUSIGN_PENDING_DRAFT_KEY)) {
+    window.setTimeout(() => {
+      window.alert(docusignResult === "connected" ? "DocuSign connected successfully." : message || "DocuSign connection failed.");
+    }, 250);
+  }
 }
 
 function renderAgents() {
@@ -4042,13 +4061,13 @@ agentModal.addEventListener("click", (event) => {
   if (event.target === agentModal) closeModal();
 });
 previewAgentContractButton.addEventListener("click", () => openAgentContract());
-sendAgentContractButton.addEventListener("click", sendAgentContractWithDocusign);
+sendAgentContractButton.addEventListener("click", () => sendAgentContractWithDocusign());
 closeAgentContractModal.addEventListener("click", closeAgentContract);
 agentContractModal.addEventListener("click", (event) => {
   if (event.target === agentContractModal) closeAgentContract();
 });
 printAgentContractButton.addEventListener("click", () => window.print());
-contractDocusignButton.addEventListener("click", sendAgentContractWithDocusign);
+contractDocusignButton.addEventListener("click", () => sendAgentContractWithDocusign());
 
 rosterTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -4291,7 +4310,12 @@ function renderAll() {
 }
 
 renderAll();
-initializeAuth();
+initializeAuth()
+  .then(() => {
+    if (docusignResult === "connected") return resumePendingDocusignDraft();
+    return null;
+  })
+  .catch((error) => console.warn("Unable to resume DocuSign draft creation.", error));
 loadOfficeListingsFromIdx();
 
 topbarNewTransaction.addEventListener("click", () => {
