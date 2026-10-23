@@ -2991,8 +2991,24 @@ body.menu-open .sidebar {
 }
 
 .idx-map-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   justify-self: start;
+  gap: 8px;
+  width: auto;
+  min-width: 0;
+  min-height: 40px;
+  border-radius: 10px;
+  padding: 8px 14px;
+  line-height: 1;
   text-decoration: none;
+}
+
+.idx-map-link svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
 }
 
 @media (max-width: 720px) {
