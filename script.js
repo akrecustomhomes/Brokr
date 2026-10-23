@@ -1838,6 +1838,28 @@ async function ensureDocusignConnection() {
 }
 
 const DOCUSIGN_PENDING_DRAFT_KEY = "brokr-docusign-pending-agent-contract";
+const DOCUSIGN_PENDING_DRAFT_MAX_AGE = 15 * 60 * 1000;
+
+function savePendingDocusignDraft(agent) {
+  localStorage.setItem(DOCUSIGN_PENDING_DRAFT_KEY, JSON.stringify({
+    agent,
+    createdAt: Date.now(),
+  }));
+}
+
+function getPendingDocusignDraft() {
+  try {
+    const pending = JSON.parse(localStorage.getItem(DOCUSIGN_PENDING_DRAFT_KEY) || "null");
+    if (!pending?.agent || Date.now() - Number(pending.createdAt || 0) > DOCUSIGN_PENDING_DRAFT_MAX_AGE) {
+      localStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
+      return null;
+    }
+    return pending.agent;
+  } catch (_error) {
+    localStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
+    return null;
+  }
+}
 
 async function fetchDocusignEnvelopeStatus(agent) {
   if (!agent?.docusignEnvelopeId) return null;
@@ -1930,11 +1952,11 @@ async function sendAgentContractWithDocusign(agentOverride = null) {
     return;
   }
 
-  sessionStorage.setItem(DOCUSIGN_PENDING_DRAFT_KEY, JSON.stringify(agent));
   if (agentFields.contractFile.files[0] || agent.contractFileName) {
     window.alert("The DocuSign workflow currently sends the generated Brokr contract. Delete the uploaded contract first if you want to generate and send a new agreement.");
     return;
   }
+  savePendingDocusignDraft(agent);
 
   const buttons = [sendAgentContractButton, contractDocusignButton];
   buttons.forEach((button) => {
@@ -1971,7 +1993,7 @@ async function sendAgentContractWithDocusign(agentOverride = null) {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "DocuSign could not send the contract.");
-    sessionStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
+    localStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
     const trackedAgentId = Number(agent.id || editingAgentId || 0);
     if (trackedAgentId) {
       agents = agents.map((item) => item.id === trackedAgentId ? {
@@ -1998,7 +2020,7 @@ async function sendAgentContractWithDocusign(agentOverride = null) {
       window.alert(`DocuSign draft created for ${agentName}, but its review window could not be opened. Envelope ID: ${result.envelopeId}`);
     }
   } catch (error) {
-    sessionStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
+    localStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
     docusignWindow?.close();
     window.alert(error.message || "DocuSign could not send the contract.");
   } finally {
@@ -2010,11 +2032,10 @@ async function sendAgentContractWithDocusign(agentOverride = null) {
 }
 
 async function resumePendingDocusignDraft() {
-  const pendingDraft = sessionStorage.getItem(DOCUSIGN_PENDING_DRAFT_KEY);
+  const pendingDraft = getPendingDocusignDraft();
   if (!pendingDraft) return;
-  sessionStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
   try {
-    await sendAgentContractWithDocusign(JSON.parse(pendingDraft));
+    await sendAgentContractWithDocusign(pendingDraft);
   } catch (error) {
     window.alert(error.message || "DocuSign could not resume the contract draft.");
   }
@@ -2027,7 +2048,7 @@ if (docusignResult) {
   resultUrl.searchParams.delete("docusign");
   resultUrl.searchParams.delete("message");
   window.history.replaceState({}, "", resultUrl);
-  if (docusignResult !== "draft-reviewed" && (docusignResult !== "connected" || !sessionStorage.getItem(DOCUSIGN_PENDING_DRAFT_KEY))) {
+  if (docusignResult !== "draft-reviewed" && (docusignResult !== "connected" || !getPendingDocusignDraft())) {
     window.setTimeout(() => {
       window.alert(docusignResult === "connected" ? "DocuSign connected successfully." : message || "DocuSign connection failed.");
     }, 250);
@@ -4706,7 +4727,7 @@ function renderAll() {
 renderAll();
 initializeAuth()
   .then(() => {
-    if (docusignResult === "connected") return resumePendingDocusignDraft();
+    if (docusignResult === "connected" || getPendingDocusignDraft()) return resumePendingDocusignDraft();
     return null;
   })
   .catch((error) => console.warn("Unable to resume DocuSign draft creation.", error));
