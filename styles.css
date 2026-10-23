@@ -9877,6 +9877,12 @@ body[data-theme="dark"] .task-status.overdue {
   text-transform: uppercase;
 }
 
+/* Author button display rules must not override the native hidden state. */
+.agent-contract-actions > button[hidden],
+#agent-contract-signing-details[hidden] {
+  display: none !important;
+}
+
 .metric-grid .metric-card[role="button"]:hover,
 .metric-grid .metric-card[role="button"]:focus-visible {
   background: color-mix(in srgb, var(--panel) 98%, var(--ink) 2%);

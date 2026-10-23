@@ -1419,23 +1419,38 @@ function getLicenseStatus(expirationDate) {
   return { label: "Current", type: "current" };
 }
 
+function parseDisplayDate(dateValue) {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) {
+    return Number.isNaN(dateValue.getTime()) ? null : dateValue;
+  }
+
+  const value = String(dateValue).trim();
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T00:00:00`)
+    : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function formatDate(dateValue) {
-  if (!dateValue) return "Not set";
+  const date = parseDisplayDate(dateValue);
+  if (!date) return "Not set";
 
   return new Intl.DateTimeFormat("en", {
     month: "short",
     day: "numeric",
     year: "numeric",
-  }).format(new Date(`${dateValue}T00:00:00`));
+  }).format(date);
 }
 
 function formatShortDate(dateValue) {
-  if (!dateValue) return "Not set";
+  const date = parseDisplayDate(dateValue);
+  if (!date) return "Not set";
 
   return new Intl.DateTimeFormat("en", {
     month: "short",
     day: "numeric",
-  }).format(new Date(`${dateValue}T00:00:00`));
+  }).format(date);
 }
 
 function toDateKey(date) {
@@ -1676,20 +1691,24 @@ function updateAgentFileTile(tile, status, name, fileName = "", emptyLabel = "Ne
 function updateAgentFileVault(agent = {}) {
   updateAgentFileTile(agentLicenseTile, agentLicenseStatus, agentLicenseFileName, agent.licenseFileName || "");
   const hasDocusignEnvelope = Boolean(agent.docusignEnvelopeId);
+  const hasUploadedContract = Boolean(agent.contractFileName || agentFields.contractFile.files[0]);
   const contractFileLabel = agent.contractFileName || (hasDocusignEnvelope ? `DocuSign envelope ${agent.docusignEnvelopeId.slice(0, 8)}…` : "");
   updateAgentFileTile(agentContractTile, agentContractStatus, agentContractFileName, contractFileLabel);
   if (hasDocusignEnvelope) {
     agentContractStatus.textContent = agent.contractStatus || "Draft";
     const activityDate = agent.contractCompletedAt || agent.contractSentAt || agent.docusignCreatedAt || "";
     agentContractSigningDetails.textContent = activityDate
-      ? `${agent.contractStatus || "Draft"} ${formatDate(activityDate)}`
-      : "Tracked through DocuSign";
+      ? `DocuSign: ${agent.contractStatus || "Draft"} · ${formatDate(activityDate)}`
+      : `DocuSign: ${agent.contractStatus || "Draft"}`;
+  } else {
+    agentContractSigningDetails.textContent = hasUploadedContract
+      ? "Contract uploaded manually"
+      : "DocuSign: Not sent";
   }
-  agentContractSigningDetails.hidden = !hasDocusignEnvelope;
+  agentContractSigningDetails.hidden = false;
   viewAgentContractDocusignButton.hidden = !hasDocusignEnvelope;
   refreshAgentContractStatusButton.hidden = !hasDocusignEnvelope;
   downloadAgentContractButton.hidden = agent.contractStatus !== "Completed";
-  const hasUploadedContract = Boolean(agent.contractFileName || agentFields.contractFile.files[0]);
   const hasCreatedContract = Boolean(agent.contractGenerated);
   previewAgentContractButton.textContent = agent.contractStatus === "Completed"
     ? "Preview Signed Contract"
