@@ -90,10 +90,12 @@ module.exports = async function idxListings(request, response) {
     const selectedFields = [...fields];
     for (let attempt = 0; attempt < fields.length; attempt += 1) {
       const query = new URLSearchParams({
-        "$top": "100",
+        "$top": officeKey ? "100" : "1000",
         "$select": selectedFields.join(","),
         "$expand": "Media($top=1)",
-        ...(officeKey ? { "$filter": `ListOfficeKey eq '${String(officeKey).replaceAll("'", "''")}'` } : {}),
+        "$filter": officeKey
+          ? `ListOfficeKey eq '${String(officeKey).replaceAll("'", "''")}'`
+          : "StandardStatus eq 'Active'",
         "$orderby": "ModificationTimestamp desc",
       });
       sparkResponse = await fetch(`${SPARK_PROPERTY_ENDPOINT}?${query}`, {
