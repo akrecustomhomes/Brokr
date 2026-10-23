@@ -9261,3 +9261,35 @@ body[data-theme="dark"] .task-status.overdue {
     justify-self: end;
   }
 }
+
+/* Final fluid overview layout: partial rows always consume the full width. */
+.metric-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--line);
+}
+
+.metric-grid .metric-card {
+  flex: 1 1 290px;
+  border: 0;
+  background: var(--panel);
+}
+
+@media (min-width: 1680px) {
+  .metric-grid .metric-card {
+    flex-basis: 0;
+  }
+}
+
+@media (max-width: 1180px) {
+  .metric-grid .metric-card {
+    flex-basis: calc(33.333% - 1px);
+  }
+}
+
+@media (max-width: 720px) {
+  .metric-grid .metric-card {
+    flex-basis: calc(50% - 1px);
+  }
+}
