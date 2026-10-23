@@ -5061,7 +5061,8 @@ function getActionIconName(control) {
 function decorateActionControl(control) {
   if (!control || control.classList.contains("has-action-icon")) return;
   if (control.matches(".icon-button, .mobile-menu, .idx-carousel-image, .calendar-event, .overview-schedule-event, .file-link, .file-inline-link")) return;
-  if (control.querySelector("svg, img") || !control.textContent.trim()) return;
+  const visibleText = control.textContent.trim();
+  if (control.querySelector("svg, img") || !visibleText || visibleText.startsWith("+")) return;
   const iconName = getActionIconName(control);
   const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   icon.setAttribute("viewBox", "0 0 24 24");
