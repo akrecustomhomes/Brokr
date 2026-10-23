@@ -9293,3 +9293,24 @@ body[data-theme="dark"] .task-status.overdue {
     flex-basis: calc(50% - 1px);
   }
 }
+
+/* Keep every File Vault action aligned and consistently sized. */
+.agent-contract-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+.agent-contract-actions button,
+.agent-file-tile .file-upload-action {
+  width: 100%;
+  min-height: 46px;
+  justify-content: center;
+  border-radius: var(--button-radius);
+  font-size: 0.8rem;
+  font-weight: 420;
+  letter-spacing: 0.025em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+}
