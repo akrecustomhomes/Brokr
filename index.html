@@ -317,7 +317,44 @@
               <button class="primary-action" id="add-transaction-button" type="button" data-action-icon="plus">New File / Transaction</button>
             </div>
 
-            <div class="roster-panel">
+            <div class="roster-panel transaction-list-section">
+              <div class="transaction-list-heading">
+                <div>
+                  <p class="eyebrow">Seller files from MLS</p>
+                  <h4>Active MLS Listing Files</h4>
+                </div>
+                <p>Expand a listing to complete dates, seller information, and required documents.</p>
+              </div>
+              <div class="agent-table-wrap">
+                <table class="agent-table transaction-table">
+                  <thead>
+                    <tr>
+                      <th>Property</th>
+                      <th>Agent</th>
+                      <th>MLS #</th>
+                      <th>List Price</th>
+                      <th>Files</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="listing-file-table-body"></tbody>
+                </table>
+              </div>
+              <div class="empty-state" id="listing-file-empty-state">
+                <h4>No active MLS listing files</h4>
+                <p>Active office listings will appear here automatically.</p>
+              </div>
+            </div>
+
+            <div class="roster-panel transaction-list-section">
+              <div class="transaction-list-heading">
+                <div>
+                  <p class="eyebrow">Properties under contract</p>
+                  <h4>Transactions</h4>
+                </div>
+                <p>Expand a transaction to review deadlines and file completion.</p>
+              </div>
               <div class="roster-tabs transaction-tabs" role="tablist" aria-label="Transaction filters">
                 <button class="roster-tab active" type="button" data-transaction-filter="all" aria-pressed="true">All</button>
                 <button class="roster-tab" type="button" data-transaction-filter="active" aria-pressed="false">Active</button>
@@ -343,8 +380,8 @@
               </div>
 
               <div class="empty-state" id="transaction-empty-state">
-                <h4>No current files or transactions</h4>
-                <p>MLS seller files appear automatically. Add a buyer or off-market file here.</p>
+                <h4>No matching transactions</h4>
+                <p>Add a buyer or seller transaction to start tracking deadlines and documents.</p>
               </div>
             </div>
           </div>

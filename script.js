@@ -236,6 +236,8 @@ const archivedAgentCount = document.querySelector("#archived-agent-count");
 const licenseAlertCount = document.querySelector("#license-alert-count");
 const agentSummaryItems = document.querySelectorAll("[data-agent-summary-action]");
 const transactionTableBody = document.querySelector("#transaction-table-body");
+const listingFileTableBody = document.querySelector("#listing-file-table-body");
+const listingFileEmptyState = document.querySelector("#listing-file-empty-state");
 const transactionTabs = document.querySelectorAll("[data-transaction-filter]");
 const transactionSummaryItems = document.querySelectorAll("[data-transaction-summary-filter]");
 const addTransactionButton = document.querySelector("#add-transaction-button");
@@ -613,6 +615,7 @@ if (!localStorage.getItem(cleanStartMigrationKey)) {
   localStorage.setItem(cleanStartMigrationKey, "true");
 }
 let transactions = JSON.parse(localStorage.getItem("brokr-transactions") || "[]");
+const expandedFileTransactionIds = new Set();
 let calendarView = "month";
 let calendarDate = new Date();
 calendarDate.setHours(0, 0, 0, 0);
@@ -2642,46 +2645,90 @@ function renderTransactions() {
   const pendingTransactions = activeTransactions.filter(
     (transaction) => isUnderContractStatus(transaction.status) && transaction.status !== "Closed",
   );
-  const filteredTransactions = visibleTransactions.filter((transaction) => matchesTransactionFilter(transaction));
+  const listingFiles = visibleTransactions.filter(
+    (transaction) => transaction.mlsManaged && transaction.mlsStatus === "Active",
+  );
+  const filteredTransactions = visibleTransactions
+    .filter((transaction) => !listingFiles.includes(transaction))
+    .filter((transaction) => matchesTransactionFilter(transaction));
   transactionTableBody.innerHTML = "";
+  listingFileTableBody.innerHTML = "";
   addTransactionButton.hidden = isAgentUser();
   transactionEmptyState.classList.toggle("visible", filteredTransactions.length === 0);
+  listingFileEmptyState.classList.toggle("visible", listingFiles.length === 0);
   transactionSummary.total.textContent = activeTransactions.length;
   transactionSummary.active.textContent = getActiveOfficeListings().length;
   transactionSummary.pending.textContent = pendingTransactions.length;
   transactionSummary.closed.textContent = activeTransactions.filter((transaction) => transaction.status === "Closed").length;
 
-  filteredTransactions.forEach((transaction) => {
+  const renderFileRows = (transaction, tableBody, isListingFile = false) => {
     const sideLabel = transaction.side === "buyer" ? "Buyer rep" : "Seller rep";
     const statusLabel = getListingStatus(transaction);
     const fileSummary = getTransactionFileSummary(transaction);
+    const isExpanded = expandedFileTransactionIds.has(Number(transaction.id));
     const row = document.createElement("tr");
     row.className = "clickable-row";
-    row.dataset.transactionEdit = transaction.id;
+    row.dataset.transactionExpand = transaction.id;
     row.tabIndex = 0;
     row.setAttribute("role", "button");
-    row.setAttribute("aria-label", `Open transaction details for ${transaction.clientName}`);
-    row.innerHTML = `
-      <td data-label="Client">
+    row.setAttribute("aria-expanded", String(isExpanded));
+    row.setAttribute("aria-label", `${isExpanded ? "Collapse" : "Expand"} ${transaction.propertyAddress || transaction.clientName}`);
+    row.innerHTML = isListingFile ? `
+      <td data-label="Property">
         <div class="agent-name">
-          <strong>${transaction.clientName}</strong>
-          <span>${transaction.side === "buyer" ? "Buyer" : "Seller"}</span>
+          <strong>${transaction.propertyAddress || "Property address needed"}</strong>
+          <span>${transaction.clientName}</span>
         </div>
       </td>
       <td data-label="Agent">${getAgentName(transaction.agentId)}</td>
-      <td data-label="Side"><span class="status-pill">${sideLabel}</span></td>
-      <td data-label="Contact">
-        <div class="agent-contact">${transaction.clientEmail || "No email on file"}<br />${transaction.clientPhone || "No phone on file"}</div>
-      </td>
-      <td data-label="Property">${transaction.propertyAddress || "No property address yet"}</td>
+      <td data-label="MLS #">${transaction.mlsNumber || "—"}</td>
+      <td data-label="List Price">${formatCurrency(transaction.listPrice || 0)}</td>
       <td data-label="Files">
         <div>${fileSummary.uploadedCount}/${fileSummary.requiredDocs.length} files complete</div>
-        <div class="license-detail">Contract ${formatDate(transaction.contractDate)} | ${fileSummary.missingCount ? `${fileSummary.missingCount} missing` : "Complete"}</div>
+        <div class="license-detail">${fileSummary.missingCount ? `${fileSummary.missingCount} missing` : "Complete"}</div>
       </td>
       <td data-label="Status"><span class="status-pill ${statusLabel === "Review Needed" ? "warning" : ""}">${statusLabel}</span></td>
+      <td data-label="Expand"><button class="text-action transaction-expand-button" type="button" data-transaction-expand-button="${transaction.id}">${isExpanded ? "Collapse" : "Expand"}</button></td>
+    ` : `
+      <td data-label="Client"><div class="agent-name"><strong>${transaction.clientName}</strong><span>${transaction.side === "buyer" ? "Buyer" : "Seller"}</span></div></td>
+      <td data-label="Agent">${getAgentName(transaction.agentId)}</td>
+      <td data-label="Side"><span class="status-pill">${sideLabel}</span></td>
+      <td data-label="Contact"><div class="agent-contact">${transaction.clientEmail || "No email on file"}<br />${transaction.clientPhone || "No phone on file"}</div></td>
+      <td data-label="Property">${transaction.propertyAddress || "No property address yet"}</td>
+      <td data-label="Files"><div>${fileSummary.uploadedCount}/${fileSummary.requiredDocs.length} files complete</div><div class="license-detail">Contract ${formatDate(transaction.contractDate)} | ${fileSummary.missingCount ? `${fileSummary.missingCount} missing` : "Complete"}</div></td>
+      <td data-label="Status"><span class="status-pill ${statusLabel === "Review Needed" ? "warning" : ""}">${statusLabel}<button class="text-action transaction-expand-button" type="button" data-transaction-expand-button="${transaction.id}">${isExpanded ? "Collapse" : "Expand"}</button></span></td>
     `;
-    transactionTableBody.appendChild(row);
-  });
+    tableBody.appendChild(row);
+
+    if (!isExpanded) return;
+    const deadlines = Object.entries(transaction.deadlines || {})
+      .filter(([, date]) => date)
+      .map(([key, date]) => `<div><span>${transactionDeadlineLabels[key] || key}</span><strong>${formatDate(date)}</strong></div>`)
+      .join("");
+    const detailRow = document.createElement("tr");
+    detailRow.className = "transaction-expanded-row";
+    detailRow.innerHTML = `
+      <td colspan="7">
+        <div class="transaction-expanded-content">
+          <div class="transaction-expanded-facts">
+            ${transaction.mlsNumber ? `<div><span>MLS #</span><strong>${transaction.mlsNumber}</strong></div>` : ""}
+            <div><span>${isListingFile ? "Listing agreement date" : "Contract date"}</span><strong>${formatDate(transaction.contractDate)}</strong></div>
+            ${isListingFile ? transaction.mlsExpirationDate ? `<div><span>Listing expiration</span><strong>${formatDate(transaction.mlsExpirationDate)}</strong></div>` : `<div><span>Listing expiration</span><strong>Needs input</strong></div>` : ""}
+            <div><span>Representation</span><strong>${sideLabel}</strong></div>
+            <div><span>File completion</span><strong>${fileSummary.uploadedCount}/${fileSummary.requiredDocs.length}</strong></div>
+          </div>
+          ${deadlines ? `<div class="transaction-expanded-deadlines">${deadlines}</div>` : ""}
+          <div class="transaction-expanded-actions">
+            <button class="primary-action" type="button" data-transaction-edit="${transaction.id}">Edit Dates &amp; Files</button>
+          </div>
+        </div>
+      </td>
+    `;
+    tableBody.appendChild(detailRow);
+  };
+
+  listingFiles.forEach((transaction) => renderFileRows(transaction, listingFileTableBody, true));
+  filteredTransactions.forEach((transaction) => renderFileRows(transaction, transactionTableBody, false));
 }
 
 function setTransactionFilter(filter) {
@@ -5182,19 +5229,35 @@ transactionSummaryItems.forEach((item) => {
 });
 setTransactionFilter(transactionFilter);
 
-transactionTableBody.addEventListener("click", (event) => {
-  const transactionRow = event.target.closest("[data-transaction-edit]");
-  if (transactionRow) openTransactionModal(Number(transactionRow.dataset.transactionEdit));
-});
+function handleFileListClick(event) {
+  const editButton = event.target.closest("[data-transaction-edit]");
+  if (editButton) {
+    openTransactionModal(Number(editButton.dataset.transactionEdit));
+    return;
+  }
+  const transactionRow = event.target.closest("[data-transaction-expand]");
+  const expandButton = event.target.closest("[data-transaction-expand-button]");
+  const transactionId = Number(expandButton?.dataset.transactionExpandButton || transactionRow?.dataset.transactionExpand);
+  if (!transactionId) return;
+  if (expandedFileTransactionIds.has(transactionId)) expandedFileTransactionIds.delete(transactionId);
+  else expandedFileTransactionIds.add(transactionId);
+  renderTransactions();
+}
 
-transactionTableBody.addEventListener("keydown", (event) => {
+function handleFileListKeydown(event) {
   if (event.key !== "Enter" && event.key !== " ") return;
-
-  const transactionRow = event.target.closest("[data-transaction-edit]");
+  const transactionRow = event.target.closest("[data-transaction-expand]");
   if (!transactionRow) return;
-
   event.preventDefault();
-  openTransactionModal(Number(transactionRow.dataset.transactionEdit));
+  const transactionId = Number(transactionRow.dataset.transactionExpand);
+  if (expandedFileTransactionIds.has(transactionId)) expandedFileTransactionIds.delete(transactionId);
+  else expandedFileTransactionIds.add(transactionId);
+  renderTransactions();
+}
+
+[listingFileTableBody, transactionTableBody].forEach((tableBody) => {
+  tableBody.addEventListener("click", handleFileListClick);
+  tableBody.addEventListener("keydown", handleFileListKeydown);
 });
 
 addUserButton.addEventListener("click", () => openUserModal());
