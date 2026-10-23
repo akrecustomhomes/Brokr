@@ -60,24 +60,33 @@ module.exports = async function idxListings(request, response) {
     "StreetName", "StreetSuffix", "City", "StateOrProvince", "PostalCode", "BedroomsTotal",
     "BathroomsTotalInteger", "LivingArea", "PropertyType", "PropertySubType", "ListOfficeName",
     "ListAgentFullName", "ListingContractDate", "ModificationTimestamp", "PublicRemarks", "Latitude", "Longitude",
-  ].join(",");
-  const query = new URLSearchParams({
-    "$top": "100",
-    "$select": fields,
-    "$expand": "Media",
-    "$filter": `ListOfficeName eq '${escapeODataString(officeName)}'`,
-    "$orderby": "ModificationTimestamp desc",
-  });
+  ];
 
   try {
-    const sparkResponse = await fetch(`${SPARK_PROPERTY_ENDPOINT}?${query}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: "application/json",
-        "User-Agent": "Brokr/1.0 (Lume Real Estate)",
-      },
-    });
-    const payload = await sparkResponse.json().catch(() => ({}));
+    let sparkResponse;
+    let payload;
+    const selectedFields = [...fields];
+    for (let attempt = 0; attempt < fields.length; attempt += 1) {
+      const query = new URLSearchParams({
+        "$top": "100",
+        "$select": selectedFields.join(","),
+        "$expand": "Media($top=1)",
+        "$filter": `ListOfficeName eq '${escapeODataString(officeName)}'`,
+        "$orderby": "ModificationTimestamp desc",
+      });
+      sparkResponse = await fetch(`${SPARK_PROPERTY_ENDPOINT}?${query}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+          "User-Agent": "Brokr/1.0 (Lume Real Estate)",
+        },
+      });
+      payload = await sparkResponse.json().catch(() => ({}));
+      const message = String(payload?.error?.message || payload?.Message || "");
+      const unsupportedField = message.match(/\$select contains non-matching element:\s*([A-Za-z0-9_]+)/i)?.[1];
+      if (sparkResponse.ok || !unsupportedField || !selectedFields.includes(unsupportedField)) break;
+      selectedFields.splice(selectedFields.indexOf(unsupportedField), 1);
+    }
     if (!sparkResponse.ok) {
       const upstreamMessage = String(payload?.error?.message || payload?.Message || "Unknown Spark error")
         .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
