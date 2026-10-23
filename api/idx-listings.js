@@ -1,5 +1,30 @@
 const SPARK_PROPERTY_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Property";
+const SPARK_OFFICE_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Office";
 const ACTIVE_STATUSES = new Set(["Active", "Coming Soon", "Active Under Contract"]);
+
+function sparkHeaders(accessToken) {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    Accept: "application/json",
+    "User-Agent": "Brokr/1.0 (Lume Real Estate)",
+  };
+}
+
+async function getOfficeKey(accessToken, officeName) {
+  const query = new URLSearchParams({
+    "$top": "1000",
+    "$select": "OfficeKey,OfficeName",
+  });
+  const officeResponse = await fetch(`${SPARK_OFFICE_ENDPOINT}?${query}`, {
+    headers: sparkHeaders(accessToken),
+  });
+  const officePayload = await officeResponse.json().catch(() => ({}));
+  if (!officeResponse.ok) return "";
+  const normalizedName = officeName.trim().toLowerCase();
+  return (officePayload.value || []).find(
+    (office) => String(office.OfficeName || "").trim().toLowerCase() === normalizedName,
+  )?.OfficeKey || "";
+}
 
 function getPrimaryPhoto(media = []) {
   return [...media]
@@ -59,22 +84,20 @@ module.exports = async function idxListings(request, response) {
   ];
 
   try {
+    const officeKey = await getOfficeKey(accessToken, officeName);
     let sparkResponse;
     let payload;
     const selectedFields = [...fields];
     for (let attempt = 0; attempt < fields.length; attempt += 1) {
       const query = new URLSearchParams({
-        "$top": "250",
+        "$top": "100",
         "$select": selectedFields.join(","),
         "$expand": "Media($top=1)",
+        ...(officeKey ? { "$filter": `ListOfficeKey eq '${String(officeKey).replaceAll("'", "''")}'` } : {}),
         "$orderby": "ModificationTimestamp desc",
       });
       sparkResponse = await fetch(`${SPARK_PROPERTY_ENDPOINT}?${query}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-          "User-Agent": "Brokr/1.0 (Lume Real Estate)",
-        },
+        headers: sparkHeaders(accessToken),
       });
       payload = await sparkResponse.json().catch(() => ({}));
       const message = String(payload?.error?.message || payload?.Message || "");
