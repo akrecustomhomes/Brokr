@@ -9546,5 +9546,6 @@ body[data-theme="dark"] .task-status.overdue {
 
   body.sidebar-collapsed .brand .sidebar-toggle::before {
     content: "❯ ❯";
+    transform: translate(0.08em, -0.02em);
   }
 }
