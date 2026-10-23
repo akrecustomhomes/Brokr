@@ -2975,6 +2975,8 @@ img.uploaded-contract-preview {
   align-items: center;
   border: 1px solid var(--line);
   background: var(--input-bg);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .input-with-suffix input {
@@ -3000,6 +3002,8 @@ img.uploaded-contract-preview {
 .notification-setting-item {
   border: 1px solid var(--line);
   background: var(--panel);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .notification-setting-heading {
@@ -3007,7 +3011,22 @@ img.uploaded-contract-preview {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 22px 24px 16px;
+  padding: 20px 24px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.notification-setting-heading::-webkit-details-marker {
+  display: none;
+}
+
+.notification-setting-heading:hover {
+  background: color-mix(in srgb, var(--panel) 96%, var(--brass));
+}
+
+.notification-setting-heading:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: -2px;
 }
 
 .notification-setting-heading h4,
@@ -3026,8 +3045,35 @@ img.uploaded-contract-preview {
   white-space: nowrap;
 }
 
+.notification-setting-summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.notification-expand-label {
+  min-width: 86px;
+  padding-left: 18px;
+  color: var(--muted);
+  text-align: center;
+  border-left: 1px solid var(--line);
+}
+
+.notification-setting-item .collapse-copy,
+.notification-setting-item[open] .expand-copy {
+  display: none;
+}
+
+.notification-setting-item[open] .collapse-copy {
+  display: inline;
+}
+
+.notification-setting-body {
+  border-top: 1px solid var(--line);
+}
+
 .notification-setting-description {
-  padding: 0 24px 20px;
+  padding: 20px 24px;
   color: var(--muted);
 }
 
@@ -3047,14 +3093,29 @@ img.uploaded-contract-preview {
 }
 
 .notification-days-field {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
   color: var(--muted);
   font-weight: 600;
 }
 
 .notification-days-field .input-with-suffix {
-  width: 100%;
+  flex: 0 0 170px;
+  height: 48px;
+}
+
+.notification-days-field .input-with-suffix input {
+  height: 46px;
+  padding: 0 14px;
+  font-size: 1rem;
+}
+
+.notification-days-field .input-with-suffix > span {
+  display: grid;
+  align-items: center;
+  align-self: stretch;
 }
 
 .notification-recipient-option {
@@ -3087,7 +3148,7 @@ img.uploaded-contract-preview {
   line-height: 1.35;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 700px) {
   .notification-setting-controls {
     grid-template-columns: 1fr;
   }
@@ -3110,6 +3171,28 @@ img.uploaded-contract-preview {
 
   .notification-setting-heading {
     align-items: flex-start;
+  }
+
+  .notification-setting-summary {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .notification-expand-label {
+    min-width: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .notification-days-field {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .notification-days-field .input-with-suffix {
+    flex-basis: 48px;
+    width: 100%;
   }
 }
 

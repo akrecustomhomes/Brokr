@@ -570,33 +570,38 @@
               </div>
 
               <div class="notification-setting-list">
-                <section class="notification-setting-item" aria-labelledby="license-notification-title">
-                  <div class="notification-setting-heading">
+                <details class="notification-setting-item">
+                  <summary class="notification-setting-heading">
                     <div>
                       <p class="eyebrow">License compliance</p>
                       <h4 id="license-notification-title">License Expiration</h4>
                     </div>
-                    <span class="notification-frequency">Runs daily</span>
+                    <span class="notification-setting-summary">
+                      <span class="notification-frequency">Runs daily</span>
+                      <span class="notification-expand-label"><span class="expand-copy">Expand</span><span class="collapse-copy">Collapse</span></span>
+                    </span>
+                  </summary>
+                  <div class="notification-setting-body">
+                    <p class="notification-setting-description">Send one reminder per expiration date when an active agent's license enters the reminder window.</p>
+                    <div class="notification-setting-controls">
+                      <label class="notification-days-field">
+                        <span>Reminder lead time</span>
+                        <span class="input-with-suffix">
+                          <input id="license-reminder-days" type="number" min="1" max="365" step="1" value="60" required />
+                          <span>days</span>
+                        </span>
+                      </label>
+                      <label class="notification-recipient-option">
+                        <input id="license-reminder-agent-enabled" type="checkbox" checked />
+                        <span><strong>Email agent</strong><small>Uses the email saved in the agent's profile.</small></span>
+                      </label>
+                      <label class="notification-recipient-option">
+                        <input id="license-reminder-broker-enabled" type="checkbox" checked />
+                        <span><strong>Email broker</strong><small>Uses the primary broker email saved above.</small></span>
+                      </label>
+                    </div>
                   </div>
-                  <p class="notification-setting-description">Send one reminder per expiration date when an active agent's license enters the reminder window.</p>
-                  <div class="notification-setting-controls">
-                    <label class="notification-days-field">
-                      <span>Reminder lead time</span>
-                      <span class="input-with-suffix">
-                        <input id="license-reminder-days" type="number" min="1" max="365" step="1" value="60" required />
-                        <span>days</span>
-                      </span>
-                    </label>
-                    <label class="notification-recipient-option">
-                      <input id="license-reminder-agent-enabled" type="checkbox" checked />
-                      <span><strong>Email agent</strong><small>Uses the email saved in the agent's profile.</small></span>
-                    </label>
-                    <label class="notification-recipient-option">
-                      <input id="license-reminder-broker-enabled" type="checkbox" checked />
-                      <span><strong>Email broker</strong><small>Uses the primary broker email saved above.</small></span>
-                    </label>
-                  </div>
-                </section>
+                </details>
               </div>
             </form>
 
