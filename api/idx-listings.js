@@ -1,6 +1,6 @@
 const SPARK_PROPERTY_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Property";
 const SPARK_OFFICE_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Office";
-const DASHBOARD_STATUSES = new Set(["Active", "Coming Soon", "Active Under Contract", "Pending", "Closed"]);
+const DASHBOARD_STATUSES = new Set(["Active", "Coming Soon", "Active Under Contract", "Pending", "Closed", "Expired"]);
 
 function sparkHeaders(accessToken) {
   return {
@@ -161,7 +161,7 @@ module.exports = async function idxListings(request, response) {
         "$expand": "Media($top=1)",
         "$filter": officeKey
           ? `ListOfficeKey eq '${String(officeKey).replaceAll("'", "''")}'`
-          : "StandardStatus in ('Active','Coming Soon','Active Under Contract','Pending','Closed')",
+          : "StandardStatus in ('Active','Coming Soon','Active Under Contract','Pending','Closed','Expired')",
         "$orderby": "ModificationTimestamp desc",
       });
       sparkResponse = await fetch(`${SPARK_PROPERTY_ENDPOINT}?${query}`, {

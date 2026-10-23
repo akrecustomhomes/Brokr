@@ -1820,6 +1820,7 @@ function getOfficeListingCategory(listing) {
   if (["Active", "Coming Soon", "New"].includes(status)) return "active";
   if (["Pending", "Active Under Contract", "Under Contract"].includes(status)) return "pending";
   if (["Closed", "Sold"].includes(status)) return "closed";
+  if (["Expired"].includes(status)) return "expired";
   return "other";
 }
 

@@ -6811,30 +6811,30 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
 }
 
 .office-listing-filters {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0;
-  padding: 0 20px 14px;
+  width: 100%;
+  padding: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 
 .office-listing-filters button {
   min-height: 40px;
   padding: 8px 20px;
-  border: 1px solid var(--line);
-  border-right: 0;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
   background: var(--panel);
   color: var(--muted);
   font: inherit;
+  font-size: clamp(0.78rem, 2.8vw, 1rem);
   cursor: pointer;
 }
 
-.office-listing-filters button:first-child {
-  border-radius: 10px 0 0 10px;
-}
-
 .office-listing-filters button:last-child {
-  border-right: 1px solid var(--line);
-  border-radius: 0 10px 10px 0;
+  border-right: 0;
 }
 
 .office-listing-filters button.active {
@@ -6845,9 +6845,7 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
 
 @media (max-width: 560px) {
   .office-listing-filters {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    padding: 0 14px 14px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .office-listing-filters button {
@@ -6860,7 +6858,7 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
-  border-top: 1px solid var(--line);
+  border-top: 0;
   padding: 16px 20px 20px;
 }
 
