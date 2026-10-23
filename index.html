@@ -614,7 +614,7 @@
                     </span>
                   </summary>
                   <div class="notification-setting-body">
-                    <p class="notification-setting-description">Send one reminder for each approaching seller disclosure, due diligence, financing and appraisal, or settlement deadline.</p>
+                    <p class="notification-setting-description">Send one reminder for each approaching contract deadline. Earnest money is automatically due four calendar days after the contract date and always alerts two days in advance.</p>
                     <div class="notification-setting-controls">
                       <label class="notification-days-field">
                         <span>Reminder lead time</span>
@@ -1005,6 +1005,11 @@
                 <h4>Calendar dates</h4>
               </div>
               <div class="deadline-grid">
+                <label>
+                  Earnest Money Deposit Deadline
+                  <input id="deadline-earnest-money" type="date" readonly aria-describedby="earnest-money-deadline-note" />
+                  <small id="earnest-money-deadline-note">Automatically set to four calendar days after the contract date.</small>
+                </label>
                 <label>
                   Seller Disclosure Deadline
                   <input id="deadline-seller-disclosure" type="date" />

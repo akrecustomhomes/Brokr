@@ -277,6 +277,7 @@ const transactionFields = {
   commissionFlatField: document.querySelector("#transaction-commission-flat-field"),
   deadlinesField: document.querySelector("#transaction-deadlines-field"),
   deadlines: {
+    earnestMoney: document.querySelector("#deadline-earnest-money"),
     sellerDisclosure: document.querySelector("#deadline-seller-disclosure"),
     dueDiligence: document.querySelector("#deadline-due-diligence"),
     financingAppraisal: document.querySelector("#deadline-financing-appraisal"),
@@ -409,6 +410,7 @@ let currentUserRole = "Guest";
 let authSubscription = null;
 let pendingPasswordSetupType = "";
 const transactionDeadlineLabels = {
+  earnestMoney: "Earnest Money Deposit Deadline",
   sellerDisclosure: "Seller Disclosure Deadline",
   dueDiligence: "Due Diligence Deadline",
   financingAppraisal: "Financing & Appraisal Deadline",
@@ -587,6 +589,12 @@ async function loadTransactionsFromBackend() {
   renderOverviewSchedule();
   renderInbox();
 }
+
+async function loadSystemNotificationsFromBackend() {
+  const remoteNotifications = await window.BrokrBackend?.loadNotifications?.();
+  systemNotifications = Array.isArray(remoteNotifications) ? remoteNotifications : [];
+  renderInbox();
+}
 const cleanStartMigrationKey = "brokr-clean-start-idx-v1";
 if (!localStorage.getItem(cleanStartMigrationKey)) {
   [
@@ -699,6 +707,7 @@ let archiveSettings = {
   packageFormat: "ZIP package",
 };
 let fileUploadNotifications = JSON.parse(localStorage.getItem("brokr-file-upload-notifications") || "[]");
+let systemNotifications = [];
 let inboxItemStates = JSON.parse(localStorage.getItem("brokr-inbox-item-states") || "{}");
 let activeInboxItemId = null;
 let transactionFilter = "all";
@@ -1073,6 +1082,7 @@ async function refreshAuthUser(session = currentSession) {
   await loadUsersFromBackend();
   await loadAgentsFromBackend();
   await loadTransactionsFromBackend();
+  await loadSystemNotificationsFromBackend();
 }
 
 async function initializeAuth() {
@@ -2252,12 +2262,17 @@ function getTransactionCalendarEvents(sourceTransactions) {
     ];
 
     if (isUnderContractStatus(transaction.status)) {
-      Object.entries(transaction.deadlines || {}).forEach(([key, date]) => {
+      const deadlines = {
+        ...(transaction.deadlines || {}),
+        earnestMoney: getEarnestMoneyDeadline(transaction.contractDate),
+      };
+      Object.entries(deadlines).forEach(([key, date]) => {
         if (!date) return;
         events.push({
           transaction,
           date,
           label: transactionDeadlineLabels[key],
+          deadlineKey: key,
         });
       });
     }
@@ -3045,28 +3060,32 @@ function buildDeadlineEmailItems() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const todayKey = toDateKey(today);
-  const cutoffKey = toDateKey(addDays(today, 7));
   const deadlineLabels = new Set(Object.values(transactionDeadlineLabels));
 
   return getTransactionCalendarEvents(getVisibleTransactions())
-    .filter((event) => deadlineLabels.has(event.label) && event.date >= todayKey && event.date <= cutoffKey)
+    .filter((event) => {
+      if (!deadlineLabels.has(event.label) || event.date < todayKey) return false;
+      const leadDays = event.label === transactionDeadlineLabels.earnestMoney
+        ? 2
+        : Number(brokerContact.deadlineReminderDays || 2);
+      return event.date <= toDateKey(addDays(today, leadDays));
+    })
     .map((event) => {
       const agent = agents.find((candidate) => candidate.id === event.transaction.agentId);
-      if (!agent?.email) return null;
 
       return {
         id: `deadline-${event.transaction.id}-${event.label}-${event.date}`,
+        sourceKey: `contract-deadline:${event.transaction.id}:${event.deadlineKey}:${event.date}`,
         type: "Deadline",
         title: `${event.label} approaching`,
-        detail: `${brokerContact.name} should review ${event.transaction.clientName} with ${agent.firstName} ${agent.lastName}. Deadline is ${formatDate(event.date)}.`,
+        detail: `${brokerContact.name} should review ${event.transaction.clientName} with ${agent ? `${agent.firstName} ${agent.lastName}` : "the assigned agent"}. Deadline is ${formatDate(event.date)}.`,
         status: "Broker alert",
         receivedDate: todayKey,
         actionLabel: "Review Transaction",
         actionType: "transaction",
         transactionId: event.transaction.id,
       };
-    })
-    .filter(Boolean);
+    });
 }
 
 function createFileUploadNotifications(transaction, uploads) {
@@ -3099,6 +3118,7 @@ function buildInboxItems() {
     .filter((agent) => getLicenseStatus(agent.licenseExpiration).type === "warning")
     .map((agent) => ({
       id: `license-${agent.id}`,
+      sourceKey: `license-expiration:${agent.id}:${agent.licenseExpiration}`,
       type: "License",
       title: `${agent.firstName} ${agent.lastName} license renewal`,
       detail: `License expires ${formatDate(agent.licenseExpiration)}. Broker follow-up is needed before renewal.`,
@@ -3152,7 +3172,26 @@ function buildInboxItems() {
         transactionId: notification.transactionId,
       }));
 
-  return [...licenseItems, ...buildDeadlineEmailItems(), ...uploadItems, ...reviewItems, ...fileItems].filter(isInboxItemActive);
+  const currentAgentId = Number(currentAgent?.id || 0);
+  const systemItems = systemNotifications
+    .filter((notification) => !isAgentUser() || Number(notification.agentId || 0) === currentAgentId)
+    .map((notification) => ({
+      id: `system-${notification.id}`,
+      sourceKey: notification.sourceKey,
+      type: notification.type,
+      title: notification.title,
+      detail: notification.detail,
+      status: notification.status || "Reminder",
+      receivedDate: notification.createdAt?.slice(0, 10) || todayKey,
+      actionLabel: notification.transactionId ? "Review Transaction" : notification.agentId && canAccessAdmin() ? "Open Agent File" : "",
+      actionType: notification.transactionId ? "transaction" : notification.agentId && canAccessAdmin() ? "agent" : "",
+      transactionId: notification.transactionId,
+      agentId: notification.agentId,
+    }));
+
+  return [...systemItems, ...licenseItems, ...buildDeadlineEmailItems(), ...uploadItems, ...reviewItems, ...fileItems]
+    .filter((item, index, items) => items.findIndex((candidate) => (candidate.sourceKey || candidate.id) === (item.sourceKey || item.id)) === index)
+    .filter(isInboxItemActive);
 }
 
 function renderInbox() {
@@ -3519,6 +3558,22 @@ function updateTransactionPriceFields() {
       field.value = "";
     });
   }
+  syncEarnestMoneyDeadline();
+}
+
+function getEarnestMoneyDeadline(contractDate) {
+  if (!contractDate) return "";
+  const date = new Date(`${contractDate}T12:00:00Z`);
+  if (Number.isNaN(date.getTime())) return "";
+  date.setUTCDate(date.getUTCDate() + 4);
+  return date.toISOString().slice(0, 10);
+}
+
+function syncEarnestMoneyDeadline() {
+  if (!transactionFields.deadlines.earnestMoney) return;
+  transactionFields.deadlines.earnestMoney.value = isUnderContractStatus(transactionFields.status.value)
+    ? getEarnestMoneyDeadline(transactionFields.contractDate.value)
+    : "";
 }
 
 function updateTransactionCommissionFields() {
@@ -3673,7 +3728,9 @@ function openTransactionModal(transactionId = null) {
   transactionFields.commissionRate.value = transaction?.commissionRate ?? 3;
   transactionFields.commissionFlatFee.value = formatCurrencyInput(transaction?.commissionFlatFee || "");
   Object.entries(transactionFields.deadlines).forEach(([key, field]) => {
-    field.value = transaction?.deadlines?.[key] || "";
+    field.value = key === "earnestMoney"
+      ? transaction?.deadlines?.[key] || getEarnestMoneyDeadline(transactionFields.contractDate.value)
+      : transaction?.deadlines?.[key] || "";
   });
   transactionFields.status.value = getEditableTransactionStatus(transaction);
   transactionFields.propertyAddress.value = transaction?.propertyAddress || "";
@@ -4251,6 +4308,7 @@ transactionFields.status.addEventListener("change", () => {
   updateTransactionPriceFields();
   renderTransactionFileVault(transactions.find((transaction) => transaction.id === editingTransactionId));
 });
+transactionFields.contractDate.addEventListener("change", syncEarnestMoneyDeadline);
 transactionFields.commissionType.addEventListener("change", updateTransactionCommissionFields);
 attachPhoneFormatter(transactionFields.clientPhone);
 [

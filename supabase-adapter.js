@@ -431,6 +431,34 @@
     if (error) throw error;
   }
 
+  async function loadNotifications() {
+    const client = await getClient();
+    if (!client) return [];
+    const { data, error } = await client
+      .from("notifications")
+      .select("id,notification_key,type,title,detail,status,state,related_agent_id,related_transaction_id,created_at")
+      .like("notification_key", "in-app:%")
+      .eq("state", "open")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) {
+      console.warn("Unable to load notification center reminders.", error);
+      return [];
+    }
+    return (data || []).map((row) => ({
+      id: row.id,
+      sourceKey: row.notification_key?.replace(/^in-app:/, "") || "",
+      type: row.type,
+      title: row.title,
+      detail: row.detail,
+      status: row.status,
+      state: row.state,
+      agentId: row.related_agent_id ? Number(row.related_agent_id) : null,
+      transactionId: row.related_transaction_id ? Number(row.related_transaction_id) : null,
+      createdAt: row.created_at,
+    }));
+  }
+
   async function loadCurrentUser() {
     const authUser = await getCurrentAuthUser();
     if (!authUser) return null;
@@ -753,6 +781,7 @@
     loadTransactions,
     saveTransactions,
     deleteTransaction,
+    loadNotifications,
     saveUserProfile,
     deleteUserProfile,
     inviteUser,

@@ -60,15 +60,24 @@ async function alreadySent(adminClient, notificationKey) {
   return Boolean(data);
 }
 
-async function recordReminder(adminClient, { notificationKey, agentId, title, detail }) {
+async function recordReminder(adminClient, {
+  notificationKey,
+  agentId,
+  transactionId = null,
+  type = "License",
+  title,
+  detail,
+  status = "Reminder",
+}) {
   const { error } = await adminClient.from("notifications").insert({
     notification_key: notificationKey,
-    type: "License",
+    type,
     title,
     detail,
-    status: "Email sent",
+    status,
     state: "open",
     related_agent_id: agentId,
+    related_transaction_id: transactionId,
   });
   if (error && error.code !== "23505") throw error;
 }
@@ -114,6 +123,13 @@ module.exports = async function handler(request, response) {
     const detail = `License ${agent.license_number || "number not entered"} expires ${expirationDate}.`;
     const html = `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(detail)}</p><p>Please complete the renewal and update the expiration date in Brokr.</p>`;
 
+    await recordReminder(adminClient, {
+      notificationKey: `in-app:license-expiration:${agent.id}:${agent.license_expires_on}`,
+      agentId: agent.id,
+      title,
+      detail,
+    });
+
     const recipients = [];
     if (agentEnabled && agent.email) recipients.push({ type: "agent", email: agent.email });
     if (brokerEnabled && broker?.broker_email) recipients.push({ type: "broker", email: broker.broker_email });
@@ -145,7 +161,7 @@ module.exports = async function handler(request, response) {
   const deadlineCutoff = dateKey(addDays(new Date(`${today}T12:00:00Z`), deadlineLeadDays));
   const { data: transactions, error: transactionsError } = await adminClient
     .from("transactions")
-    .select("id,agent_id,client_name,property_address,status,deadlines")
+    .select("id,agent_id,client_name,property_address,status,contract_date,deadlines")
     .not("status", "in", '("Closed","Cancelled")');
   if (transactionsError) return sendJson(response, 500, { error: transactionsError.message });
 
@@ -161,6 +177,7 @@ module.exports = async function handler(request, response) {
   }
   const agentsById = new Map(transactionAgents.map((agent) => [Number(agent.id), agent]));
   const deadlineLabels = {
+    earnestMoney: "Earnest Money Deposit Deadline",
     sellerDisclosure: "Seller Disclosure Deadline",
     dueDiligence: "Due Diligence Deadline",
     financingAppraisal: "Financing & Appraisal Deadline",
@@ -170,13 +187,31 @@ module.exports = async function handler(request, response) {
   for (const transaction of transactions || []) {
     const agent = agentsById.get(Number(transaction.agent_id));
     const agentName = agent ? `${agent.first_name || ""} ${agent.last_name || ""}`.trim() : "Assigned agent";
-    for (const [deadlineKey, deadlineDate] of Object.entries(transaction.deadlines || {})) {
-      if (!deadlineDate || deadlineDate < today || deadlineDate > deadlineCutoff) continue;
+    const calculatedDeadlines = {
+      ...(transaction.deadlines || {}),
+      earnestMoney: transaction.contract_date
+        ? dateKey(addDays(new Date(`${transaction.contract_date}T12:00:00Z`), 4))
+        : transaction.deadlines?.earnestMoney,
+    };
+    for (const [deadlineKey, deadlineDate] of Object.entries(calculatedDeadlines)) {
+      const reminderCutoff = deadlineKey === "earnestMoney"
+        ? dateKey(addDays(new Date(`${today}T12:00:00Z`), 2))
+        : deadlineCutoff;
+      if (!deadlineDate || deadlineDate < today || deadlineDate > reminderCutoff) continue;
       const deadlineLabel = deadlineLabels[deadlineKey] || deadlineKey;
       const remainingDays = daysUntil(deadlineDate, today);
       const title = `${deadlineLabel} is due in ${remainingDays} day${remainingDays === 1 ? "" : "s"}`;
       const detail = `${transaction.client_name || "Transaction"}${transaction.property_address ? ` — ${transaction.property_address}` : ""}. Deadline: ${formatDate(deadlineDate)}.`;
       const html = `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(detail)}</p><p>Assigned agent: ${escapeHtml(agentName)}. Open Brokr to review the transaction file and deadline.</p>`;
+
+      await recordReminder(adminClient, {
+        notificationKey: `in-app:contract-deadline:${transaction.id}:${deadlineKey}:${deadlineDate}`,
+        agentId: transaction.agent_id || null,
+        transactionId: transaction.id,
+        type: "Deadline",
+        title,
+        detail,
+      });
       const recipients = [];
       if (deadlineAgentEnabled && agent?.email) recipients.push({ type: "agent", email: agent.email });
       if (deadlineBrokerEnabled && broker?.broker_email) recipients.push({ type: "broker", email: broker.broker_email });
