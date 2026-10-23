@@ -459,6 +459,27 @@
     }));
   }
 
+  async function saveNotification(notification) {
+    const client = await getClient();
+    if (!client || !notification?.sourceKey) return null;
+    const { data, error } = await client
+      .from("notifications")
+      .upsert({
+        notification_key: `in-app:${notification.sourceKey}`,
+        type: notification.type || "File",
+        title: notification.title,
+        detail: notification.detail,
+        status: notification.status || "Setup needed",
+        state: "open",
+        related_agent_id: notification.agentId || null,
+        related_transaction_id: notification.transactionId || null,
+      }, { onConflict: "notification_key", ignoreDuplicates: true })
+      .select("id")
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+
   async function loadCurrentUser() {
     const authUser = await getCurrentAuthUser();
     if (!authUser) return null;
@@ -782,6 +803,7 @@
     saveTransactions,
     deleteTransaction,
     loadNotifications,
+    saveNotification,
     saveUserProfile,
     deleteUserProfile,
     inviteUser,

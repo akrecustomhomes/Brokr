@@ -1,7 +1,7 @@
 const pageTitles = {
   overview: "Overview",
   agents: "Agents",
-  transactions: "Transactions",
+  transactions: "Files & Transactions",
   schedule: "Schedule",
   inbox: "Inbox",
   users: "Users",
@@ -173,6 +173,7 @@ const idxLightboxPrevious = document.querySelector("#idx-lightbox-previous");
 const idxLightboxNext = document.querySelector("#idx-lightbox-next");
 let idxOfficeListings = [];
 let idxOfficeListingsLoaded = false;
+let transactionsLoadedFromBackend = false;
 let idxGalleryPhotos = [];
 let idxGalleryIndex = 0;
 let idxGalleryTargetIndex = 0;
@@ -587,6 +588,8 @@ async function loadTransactionsFromBackend() {
       localStorage.setItem("brokr-transactions", JSON.stringify(transactions));
     }
   }
+  transactionsLoadedFromBackend = true;
+  await syncMlsListingFiles();
   renderTransactions();
   renderCalendar();
   renderOverviewMetrics();
@@ -2454,11 +2457,122 @@ async function loadOfficeListingsFromIdx() {
     if (!response.ok) throw new Error(payload.error || "Unable to load IDX listings.");
     idxOfficeListings = (payload.listings || []).map((listing) => ({ ...listing, isIdxListing: true }));
     idxOfficeListingsLoaded = true;
+    await syncMlsListingFiles();
     renderOfficeListings();
     renderOverviewMetrics();
   } catch (error) {
     console.warn("Using local office listings because IDX is unavailable:", error.message);
   }
+}
+
+function getMlsFileId(listingKey) {
+  let hash = 2166136261;
+  for (const character of String(listingKey || "")) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return 8_000_000_000_000_000 + (hash >>> 0);
+}
+
+function getMlsTransactionStatus(status) {
+  if (status === "Closed") return "Closed";
+  if (["Pending", "Active Under Contract"].includes(status)) return "Under Contract";
+  if (status === "Expired") return "Cancelled";
+  return "Active";
+}
+
+function findAgentForMlsListing(listing) {
+  const listingAgentName = formatPersonName(listing.agentName).trim().toLowerCase();
+  if (!listingAgentName) return null;
+  return agents.find(
+    (agent) => `${agent.firstName || ""} ${agent.lastName || ""}`.trim().toLowerCase() === listingAgentName,
+  ) || null;
+}
+
+async function syncMlsListingFiles() {
+  if (!idxOfficeListingsLoaded || !transactionsLoadedFromBackend || !canAccessAdmin()) return;
+  let changed = false;
+  const newFiles = [];
+
+  for (const listing of idxOfficeListings) {
+    const listingKey = String(listing.id || "");
+    if (!listingKey) continue;
+    const existingIndex = transactions.findIndex(
+      (transaction) => String(transaction.mlsListingKey || "") === listingKey || Number(transaction.id) === getMlsFileId(listingKey),
+    );
+    const existing = existingIndex >= 0 ? transactions[existingIndex] : null;
+    const agent = findAgentForMlsListing(listing);
+    const listingDate = String(listing.listingDate || "").slice(0, 10);
+    const sourceStatus = getMlsTransactionStatus(listing.status);
+    const mlsFields = {
+      id: existing?.id || getMlsFileId(listingKey),
+      agentId: agent?.id || existing?.agentId || null,
+      side: "seller",
+      clientName: existing?.clientName || "Seller details needed",
+      clientEmail: existing?.clientEmail || "",
+      clientPhone: existing?.clientPhone || "",
+      propertyAddress: listing.address || existing?.propertyAddress || "",
+      listingTitle: listing.title || listing.address || existing?.listingTitle || "MLS seller file",
+      listingPhotoSrc: listing.photoUrl || existing?.listingPhotoSrc || "",
+      listingPhotoUrls: listing.photoUrls?.length ? listing.photoUrls : existing?.listingPhotoUrls || [],
+      listingDate: listingDate || existing?.listingDate || "",
+      contractDate: existing?.contractDate || listingDate || toDateKey(new Date()),
+      listPrice: Number(listing.price) || existing?.listPrice || 0,
+      contractPrice: Number(listing.closePrice) || existing?.contractPrice || 0,
+      commissionType: existing?.commissionType || "percent",
+      commissionRate: existing?.commissionRate ?? 3,
+      commissionFlatFee: existing?.commissionFlatFee || 0,
+      deadlines: existing?.deadlines || {},
+      documents: existing?.documents || {},
+      additionalDocuments: existing?.additionalDocuments || [],
+      fileNames: existing?.fileNames || {},
+      status: sourceStatus,
+      mlsManaged: true,
+      mlsListingKey: listingKey,
+      mlsNumber: listing.listingId || existing?.mlsNumber || "",
+      mlsStatus: listing.status || "",
+      mlsExpirationDate: listing.expirationDate || "",
+      mlsAgentName: formatPersonName(listing.agentName),
+      mlsLastSyncedAt: new Date().toISOString(),
+      createdAt: existing?.createdAt || new Date().toISOString(),
+    };
+
+    if (existingIndex >= 0) transactions[existingIndex] = { ...existing, ...mlsFields };
+    else {
+      transactions.push(mlsFields);
+      newFiles.push({ listing, transaction: mlsFields });
+    }
+    changed = true;
+  }
+
+  if (!changed) return;
+  localStorage.setItem("brokr-transactions", JSON.stringify(transactions));
+  try {
+    const saved = await window.BrokrBackend?.saveTransactions?.(transactions);
+    if (Array.isArray(saved) && saved.length) {
+      transactions = saved;
+      localStorage.setItem("brokr-transactions", JSON.stringify(transactions));
+    }
+    await Promise.all(newFiles.map(({ listing, transaction }) => {
+      const missing = ["seller name and contact information", "signed listing documents"];
+      if (!listing.expirationDate) missing.push("listing expiration date");
+      return window.BrokrBackend?.saveNotification?.({
+        sourceKey: `mls-file-setup:${listing.id}`,
+        type: "MLS File",
+        title: `Complete the new listing file for ${listing.address || listing.title || `MLS # ${listing.listingId}`}`,
+        detail: `MLS # ${listing.listingId || "—"} was added automatically. Upload the required documents and complete: ${missing.join(", ")}.`,
+        status: "Setup needed",
+        agentId: transaction.agentId,
+        transactionId: transaction.id,
+      });
+    }));
+  } catch (error) {
+    console.warn("Unable to synchronize MLS seller files.", error);
+  }
+  renderTransactions();
+  renderCalendar();
+  renderOverviewMetrics();
+  renderInbox();
 }
 
 function getTransactionCalendarEvents(sourceTransactions) {
@@ -3963,7 +4077,11 @@ function openTransactionModal(transactionId = null) {
   }
   additionalDocumentsDraft = (transaction?.additionalDocuments || []).map((document) => ({ ...document }));
 
-  document.querySelector("#transaction-modal-title").textContent = transaction ? "Transaction Details" : "Add Transaction";
+  document.querySelector("#transaction-modal-title").textContent = transaction
+    ? transaction.mlsManaged && !isUnderContractStatus(transaction.status)
+      ? "Seller Listing File"
+      : "File & Transaction Details"
+    : "Add File / Transaction";
   transactionFields.agentId.value = transaction?.agentId || transactionFields.agentId.options[0]?.value || "";
   transactionFields.side.value = transaction?.side || "buyer";
   transactionFields.clientName.value = transaction?.clientName || "";
