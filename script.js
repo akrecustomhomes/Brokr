@@ -2493,8 +2493,25 @@ async function syncMlsListingFiles() {
   if (!idxOfficeListingsLoaded || !transactionsLoadedFromBackend || !canAccessAdmin()) return;
   let changed = false;
   const newFiles = [];
+  const activeListings = idxOfficeListings.filter((listing) => listing.status === "Active");
+  const activeListingKeys = new Set(activeListings.map((listing) => String(listing.id || "")).filter(Boolean));
+  const inactiveMlsFiles = transactions.filter(
+    (transaction) => transaction.mlsManaged && !activeListingKeys.has(String(transaction.mlsListingKey || "")),
+  );
 
-  for (const listing of idxOfficeListings) {
+  if (inactiveMlsFiles.length) {
+    const inactiveIds = new Set(inactiveMlsFiles.map((transaction) => Number(transaction.id)));
+    transactions = transactions.filter((transaction) => !inactiveIds.has(Number(transaction.id)));
+    systemNotifications = systemNotifications.filter(
+      (notification) => !inactiveIds.has(Number(notification.transactionId)),
+    );
+    await Promise.all(
+      inactiveMlsFiles.map((transaction) => window.BrokrBackend?.deleteTransaction?.(transaction.id)),
+    );
+    changed = true;
+  }
+
+  for (const listing of activeListings) {
     const listingKey = String(listing.id || "");
     if (!listingKey) continue;
     const existingIndex = transactions.findIndex(
