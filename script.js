@@ -142,6 +142,12 @@ const overviewSchedulePrev = document.querySelector("#overview-schedule-prev");
 const overviewScheduleNext = document.querySelector("#overview-schedule-next");
 const officeListingsGrid = document.querySelector("#office-listings-grid");
 const officeListingsToggle = document.querySelector("#office-listings-toggle");
+const idxListingModal = document.querySelector("#idx-listing-modal");
+const idxListingModalTitle = document.querySelector("#idx-listing-title");
+const idxListingModalStatus = document.querySelector("#idx-listing-status");
+const idxListingDetail = document.querySelector("#idx-listing-detail");
+const closeIdxListingModal = document.querySelector("#close-idx-listing-modal");
+const doneIdxListingModal = document.querySelector("#done-idx-listing-modal");
 let idxOfficeListings = [];
 let idxOfficeListingsLoaded = false;
 const companyTaskList = document.querySelector("#company-task-list");
@@ -1853,7 +1859,7 @@ function renderOfficeListings() {
         ? `<img src="${escapeLockboxText(photoSrc)}" alt="${escapeLockboxText(title)}" />`
         : `<div class="listing-photo-placeholder"><span>${escapeLockboxText(title.slice(0, 1))}</span></div>`;
       const interactionAttributes = listing.isIdxListing
-        ? `data-idx-listing-key="${escapeLockboxText(listing.id)}"`
+        ? `role="button" tabindex="0" data-idx-listing-key="${escapeLockboxText(listing.id)}" aria-label="Preview MLS listing ${escapeLockboxText(title)}"`
         : `role="button" tabindex="0" data-listing-id="${listing.id}" aria-label="Open listing ${escapeLockboxText(title)}"`;
 
       return `
@@ -1871,6 +1877,35 @@ function renderOfficeListings() {
       `;
     })
     .join("");
+}
+
+function openIdxListingPreview(listingKey) {
+  const listing = idxOfficeListings.find((item) => String(item.id) === String(listingKey));
+  if (!listing || !idxListingModal) return;
+  const facts = [
+    ["MLS #", listing.listingId || "—"],
+    ["Price", formatCurrency(listing.price || 0)],
+    ["Bedrooms", listing.bedrooms || "—"],
+    ["Bathrooms", listing.bathrooms || "—"],
+    ["Property type", listing.propertyType || "—"],
+    ["Listing agent", listing.agentName || "—"],
+    ["Listed", listing.listingDate ? formatDate(listing.listingDate) : "—"],
+  ];
+  idxListingModalTitle.textContent = listing.address || listing.title || "Listing Details";
+  idxListingModalStatus.textContent = listing.status || "MLS listing";
+  idxListingDetail.innerHTML = `
+    ${listing.photoUrl ? `<img class="idx-listing-hero" src="${escapeLockboxText(listing.photoUrl)}" alt="${escapeLockboxText(listing.address || listing.title || "MLS listing")}" />` : ""}
+    <div class="idx-listing-facts">
+      ${facts.map(([label, value]) => `<div><span>${escapeLockboxText(label)}</span><strong>${escapeLockboxText(value)}</strong></div>`).join("")}
+    </div>
+    ${listing.remarks ? `<div class="idx-listing-remarks"><h4>Property description</h4><p>${escapeLockboxText(listing.remarks)}</p></div>` : ""}
+  `;
+  idxListingModal.hidden = false;
+  closeIdxListingModal?.focus();
+}
+
+function closeIdxListingPreview() {
+  if (idxListingModal) idxListingModal.hidden = true;
 }
 
 async function loadOfficeListingsFromIdx() {
@@ -3719,6 +3754,11 @@ attachPhoneFormatter(transactionFields.clientPhone);
 ].forEach(attachCurrencyFormatter);
 
 officeListingsGrid?.addEventListener("click", (event) => {
+  const idxListingCard = event.target.closest("[data-idx-listing-key]");
+  if (idxListingCard) {
+    openIdxListingPreview(idxListingCard.dataset.idxListingKey);
+    return;
+  }
   const listingCard = event.target.closest("[data-listing-id]");
   if (!listingCard) return;
   openTransactionModal(Number(listingCard.dataset.listingId));
@@ -3726,10 +3766,22 @@ officeListingsGrid?.addEventListener("click", (event) => {
 
 officeListingsGrid?.addEventListener("keydown", (event) => {
   if (event.key !== "Enter" && event.key !== " ") return;
+  const idxListingCard = event.target.closest("[data-idx-listing-key]");
+  if (idxListingCard) {
+    event.preventDefault();
+    openIdxListingPreview(idxListingCard.dataset.idxListingKey);
+    return;
+  }
   const listingCard = event.target.closest("[data-listing-id]");
   if (!listingCard) return;
   event.preventDefault();
   openTransactionModal(Number(listingCard.dataset.listingId));
+});
+
+closeIdxListingModal?.addEventListener("click", closeIdxListingPreview);
+doneIdxListingModal?.addEventListener("click", closeIdxListingPreview);
+idxListingModal?.addEventListener("click", (event) => {
+  if (event.target === idxListingModal) closeIdxListingPreview();
 });
 
 transactionFileGrid.addEventListener("change", (event) => {

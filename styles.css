@@ -2759,6 +2759,79 @@ body.menu-open .sidebar {
   }
 }
 
+/* MLS listing preview */
+.idx-listing-modal {
+  width: min(860px, calc(100vw - 32px));
+}
+
+#idx-listing-detail {
+  display: grid;
+  gap: 22px;
+  padding: 0 24px 24px;
+}
+
+.idx-listing-hero {
+  width: 100%;
+  max-height: 430px;
+  border-radius: var(--surface-radius);
+  object-fit: cover;
+}
+
+.idx-listing-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: var(--surface-radius);
+  overflow: hidden;
+}
+
+.idx-listing-facts > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 16px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.idx-listing-facts span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.idx-listing-facts strong {
+  overflow-wrap: anywhere;
+  font-weight: 520;
+}
+
+.idx-listing-remarks h4,
+.idx-listing-remarks p {
+  margin: 0;
+}
+
+.idx-listing-remarks {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.idx-listing-remarks h4 {
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .idx-listing-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #idx-listing-detail {
+    padding-inline: 16px;
+  }
+}
+
 .lockbox-row[data-lockbox-card],
 .qr-code-card[data-qr-card],
 .commission-row[data-commission-card] {
