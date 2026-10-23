@@ -1373,6 +1373,12 @@ function formatCurrency(value) {
   }).format(value || 0);
 }
 
+function formatPersonName(value = "") {
+  const name = String(value).trim();
+  if (!name || name !== name.toUpperCase()) return name;
+  return name.toLowerCase().replace(/(^|[\s'-])([a-z])/g, (_match, separator, letter) => `${separator}${letter.toUpperCase()}`);
+}
+
 function formatAgentAddress(agent) {
   const stateZip = [agent.state, agent.zip].filter(Boolean).join(" ");
   const cityStateZip = [agent.city, stateZip].filter(Boolean).join(", ");
@@ -1864,7 +1870,7 @@ function renderOfficeListings() {
         ? null
         : agents.find((agent) => String(agent.id) === String(listing.agentId));
       const agentName = listing.isIdxListing
-        ? listing.agentName
+        ? formatPersonName(listing.agentName)
         : listingAgent
           ? `${listingAgent.firstName} ${listingAgent.lastName}`
           : "";
@@ -1926,7 +1932,7 @@ async function openIdxListingPreview(listingKey) {
     ["Property type", listing.propertyType || "—", ""],
   ];
   const listingFacts = [
-    ["Listing agent", listing.agentName || "—"],
+    ["Listing agent", formatPersonName(listing.agentName) || "—"],
     ["Listed", listing.listingDate ? formatDate(listing.listingDate) : "—"],
     ["Days on market", listing.daysOnMarket || "—"],
     ["Cumulative DOM", listing.cumulativeDaysOnMarket || "—"],
