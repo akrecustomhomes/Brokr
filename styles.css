@@ -2938,6 +2938,11 @@ body.menu-open .sidebar {
   max-width: 100%;
   max-height: calc(100vh - 92px);
   object-fit: contain;
+  transition: opacity 140ms ease;
+}
+
+.idx-gallery-lightbox.is-loading .idx-lightbox-stage img {
+  opacity: 0.72;
 }
 
 .idx-lightbox-stage figcaption {

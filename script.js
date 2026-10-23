@@ -158,9 +158,11 @@ let idxOfficeListings = [];
 let idxOfficeListingsLoaded = false;
 let idxGalleryPhotos = [];
 let idxGalleryIndex = 0;
+let idxGalleryTargetIndex = 0;
 let idxGalleryLabel = "Listing photo";
 let idxGalleryTouchStartX = null;
 let idxGalleryWheelLocked = false;
+let idxGalleryLoadRequest = 0;
 const companyTaskList = document.querySelector("#company-task-list");
 const companyTaskOpenCount = document.querySelector("#company-task-open-count");
 const addCompanyTaskButton = document.querySelector("#add-company-task-button");
@@ -1991,18 +1993,33 @@ async function openIdxListingPreview(listingKey) {
 
 function preloadIdxGalleryNeighbors() {
   if (idxGalleryPhotos.length < 2) return;
-  [-1, 1].forEach((offset) => {
+  [-3, -2, -1, 1, 2, 3].forEach((offset) => {
     const preload = new Image();
-    preload.src = idxGalleryPhotos[(idxGalleryIndex + offset + idxGalleryPhotos.length) % idxGalleryPhotos.length];
+    preload.src = idxGalleryPhotos[(idxGalleryTargetIndex + offset + idxGalleryPhotos.length) % idxGalleryPhotos.length];
   });
 }
 
 function showIdxGalleryPhoto(nextIndex) {
   if (!idxGalleryPhotos.length) return;
-  idxGalleryIndex = (nextIndex + idxGalleryPhotos.length) % idxGalleryPhotos.length;
-  idxLightboxImage.src = idxGalleryPhotos[idxGalleryIndex];
-  idxLightboxImage.alt = `${idxGalleryLabel}, photo ${idxGalleryIndex + 1} of ${idxGalleryPhotos.length}`;
-  idxLightboxCaption.textContent = `${idxGalleryIndex + 1} / ${idxGalleryPhotos.length}`;
+  idxGalleryTargetIndex = (nextIndex + idxGalleryPhotos.length) % idxGalleryPhotos.length;
+  const requestId = ++idxGalleryLoadRequest;
+  idxGalleryLightbox.classList.add("is-loading");
+  idxLightboxCaption.textContent = "Loading photo…";
+  const nextPhoto = new Image();
+  nextPhoto.onload = () => {
+    if (requestId !== idxGalleryLoadRequest) return;
+    idxGalleryIndex = idxGalleryTargetIndex;
+    idxLightboxImage.src = nextPhoto.src;
+    idxLightboxImage.alt = `${idxGalleryLabel}, photo ${idxGalleryIndex + 1} of ${idxGalleryPhotos.length}`;
+    idxLightboxCaption.textContent = `${idxGalleryIndex + 1} / ${idxGalleryPhotos.length}`;
+    idxGalleryLightbox.classList.remove("is-loading");
+  };
+  nextPhoto.onerror = () => {
+    if (requestId !== idxGalleryLoadRequest) return;
+    idxLightboxCaption.textContent = "Photo could not be loaded";
+    idxGalleryLightbox.classList.remove("is-loading");
+  };
+  nextPhoto.src = idxGalleryPhotos[idxGalleryTargetIndex];
   preloadIdxGalleryNeighbors();
 }
 
@@ -2010,6 +2027,7 @@ function openIdxGallery(photos, label) {
   if (!photos.length || !idxGalleryLightbox) return;
   idxGalleryPhotos = photos;
   idxGalleryLabel = label;
+  idxGalleryTargetIndex = 0;
   idxGalleryLightbox.hidden = false;
   document.body.classList.add("idx-lightbox-open");
   showIdxGalleryPhoto(0);
@@ -3903,8 +3921,8 @@ idxListingModal?.addEventListener("click", (event) => {
   if (event.target === idxListingModal) closeIdxListingPreview();
 });
 idxLightboxClose?.addEventListener("click", closeIdxGallery);
-idxLightboxPrevious?.addEventListener("click", () => showIdxGalleryPhoto(idxGalleryIndex - 1));
-idxLightboxNext?.addEventListener("click", () => showIdxGalleryPhoto(idxGalleryIndex + 1));
+idxLightboxPrevious?.addEventListener("click", () => showIdxGalleryPhoto(idxGalleryTargetIndex - 1));
+idxLightboxNext?.addEventListener("click", () => showIdxGalleryPhoto(idxGalleryTargetIndex + 1));
 idxGalleryLightbox?.addEventListener("click", (event) => {
   if (event.target === idxGalleryLightbox) closeIdxGallery();
 });
@@ -3912,7 +3930,7 @@ idxGalleryLightbox?.addEventListener("wheel", (event) => {
   event.preventDefault();
   if (idxGalleryWheelLocked) return;
   idxGalleryWheelLocked = true;
-  showIdxGalleryPhoto(idxGalleryIndex + (event.deltaY > 0 || event.deltaX > 0 ? 1 : -1));
+  showIdxGalleryPhoto(idxGalleryTargetIndex + (event.deltaY > 0 || event.deltaX > 0 ? 1 : -1));
   window.setTimeout(() => { idxGalleryWheelLocked = false; }, 280);
 }, { passive: false });
 idxGalleryLightbox?.addEventListener("touchstart", (event) => {
@@ -3921,14 +3939,14 @@ idxGalleryLightbox?.addEventListener("touchstart", (event) => {
 idxGalleryLightbox?.addEventListener("touchend", (event) => {
   if (idxGalleryTouchStartX === null) return;
   const distance = (event.changedTouches[0]?.clientX ?? idxGalleryTouchStartX) - idxGalleryTouchStartX;
-  if (Math.abs(distance) > 45) showIdxGalleryPhoto(idxGalleryIndex + (distance < 0 ? 1 : -1));
+  if (Math.abs(distance) > 45) showIdxGalleryPhoto(idxGalleryTargetIndex + (distance < 0 ? 1 : -1));
   idxGalleryTouchStartX = null;
 }, { passive: true });
 document.addEventListener("keydown", (event) => {
   if (!idxGalleryLightbox || idxGalleryLightbox.hidden) return;
   if (event.key === "Escape") closeIdxGallery();
-  if (event.key === "ArrowLeft") showIdxGalleryPhoto(idxGalleryIndex - 1);
-  if (event.key === "ArrowRight") showIdxGalleryPhoto(idxGalleryIndex + 1);
+  if (event.key === "ArrowLeft") showIdxGalleryPhoto(idxGalleryTargetIndex - 1);
+  if (event.key === "ArrowRight") showIdxGalleryPhoto(idxGalleryTargetIndex + 1);
 });
 
 transactionFileGrid.addEventListener("change", (event) => {
