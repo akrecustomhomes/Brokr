@@ -7279,6 +7279,15 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
   line-height: 1.35;
 }
 
+.office-listing-expiration {
+  margin: 0 1.5rem 0.85rem;
+  color: var(--accent-color);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .office-listing-meta {
   display: flex;
   align-items: center;

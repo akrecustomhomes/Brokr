@@ -2282,6 +2282,7 @@ function renderOfficeListings() {
             <h4>${escapeLockboxText(title)}</h4>
             <p>${escapeLockboxText(listingByline)}</p>
           </div>
+          ${listing.isIdxListing && listing.expirationDate ? `<p class="office-listing-expiration">Expires ${escapeLockboxText(formatDate(listing.expirationDate))}</p>` : ""}
           <div class="office-listing-meta">
             <span><i aria-hidden="true"></i>${escapeLockboxText(listingStatus)}</span>
             <strong>${escapeLockboxText(listingReference)}</strong>
@@ -2324,6 +2325,7 @@ async function openIdxListingPreview(listingKey) {
   const listingFacts = [
     ["Listing agent", formatPersonName(listing.agentName) || "—"],
     ["Listed", listing.listingDate ? formatDate(listing.listingDate) : "—"],
+    ["Listing expires", listing.expirationDate ? formatDate(listing.expirationDate) : "—"],
     ["Days on market", listing.daysOnMarket || "—"],
     ["Cumulative DOM", listing.cumulativeDaysOnMarket || "—"],
     ["Subdivision", listing.subdivision || "—"],
@@ -3296,6 +3298,41 @@ function buildDeadlineEmailItems() {
     });
 }
 
+function buildListingExpirationItems() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cutoff = addDays(today, 21);
+  const currentAgent = getCurrentUserAgent();
+  const currentAgentName = currentAgent
+    ? `${currentAgent.firstName || ""} ${currentAgent.lastName || ""}`.trim().toLowerCase()
+    : "";
+
+  return idxOfficeListings
+    .filter((listing) => ["Active", "Coming Soon", "Active Under Contract", "Pending"].includes(listing.status))
+    .filter((listing) => {
+      if (!listing.expirationDate) return false;
+      const expiration = new Date(`${listing.expirationDate}T00:00:00`);
+      return expiration >= today && expiration <= cutoff;
+    })
+    .filter((listing) => !isAgentUser() || formatPersonName(listing.agentName).toLowerCase() === currentAgentName)
+    .map((listing) => {
+      const expiration = new Date(`${listing.expirationDate}T00:00:00`);
+      const remainingDays = Math.ceil((expiration - today) / 86400000);
+      return {
+        id: `listing-expiration-${listing.id}-${listing.expirationDate}`,
+        sourceKey: `listing-expiration:${listing.id}:${listing.expirationDate}`,
+        type: "Listing",
+        title: `${listing.address || listing.title || "MLS listing"} expires ${remainingDays === 0 ? "today" : `in ${remainingDays} day${remainingDays === 1 ? "" : "s"}`}`,
+        detail: `MLS # ${listing.listingId || "—"} is scheduled to expire ${formatDate(listing.expirationDate)}. Listing agent: ${formatPersonName(listing.agentName) || "Not listed"}.`,
+        status: remainingDays <= 7 ? "Expiring soon" : "Renewal needed",
+        receivedDate: toDateKey(today),
+        actionLabel: "View Listing",
+        actionType: "listing",
+        listingId: listing.id,
+      };
+    });
+}
+
 function createFileUploadNotifications(transaction, uploads) {
   if (!uploads.length) return;
 
@@ -3397,7 +3434,7 @@ function buildInboxItems() {
       agentId: notification.agentId,
     }));
 
-  return [...systemItems, ...licenseItems, ...buildDeadlineEmailItems(), ...uploadItems, ...reviewItems, ...fileItems]
+  return [...systemItems, ...buildListingExpirationItems(), ...licenseItems, ...buildDeadlineEmailItems(), ...uploadItems, ...reviewItems, ...fileItems]
     .filter((item, index, items) => items.findIndex((candidate) => (candidate.sourceKey || candidate.id) === (item.sourceKey || item.id)) === index)
     .filter(isInboxItemActive);
 }
@@ -3472,6 +3509,11 @@ function runInboxAction(itemId) {
 
   if (item.actionType === "agent" && item.agentId && canAccessAdmin()) {
     openAgentModal(Number(item.agentId));
+    return;
+  }
+
+  if (item.actionType === "listing" && item.listingId) {
+    openIdxListingPreview(item.listingId);
   }
 }
 

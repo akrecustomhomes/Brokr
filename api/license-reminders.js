@@ -88,6 +88,46 @@ function addUniqueRecipient(recipients, type, email) {
   recipients.push({ type, email: String(email).trim() });
 }
 
+function normalizeName(value = "") {
+  return String(value).trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+async function getExpiringOfficeListings() {
+  const accessToken = process.env.SPARK_ACCESS_TOKEN;
+  if (!accessToken) return [];
+  const officeName = process.env.SPARK_OFFICE_NAME || "LUME REAL ESTATE";
+  const headers = {
+    Authorization: `Bearer ${accessToken}`,
+    Accept: "application/json",
+    "User-Agent": "Brokr/1.0 (Lume Real Estate)",
+  };
+  const officeQuery = new URLSearchParams({ "$top": "1000", "$select": "OfficeKey,OfficeName" });
+  const officeResponse = await fetch(`https://replication.sparkapi.com/Version/3/Reso/OData/Office?${officeQuery}`, { headers });
+  const officePayload = await officeResponse.json().catch(() => ({}));
+  if (!officeResponse.ok) throw new Error("The MLS office record could not be loaded.");
+  const officeKey = (officePayload.value || []).find(
+    (office) => normalizeName(office.OfficeName) === normalizeName(officeName),
+  )?.OfficeKey;
+  if (!officeKey) return [];
+
+  const fields = ["ListingKey", "ListingId", "UnparsedAddress", "StandardStatus", "ListAgentFullName", "ListOfficeName", "ExpirationDate"];
+  const query = new URLSearchParams({
+    "$top": "100",
+    "$select": fields.join(","),
+    "$filter": `ListOfficeKey eq '${String(officeKey).replaceAll("'", "''")}'`,
+  });
+  const listingResponse = await fetch(`https://replication.sparkapi.com/Version/3/Reso/OData/Property?${query}`, { headers });
+  const listingPayload = await listingResponse.json().catch(() => ({}));
+  if (!listingResponse.ok) {
+    const message = String(listingPayload?.error?.message || listingPayload?.Message || "");
+    if (/ExpirationDate/i.test(message)) {
+      throw new Error("The current MLS feed does not expose listing expiration dates.");
+    }
+    throw new Error("The MLS listings could not be loaded.");
+  }
+  return listingPayload.value || [];
+}
+
 module.exports = async function handler(request, response) {
   if (request.method !== "GET") return sendJson(response, 405, { error: "Method not allowed." });
 
@@ -247,6 +287,73 @@ module.exports = async function handler(request, response) {
         }
       }
     }
+  }
+
+  try {
+    const officeListings = await getExpiringOfficeListings();
+    const listingAgentNames = [...new Set(officeListings.map((listing) => normalizeName(listing.ListAgentFullName)).filter(Boolean))];
+    let listingAgents = [];
+    if (listingAgentNames.length) {
+      const { data, error } = await adminClient
+        .from("agents")
+        .select("id,first_name,last_name,email,archived")
+        .eq("archived", false);
+      if (error) throw error;
+      listingAgents = data || [];
+    }
+    const agentsByName = new Map(
+      listingAgents.map((agent) => [normalizeName(`${agent.first_name || ""} ${agent.last_name || ""}`), agent]),
+    );
+    const listingCutoff = dateKey(addDays(new Date(`${today}T12:00:00Z`), 21));
+    const activeStatuses = new Set(["Active", "Coming Soon", "Active Under Contract", "Pending"]);
+
+    for (const listing of officeListings) {
+      if (!listing.ExpirationDate || !activeStatuses.has(listing.StandardStatus)) continue;
+      const expirationDate = String(listing.ExpirationDate).slice(0, 10);
+      if (expirationDate < today || expirationDate > listingCutoff) continue;
+      const remainingDays = daysUntil(expirationDate, today);
+      const address = listing.UnparsedAddress || `MLS # ${listing.ListingId || "—"}`;
+      const agent = agentsByName.get(normalizeName(listing.ListAgentFullName));
+      const title = `${address} listing expires ${remainingDays === 0 ? "today" : `in ${remainingDays} day${remainingDays === 1 ? "" : "s"}`}`;
+      const detail = `MLS # ${listing.ListingId || "—"} expires ${formatDate(expirationDate)}. Listing agent: ${listing.ListAgentFullName || "Not listed"}.`;
+      const html = `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(detail)}</p><p>Open Brokr to review the listing and coordinate an extension or expiration.</p>`;
+
+      await recordReminder(adminClient, {
+        notificationKey: `in-app:listing-expiration:${listing.ListingKey}:${expirationDate}`,
+        agentId: agent?.id || null,
+        type: "Listing",
+        title,
+        detail,
+        status: remainingDays <= 7 ? "Expiring soon" : "Renewal needed",
+      });
+
+      const recipients = [];
+      addUniqueRecipient(recipients, "agent", agent?.email);
+      addUniqueRecipient(recipients, "broker", broker?.broker_email);
+      for (const recipient of recipients) {
+        const notificationKey = `listing-expiration:${listing.ListingKey}:${expirationDate}:${recipient.type}`;
+        if (await alreadySent(adminClient, notificationKey)) {
+          results.push({ listingId: listing.ListingId, recipient: recipient.type, status: "already-sent" });
+          continue;
+        }
+        try {
+          await sendEmail({ to: recipient.email, subject: title, html });
+          await recordReminder(adminClient, {
+            notificationKey,
+            agentId: agent?.id || null,
+            type: "Listing",
+            title,
+            detail,
+            status: "Email sent",
+          });
+          results.push({ listingId: listing.ListingId, recipient: recipient.type, status: "sent" });
+        } catch (error) {
+          results.push({ listingId: listing.ListingId, recipient: recipient.type, status: "failed", error: error.message });
+        }
+      }
+    }
+  } catch (error) {
+    results.push({ type: "listing-expiration", status: "failed", error: error.message });
   }
 
   return sendJson(response, 200, {
