@@ -24,6 +24,37 @@ function assertDocusignConfig(config) {
   if (missing.length) throw new Error(`DocuSign is missing: ${missing.join(", ")}`);
 }
 
+async function getActiveDocusignSession(request, response, config) {
+  const session = unseal(parseCookies(request)[SESSION_COOKIE], config.sessionSecret);
+  if (!session) throw new Error("Connect DocuSign before accessing an envelope.");
+  if (Number(session.expiresAt || 0) > Date.now() + 60_000) return session;
+  if (!session.refreshToken) throw new Error("The DocuSign connection expired. Connect it again.");
+
+  const tokenResponse = await fetch(`${config.oauthBaseUrl}/oauth/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: session.refreshToken }),
+  });
+  const tokenData = await tokenResponse.json().catch(() => ({}));
+  if (!tokenResponse.ok) throw new Error(tokenData.error_description || "The DocuSign connection could not be refreshed.");
+
+  const refreshedSession = {
+    ...session,
+    accessToken: tokenData.access_token,
+    refreshToken: tokenData.refresh_token || session.refreshToken,
+    expiresAt: Date.now() + Number(tokenData.expires_in || 28800) * 1000,
+  };
+  response.setHeader("Set-Cookie", serializeCookie(
+    SESSION_COOKIE,
+    seal(refreshedSession, config.sessionSecret),
+    30 * 24 * 60 * 60,
+  ));
+  return refreshedSession;
+}
+
 function base64url(value) {
   return Buffer.from(value).toString("base64url");
 }
@@ -81,6 +112,7 @@ module.exports = {
   assertDocusignConfig,
   base64url,
   clearCookie,
+  getActiveDocusignSession,
   getDocusignConfig,
   parseCookies,
   seal,

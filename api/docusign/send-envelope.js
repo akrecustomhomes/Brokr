@@ -1,44 +1,9 @@
 const { requireAdmin, sendJson } = require("../_admin");
 const {
-  SESSION_COOKIE,
   assertDocusignConfig,
+  getActiveDocusignSession,
   getDocusignConfig,
-  parseCookies,
-  seal,
-  serializeCookie,
-  unseal,
 } = require("../_docusign");
-
-async function getActiveSession(request, response, config) {
-  const session = unseal(parseCookies(request)[SESSION_COOKIE], config.sessionSecret);
-  if (!session) throw new Error("Connect DocuSign before sending an envelope.");
-  if (Number(session.expiresAt || 0) > Date.now() + 60_000) return session;
-  if (!session.refreshToken) throw new Error("The DocuSign connection expired. Connect it again.");
-
-  const tokenResponse = await fetch(`${config.oauthBaseUrl}/oauth/token`, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${config.clientId}:${config.clientSecret}`).toString("base64")}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: session.refreshToken }),
-  });
-  const tokenData = await tokenResponse.json().catch(() => ({}));
-  if (!tokenResponse.ok) throw new Error(tokenData.error_description || "The DocuSign connection could not be refreshed.");
-
-  const refreshedSession = {
-    ...session,
-    accessToken: tokenData.access_token,
-    refreshToken: tokenData.refresh_token || session.refreshToken,
-    expiresAt: Date.now() + Number(tokenData.expires_in || 28800) * 1000,
-  };
-  response.setHeader("Set-Cookie", serializeCookie(
-    SESSION_COOKIE,
-    seal(refreshedSession, config.sessionSecret),
-    30 * 24 * 60 * 60,
-  ));
-  return refreshedSession;
-}
 
 function signer({ email, name, recipientId, routingOrder, signatureAnchor, dateAnchor, initialsAnchor }) {
   return {
@@ -77,7 +42,7 @@ module.exports = async function sendDocusignEnvelope(request, response) {
   try {
     const config = getDocusignConfig(request);
     assertDocusignConfig(config);
-    const session = await getActiveSession(request, response, config);
+    const session = await getActiveDocusignSession(request, response, config);
     const agentEmail = String(request.body?.agentEmail || "").trim();
     const agentName = String(request.body?.agentName || "").trim();
     const documentHtml = String(request.body?.documentHtml || "");

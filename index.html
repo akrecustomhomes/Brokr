@@ -855,11 +855,15 @@
               <div class="file-tile-meta">
                 <span class="file-tile-status" id="agent-contract-status">Needed</span>
                 <span class="file-tile-name" id="agent-contract-file-name">No file uploaded</span>
+                <span class="file-tile-name" id="agent-contract-signing-details" hidden></span>
               </div>
               <div class="file-tile-divider"></div>
               <div class="agent-contract-actions">
                 <button class="secondary-action" id="preview-agent-contract-button" type="button">Preview Contract</button>
                 <button class="primary-action" id="send-agent-contract-button" type="button">Create DocuSign Draft</button>
+                <button class="secondary-action" id="view-agent-contract-docusign-button" type="button" hidden>View in DocuSign</button>
+                <button class="secondary-action" id="refresh-agent-contract-status-button" type="button" hidden>Refresh Status</button>
+                <button class="secondary-action" id="download-agent-contract-button" type="button" hidden>Download Signed PDF</button>
                 <button class="secondary-action destructive-action" id="delete-agent-contract-button" type="button" hidden>Delete Contract</button>
               </div>
               <label class="file-upload-action">

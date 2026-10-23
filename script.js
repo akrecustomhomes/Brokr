@@ -380,6 +380,10 @@ const sendAgentContractButton = document.querySelector("#send-agent-contract-but
 const deleteAgentContractButton = document.querySelector("#delete-agent-contract-button");
 const printAgentContractButton = document.querySelector("#print-agent-contract-button");
 const contractDocusignButton = document.querySelector("#contract-docusign-button");
+const agentContractSigningDetails = document.querySelector("#agent-contract-signing-details");
+const viewAgentContractDocusignButton = document.querySelector("#view-agent-contract-docusign-button");
+const refreshAgentContractStatusButton = document.querySelector("#refresh-agent-contract-status-button");
+const downloadAgentContractButton = document.querySelector("#download-agent-contract-button");
 const agentCommissionSplitField = document.querySelector("#agent-commission-split-field");
 const agentFlatTransactionFeeField = document.querySelector("#agent-flat-transaction-fee-field");
 
@@ -1083,6 +1087,7 @@ async function refreshAuthUser(session = currentSession) {
   await loadAgentsFromBackend();
   await loadTransactionsFromBackend();
   await loadSystemNotificationsFromBackend();
+  await syncAllDocusignEnvelopes();
 }
 
 async function initializeAuth() {
@@ -1649,10 +1654,25 @@ function updateAgentFileTile(tile, status, name, fileName = "", emptyLabel = "Ne
 
 function updateAgentFileVault(agent = {}) {
   updateAgentFileTile(agentLicenseTile, agentLicenseStatus, agentLicenseFileName, agent.licenseFileName || "");
-  updateAgentFileTile(agentContractTile, agentContractStatus, agentContractFileName, agent.contractFileName || "");
+  const hasDocusignEnvelope = Boolean(agent.docusignEnvelopeId);
+  const contractFileLabel = agent.contractFileName || (hasDocusignEnvelope ? `DocuSign envelope ${agent.docusignEnvelopeId.slice(0, 8)}…` : "");
+  updateAgentFileTile(agentContractTile, agentContractStatus, agentContractFileName, contractFileLabel);
+  if (hasDocusignEnvelope) {
+    agentContractStatus.textContent = agent.contractStatus || "Draft";
+    const activityDate = agent.contractCompletedAt || agent.contractSentAt || agent.docusignCreatedAt || "";
+    agentContractSigningDetails.textContent = activityDate
+      ? `${agent.contractStatus || "Draft"} ${formatDate(activityDate)}`
+      : "Tracked through DocuSign";
+  }
+  agentContractSigningDetails.hidden = !hasDocusignEnvelope;
+  viewAgentContractDocusignButton.hidden = !hasDocusignEnvelope;
+  refreshAgentContractStatusButton.hidden = !hasDocusignEnvelope;
+  downloadAgentContractButton.hidden = agent.contractStatus !== "Completed";
   const hasUploadedContract = Boolean(agent.contractFileName || agentFields.contractFile.files[0]);
   const hasCreatedContract = Boolean(agent.contractGenerated);
-  previewAgentContractButton.textContent = hasUploadedContract ? "Preview Uploaded Contract" : "Preview Contract";
+  previewAgentContractButton.textContent = agent.contractStatus === "Completed"
+    ? "Preview Signed Contract"
+    : hasUploadedContract ? "Preview Uploaded Contract" : "Preview Contract";
   deleteAgentContractButton.hidden = !hasUploadedContract && !hasCreatedContract;
   updateAgentFileTile(agentOtherTile, agentOtherStatus, agentOtherFileName, agent.otherFileName || "", "Optional");
 }
@@ -1797,6 +1817,89 @@ async function ensureDocusignConnection() {
 
 const DOCUSIGN_PENDING_DRAFT_KEY = "brokr-docusign-pending-agent-contract";
 
+async function fetchDocusignEnvelopeStatus(agent) {
+  if (!agent?.docusignEnvelopeId) return null;
+  const session = await window.BrokrBackend?.getSession();
+  if (!session?.access_token) return null;
+  const params = new URLSearchParams({
+    envelopeId: agent.docusignEnvelopeId,
+    agentId: String(agent.id || ""),
+  });
+  const response = await fetch(`/api/docusign/envelope-status?${params}`, {
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
+function applyDocusignEnvelopeStatus(agent, status) {
+  return {
+    ...agent,
+    contractStatus: status.status || agent.contractStatus || "Draft",
+    contractSentAt: status.sentAt || agent.contractSentAt || "",
+    contractCompletedAt: status.completedAt || agent.contractCompletedAt || "",
+    contractFileName: status.contractFileName || agent.contractFileName || "",
+    contractStoragePath: status.contractStoragePath || agent.contractStoragePath || "",
+    docusignEnvelopeStatus: status.docusignStatus || agent.docusignEnvelopeStatus || "",
+    docusignEnvelopeWebUrl: status.webUrl || agent.docusignEnvelopeWebUrl || "",
+    docusignRecipients: status.recipients || agent.docusignRecipients || [],
+    contractGenerated: true,
+  };
+}
+
+async function syncDocusignEnvelope(agent, showError = false) {
+  try {
+    const status = await fetchDocusignEnvelopeStatus(agent);
+    if (!status) throw new Error("DocuSign status is not available. Reconnect DocuSign and try again.");
+    agents = agents.map((item) => item.id === agent.id ? applyDocusignEnvelopeStatus(item, status) : item);
+    saveAgents();
+    renderAgents();
+    const updatedAgent = agents.find((item) => item.id === agent.id);
+    if (editingAgentId === agent.id) updateAgentFileVault(updatedAgent);
+    return updatedAgent;
+  } catch (error) {
+    if (showError) window.alert(error.message || "DocuSign status could not be refreshed.");
+    return null;
+  }
+}
+
+async function syncAllDocusignEnvelopes() {
+  for (const agent of agents.filter((item) => item.docusignEnvelopeId && (item.contractStatus !== "Completed" || !item.contractStoragePath))) {
+    await syncDocusignEnvelope(agent, false);
+  }
+}
+
+async function openSignedDocusignContract(agent, download = false) {
+  const previewWindow = download ? null : window.open("", "brokr-signed-agent-contract");
+  try {
+    const session = await window.BrokrBackend?.getSession();
+    if (!session?.access_token) throw new Error("Sign in before opening the signed contract.");
+    const params = new URLSearchParams({
+      envelopeId: agent.docusignEnvelopeId,
+      agentId: String(agent.id || ""),
+    });
+    const response = await fetch(`/api/docusign/envelope-document?${params}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    if (!response.ok) throw new Error(await response.text());
+    const url = URL.createObjectURL(await response.blob());
+    if (download) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = agent.contractFileName || `${agent.firstName}-${agent.lastName}-Signed-Contract.pdf`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    } else if (previewWindow) {
+      previewWindow.location.replace(url);
+    } else {
+      window.location.assign(url);
+    }
+  } catch (error) {
+    previewWindow?.close();
+    window.alert(error.message || "The signed contract could not be opened.");
+  }
+}
+
 async function sendAgentContractWithDocusign(agentOverride = null) {
   const agent = agentOverride?.firstName ? agentOverride : getAgentContractDraft();
   const agentName = `${agent.firstName || ""} ${agent.lastName || ""}`.trim();
@@ -1847,6 +1950,21 @@ async function sendAgentContractWithDocusign(agentOverride = null) {
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "DocuSign could not send the contract.");
     sessionStorage.removeItem(DOCUSIGN_PENDING_DRAFT_KEY);
+    const trackedAgentId = Number(agent.id || editingAgentId || 0);
+    if (trackedAgentId) {
+      agents = agents.map((item) => item.id === trackedAgentId ? {
+        ...item,
+        docusignEnvelopeId: result.envelopeId,
+        docusignEnvelopeStatus: result.status || "created",
+        docusignEnvelopeWebUrl: result.senderViewUrl || "",
+        docusignCreatedAt: new Date().toISOString(),
+        contractStatus: "Draft",
+        contractGenerated: true,
+      } : item);
+      saveAgents();
+      updateAgentFileVault(agents.find((item) => item.id === trackedAgentId));
+      renderAgents();
+    }
     if (result.senderViewUrl) {
       if (docusignWindow) {
         docusignWindow.location.replace(result.senderViewUrl);
@@ -4061,8 +4179,28 @@ cancelAgentButton.addEventListener("click", closeModal);
 agentModal.addEventListener("click", (event) => {
   if (event.target === agentModal) closeModal();
 });
-previewAgentContractButton.addEventListener("click", () => openAgentContract());
+previewAgentContractButton.addEventListener("click", () => {
+  const agent = getAgentContractDraft();
+  if (agent.contractStatus === "Completed" && agent.docusignEnvelopeId) {
+    openSignedDocusignContract(agent, false);
+    return;
+  }
+  openAgentContract(agent);
+});
 sendAgentContractButton.addEventListener("click", () => sendAgentContractWithDocusign());
+viewAgentContractDocusignButton.addEventListener("click", () => {
+  const agent = getAgentContractDraft();
+  if (agent.docusignEnvelopeWebUrl) window.open(agent.docusignEnvelopeWebUrl, "_blank", "noopener");
+});
+refreshAgentContractStatusButton.addEventListener("click", async () => {
+  const agent = getAgentContractDraft();
+  refreshAgentContractStatusButton.disabled = true;
+  refreshAgentContractStatusButton.textContent = "Refreshing…";
+  await syncDocusignEnvelope(agent, true);
+  refreshAgentContractStatusButton.disabled = false;
+  refreshAgentContractStatusButton.textContent = "Refresh Status";
+});
+downloadAgentContractButton.addEventListener("click", () => openSignedDocusignContract(getAgentContractDraft(), true));
 closeAgentContractModal.addEventListener("click", closeAgentContract);
 agentContractModal.addEventListener("click", (event) => {
   if (event.target === agentContractModal) closeAgentContract();
@@ -4211,6 +4349,14 @@ deleteAgentContractButton.addEventListener("click", () => {
             contractFileType: "",
             contractGenerated: false,
             contractStatus: "Draft",
+            docusignEnvelopeId: "",
+            docusignEnvelopeStatus: "",
+            docusignEnvelopeWebUrl: "",
+            docusignRecipients: [],
+            docusignCreatedAt: "",
+            contractSentAt: "",
+            contractCompletedAt: "",
+            contractStoragePath: "",
           }
         : agent,
     );
@@ -4317,6 +4463,10 @@ initializeAuth()
     return null;
   })
   .catch((error) => console.warn("Unable to resume DocuSign draft creation.", error));
+
+window.setInterval(() => {
+  if (isSignedIn()) syncAllDocusignEnvelopes();
+}, 60_000);
 loadOfficeListingsFromIdx();
 
 topbarNewTransaction.addEventListener("click", () => {
