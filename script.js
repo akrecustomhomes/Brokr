@@ -1593,7 +1593,7 @@ function syncAgentCompensationFields() {
 
 function renderAgentContract(agent) {
   const name = `${agent.firstName || ""} ${agent.lastName || ""}`.trim() || "________________________";
-  const effectiveDate = agent.contractEffectiveDate ? formatDate(agent.contractEffectiveDate) : "________________";
+  const effectiveDate = formatDate(toDateKey(new Date()));
   const agentSplit = Number(agent.commissionSplit) || 0;
   const brokerageSplit = 100 - agentSplit;
   const splitSelected = (agent.compensationOption || "split") === "split";
