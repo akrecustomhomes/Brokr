@@ -1047,6 +1047,56 @@ body.overview-active .topbar > div:not(.overview-actions) {
   margin-top: 1.25rem;
 }
 
+.transaction-list-section .transaction-table {
+  padding: 0 0.8rem 0.8rem;
+  border-collapse: separate;
+  border-spacing: 0 0.7rem;
+}
+
+.transaction-list-section .transaction-table th {
+  border-bottom: 0;
+  padding-top: 1rem;
+  padding-bottom: 0.2rem;
+}
+
+.transaction-list-section .transaction-tile-row > td {
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.transaction-list-section .transaction-tile-row > td:first-child {
+  border-left: 1px solid var(--line);
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.transaction-list-section .transaction-tile-row > td:last-child {
+  border-right: 1px solid var(--line);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.transaction-list-section .transaction-tile-row:hover > td {
+  background: color-mix(in srgb, var(--panel) 97%, var(--soft));
+}
+
+.transaction-list-section .transaction-tile-row.is-expanded > td {
+  border-bottom-color: transparent;
+}
+
+.transaction-list-section .transaction-tile-row.is-expanded > td:first-child {
+  border-radius: var(--radius) 0 0 0;
+}
+
+.transaction-list-section .transaction-tile-row.is-expanded > td:last-child {
+  border-radius: 0 var(--radius) 0 0;
+}
+
+.transaction-list-section .transaction-expanded-row > td {
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
 .transaction-list-heading {
   display: flex;
   align-items: end;
