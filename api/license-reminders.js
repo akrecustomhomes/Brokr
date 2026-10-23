@@ -82,6 +82,12 @@ async function recordReminder(adminClient, {
   if (error && error.code !== "23505") throw error;
 }
 
+function addUniqueRecipient(recipients, type, email) {
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (!normalizedEmail || recipients.some((recipient) => recipient.email.toLowerCase() === normalizedEmail)) return;
+  recipients.push({ type, email: String(email).trim() });
+}
+
 module.exports = async function handler(request, response) {
   if (request.method !== "GET") return sendJson(response, 405, { error: "Method not allowed." });
 
@@ -131,8 +137,8 @@ module.exports = async function handler(request, response) {
     });
 
     const recipients = [];
-    if (agentEnabled && agent.email) recipients.push({ type: "agent", email: agent.email });
-    if (brokerEnabled && broker?.broker_email) recipients.push({ type: "broker", email: broker.broker_email });
+    if (agentEnabled) addUniqueRecipient(recipients, "agent", agent.email);
+    if (brokerEnabled) addUniqueRecipient(recipients, "broker", broker?.broker_email);
 
     for (const recipient of recipients) {
       const notificationKey = `license-expiration:${agent.id}:${agent.license_expires_on}:${recipient.type}`;
@@ -213,8 +219,8 @@ module.exports = async function handler(request, response) {
         detail,
       });
       const recipients = [];
-      if (deadlineAgentEnabled && agent?.email) recipients.push({ type: "agent", email: agent.email });
-      if (deadlineBrokerEnabled && broker?.broker_email) recipients.push({ type: "broker", email: broker.broker_email });
+      if (deadlineAgentEnabled) addUniqueRecipient(recipients, "agent", agent?.email);
+      if (deadlineBrokerEnabled) addUniqueRecipient(recipients, "broker", broker?.broker_email);
 
       for (const recipient of recipients) {
         const notificationKey = `contract-deadline:${transaction.id}:${deadlineKey}:${deadlineDate}:${recipient.type}`;
