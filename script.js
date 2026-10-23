@@ -1635,8 +1635,37 @@ function closeAgentContract() {
   agentContractModal.hidden = true;
 }
 
-function promptDocusignConnection() {
-  window.alert("The contract is ready. Connect the Lume DocuSign account before sending so Brokr can create envelopes and track signatures.");
+async function promptDocusignConnection() {
+  try {
+    const session = await window.BrokrBackend?.getSession();
+    if (!session?.access_token) throw new Error("Sign in as Broker or Admin before connecting DocuSign.");
+    const headers = { Authorization: `Bearer ${session.access_token}` };
+    const statusResponse = await fetch("/api/docusign/status", { headers });
+    const status = await statusResponse.json();
+    if (statusResponse.ok && status.connected) {
+      window.alert(`DocuSign is connected${status.accountName ? ` to ${status.accountName}` : ""}. Envelope sending will use this authorized account.`);
+      return;
+    }
+
+    const response = await fetch("/api/docusign/connect", { headers });
+    const data = await response.json();
+    if (!response.ok || !data.authorizationUrl) throw new Error(data.error || "DocuSign connection could not start.");
+    window.location.assign(data.authorizationUrl);
+  } catch (error) {
+    window.alert(error.message || "DocuSign connection could not start.");
+  }
+}
+
+const docusignResult = new URLSearchParams(window.location.search).get("docusign");
+if (docusignResult) {
+  const resultUrl = new URL(window.location.href);
+  const message = resultUrl.searchParams.get("message");
+  resultUrl.searchParams.delete("docusign");
+  resultUrl.searchParams.delete("message");
+  window.history.replaceState({}, "", resultUrl);
+  window.setTimeout(() => {
+    window.alert(docusignResult === "connected" ? "DocuSign connected successfully." : message || "DocuSign connection failed.");
+  }, 250);
 }
 
 function renderAgents() {
