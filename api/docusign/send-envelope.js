@@ -133,7 +133,28 @@ module.exports = async function sendDocusignEnvelope(request, response) {
     if (!envelopeResponse.ok) {
       throw new Error(envelopeData.message || envelopeData.errorCode || "DocuSign could not create the envelope.");
     }
-    return sendJson(response, 200, { envelopeId: envelopeData.envelopeId, status: envelopeData.status || "created" });
+
+    let senderViewUrl = "";
+    try {
+      const senderViewResponse = await fetch(
+        `${String(session.baseUri).replace(/\/$/, "")}/restapi/v2.1/accounts/${encodeURIComponent(session.accountId)}/envelopes/${encodeURIComponent(envelopeData.envelopeId)}/views/sender`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${session.accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ returnUrl: `${config.appBaseUrl}/?docusign=draft-reviewed` }),
+        },
+      );
+      const senderViewData = await senderViewResponse.json().catch(() => ({}));
+      if (senderViewResponse.ok) senderViewUrl = senderViewData.url || "";
+    } catch (_error) {
+      // The draft still exists even if DocuSign cannot create its short-lived sender view URL.
+    }
+
+    return sendJson(response, 200, {
+      envelopeId: envelopeData.envelopeId,
+      status: envelopeData.status || "created",
+      senderViewUrl,
+    });
   } catch (error) {
     return sendJson(response, 400, { error: error.message || "DocuSign could not send the contract." });
   }

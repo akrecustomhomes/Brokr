@@ -1808,6 +1808,11 @@ async function sendAgentContractWithDocusign() {
 
   const connection = await ensureDocusignConnection();
   if (!connection) return;
+  const docusignWindow = window.open("", "brokr-docusign-draft");
+  if (docusignWindow) {
+    docusignWindow.document.title = "Opening DocuSign draft…";
+    docusignWindow.document.body.innerHTML = '<p style="font:16px system-ui,sans-serif;padding:32px">Creating your DocuSign draft…</p>';
+  }
   renderAgentContract(agent);
   const session = await window.BrokrBackend?.getSession();
   const buttons = [sendAgentContractButton, contractDocusignButton];
@@ -1830,8 +1835,18 @@ async function sendAgentContractWithDocusign() {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "DocuSign could not send the contract.");
-    window.alert(`DocuSign draft created for ${agentName}. Review and send it from DocuSign when ready. Envelope ID: ${result.envelopeId}`);
+    if (result.senderViewUrl) {
+      if (docusignWindow) {
+        docusignWindow.location.replace(result.senderViewUrl);
+      } else {
+        window.location.assign(result.senderViewUrl);
+      }
+    } else {
+      docusignWindow?.close();
+      window.alert(`DocuSign draft created for ${agentName}, but its review window could not be opened. Envelope ID: ${result.envelopeId}`);
+    }
   } catch (error) {
+    docusignWindow?.close();
     window.alert(error.message || "DocuSign could not send the contract.");
   } finally {
     sendAgentContractButton.disabled = false;
