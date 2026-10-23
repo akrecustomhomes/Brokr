@@ -9385,6 +9385,7 @@ body[data-theme="dark"] .task-status.overdue {
 }
 
 #agent-contract-modal .agent-contract-modal {
+  position: relative;
   margin: 0;
   padding: 0;
 }
@@ -9392,8 +9393,20 @@ body[data-theme="dark"] .task-status.overdue {
 #agent-contract-modal .agent-contract-modal > .modal-header {
   min-height: 0;
   margin: 0;
-  padding: 16px 22px;
+  padding: 16px 76px 16px 22px;
   border-bottom: 1px solid var(--line);
+}
+
+#agent-contract-modal .agent-contract-modal > .modal-header > div {
+  min-width: 0;
+}
+
+#agent-contract-modal #close-agent-contract-modal {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  right: 12px;
+  margin: 0;
 }
 
 #agent-contract-modal .agent-contract-modal > .agent-contract-document {
@@ -9406,6 +9419,10 @@ body[data-theme="dark"] .task-status.overdue {
   max-width: min(250px, 70%);
   max-height: 72px;
   margin: 0 auto 22px;
+  box-sizing: content-box;
+  border-radius: 4px;
+  background: #28241f;
+  padding: 14px 22px;
   object-fit: contain;
 }
 
@@ -9436,6 +9453,10 @@ body[data-theme="dark"] .task-status.overdue {
   max-width: min(220px, 60vw);
   height: auto;
   max-height: 58px;
+  box-sizing: content-box;
+  border-radius: 4px;
+  background: #28241f;
+  padding: 10px 16px;
   object-fit: contain;
   object-position: left center;
   margin: 0 0 14px;
