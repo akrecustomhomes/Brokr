@@ -9674,6 +9674,16 @@ body[data-theme="dark"] .task-status.overdue {
   pointer-events: none;
 }
 
+.file-upload-action.has-action-icon,
+.form-grid .transaction-file-tile .file-upload-action.has-action-icon,
+.agent-file-tile .file-upload-action.has-action-icon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
 .text-action.has-action-icon,
 .file-link-button.has-action-icon {
   gap: 5px;
