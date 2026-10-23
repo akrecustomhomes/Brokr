@@ -79,8 +79,15 @@ module.exports = async function idxListings(request, response) {
     });
     const payload = await sparkResponse.json().catch(() => ({}));
     if (!sparkResponse.ok) {
-      console.error("Spark IDX request failed", sparkResponse.status, payload?.error?.message || payload?.Message || "Unknown error");
-      return response.status(502).json({ error: "The IDX feed could not be loaded." });
+      const upstreamMessage = String(payload?.error?.message || payload?.Message || "Unknown Spark error")
+        .replace(/Bearer\s+\S+/gi, "Bearer [redacted]")
+        .slice(0, 240);
+      console.error("Spark IDX request failed", sparkResponse.status, upstreamMessage);
+      return response.status(502).json({
+        error: "The IDX feed could not be loaded.",
+        upstreamStatus: sparkResponse.status,
+        upstreamMessage,
+      });
     }
 
     const listings = (payload.value || [])
