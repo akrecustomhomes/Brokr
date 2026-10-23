@@ -62,7 +62,7 @@ function signer({ email, name, recipientId, routingOrder, signatureAnchor, dateA
       initialHereTabs: [{
         anchorString: initialsAnchor,
         anchorUnits: "pixels",
-        anchorXOffset: "0",
+        anchorXOffset: "40",
         anchorYOffset: "8",
       }],
     },
