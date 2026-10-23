@@ -163,6 +163,29 @@ let idxGalleryLabel = "Listing photo";
 let idxGalleryTouchStartX = null;
 let idxGalleryWheelLocked = false;
 let idxGalleryLoadRequest = 0;
+const idxGalleryPreloadCache = new Map();
+
+function preloadIdxPhoto(url) {
+  if (!url) return Promise.resolve();
+  if (idxGalleryPreloadCache.has(url)) return idxGalleryPreloadCache.get(url);
+  const preloadPromise = new Promise((resolve) => {
+    const image = new Image();
+    image.onload = resolve;
+    image.onerror = resolve;
+    image.src = url;
+  });
+  idxGalleryPreloadCache.set(url, preloadPromise);
+  return preloadPromise;
+}
+
+async function preloadIdxGallery(photos) {
+  if (!photos.length || navigator.connection?.saveData) return;
+  const queue = [...new Set(photos)];
+  const workers = Array.from({ length: Math.min(6, queue.length) }, async () => {
+    while (queue.length) await preloadIdxPhoto(queue.shift());
+  });
+  await Promise.all(workers);
+}
 const companyTaskList = document.querySelector("#company-task-list");
 const companyTaskOpenCount = document.querySelector("#company-task-open-count");
 const addCompanyTaskButton = document.querySelector("#add-company-task-button");
@@ -1969,6 +1992,7 @@ async function openIdxListingPreview(listingKey) {
   idxListingModalTitle.textContent = listing.address || listing.title || "Listing Details";
   idxListingModalStatus.textContent = listing.status || "MLS listing";
   const photos = listing.photoUrls?.length ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : [];
+  preloadIdxGallery(photos);
   idxListingDetail.innerHTML = `
     <div class="idx-listing-summary">
       ${photos.length ? `<div class="idx-listing-carousel"><button class="idx-carousel-image" type="button" aria-label="Open all ${photos.length} listing photos"><img class="idx-listing-hero" src="${escapeLockboxText(photos[0])}" alt="${escapeLockboxText(listing.address || listing.title || "MLS listing")}" />${photos.length > 1 ? `<span class="idx-carousel-count">View all ${photos.length} photos</span>` : ""}</button></div>` : ""}
@@ -1994,8 +2018,7 @@ async function openIdxListingPreview(listingKey) {
 function preloadIdxGalleryNeighbors() {
   if (idxGalleryPhotos.length < 2) return;
   [-3, -2, -1, 1, 2, 3].forEach((offset) => {
-    const preload = new Image();
-    preload.src = idxGalleryPhotos[(idxGalleryTargetIndex + offset + idxGalleryPhotos.length) % idxGalleryPhotos.length];
+    preloadIdxPhoto(idxGalleryPhotos[(idxGalleryTargetIndex + offset + idxGalleryPhotos.length) % idxGalleryPhotos.length]);
   });
 }
 
