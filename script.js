@@ -4000,7 +4000,12 @@ deleteAgentContractButton.addEventListener("click", () => {
   const savedAgent = agents.find((agent) => agent.id === editingAgentId);
   const hasContract = Boolean(agentFields.contractFile.files[0] || savedAgent?.contractFileName || savedAgent?.contractGenerated);
   if (!hasContract) return;
-  if (!window.confirm("Delete this broker / agent contract? This cannot be undone.")) return;
+  const agentName = `${savedAgent?.firstName || agentFields.firstName.value || "this"} ${savedAgent?.lastName || agentFields.lastName.value || "agent"}`.trim();
+  const contractType = agentFields.contractFile.files[0] || savedAgent?.contractFileName ? "uploaded" : "generated";
+  const confirmed = window.confirm(
+    `Delete ${agentName}'s ${contractType} broker / agent contract?\n\nThis permanently removes the contract record and cannot be undone.`,
+  );
+  if (!confirmed) return;
 
   agentFields.contractFile.value = "";
   if (savedAgent) {
