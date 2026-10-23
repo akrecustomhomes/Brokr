@@ -1887,7 +1887,7 @@ if (docusignResult) {
   resultUrl.searchParams.delete("docusign");
   resultUrl.searchParams.delete("message");
   window.history.replaceState({}, "", resultUrl);
-  if (docusignResult !== "connected" || !sessionStorage.getItem(DOCUSIGN_PENDING_DRAFT_KEY)) {
+  if (docusignResult !== "draft-reviewed" && (docusignResult !== "connected" || !sessionStorage.getItem(DOCUSIGN_PENDING_DRAFT_KEY))) {
     window.setTimeout(() => {
       window.alert(docusignResult === "connected" ? "DocuSign connected successfully." : message || "DocuSign connection failed.");
     }, 250);
