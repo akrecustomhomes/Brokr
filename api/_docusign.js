@@ -34,6 +34,10 @@ function assertDocusignConfig(config) {
 async function getActiveDocusignSession(request, response, config) {
   const session = unseal(parseCookies(request)[SESSION_COOKIE], config.sessionSecret);
   if (!session) throw new Error("Connect DocuSign before accessing an envelope.");
+  if (config.oauthBaseUrl === "https://account.docusign.com" && /demo\.docusign\.net/i.test(String(session.baseUri || ""))) {
+    response.setHeader("Set-Cookie", clearCookie(SESSION_COOKIE));
+    throw new Error("The saved DocuSign connection is a demo account. Reconnect DocuSign using the Lume Real Estate production account.");
+  }
   if (Number(session.expiresAt || 0) > Date.now() + 60_000) return session;
   if (!session.refreshToken) throw new Error("The DocuSign connection expired. Connect it again.");
 

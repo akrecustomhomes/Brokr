@@ -56,8 +56,15 @@ module.exports = async function docusignCallback(request, response) {
     });
     const userData = await userResponse.json();
     if (!userResponse.ok) throw new Error(userData.message || "DocuSign account information could not be loaded.");
-    const account = (userData.accounts || []).find((item) => item.is_default) || userData.accounts?.[0];
-    if (!account) throw new Error("No DocuSign account was returned for this user.");
+    const accounts = userData.accounts || [];
+    const productionAccounts = accounts.filter((item) => !/demo\.docusign\.net/i.test(String(item.base_uri || "")));
+    const availableAccounts = config.oauthBaseUrl === "https://account.docusign.com" ? productionAccounts : accounts;
+    const account = availableAccounts.find((item) => item.is_default) || availableAccounts[0];
+    if (!account) {
+      throw new Error(config.oauthBaseUrl === "https://account.docusign.com"
+        ? "This DocuSign login only returned a demo account. Sign in with the Lume Real Estate production account."
+        : "No DocuSign account was returned for this user.");
+    }
 
     const session = seal({
       accessToken: tokenData.access_token,
