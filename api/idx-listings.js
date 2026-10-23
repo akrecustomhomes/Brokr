@@ -61,6 +61,7 @@ function normalizeListing(listing) {
     title: listing.UnparsedAddress || [listing.StreetNumber, listing.StreetName].filter(Boolean).join(" ") || "Lume listing",
     address: getAddress(listing),
     price: Number(listing.ListPrice) || 0,
+    closePrice: Number(listing.ClosePrice) || 0,
     bedrooms: Number(listing.BedroomsTotal) || 0,
     bathrooms: Number(listing.BathroomsTotalInteger) || 0,
     livingArea: Number(listing.LivingArea) || 0,
@@ -113,7 +114,7 @@ module.exports = async function idxListings(request, response) {
 
   const officeName = process.env.SPARK_OFFICE_NAME || "LUME REAL ESTATE";
   const fields = [
-    "ListingKey", "ListingId", "StandardStatus", "ListPrice", "UnparsedAddress", "StreetNumber",
+    "ListingKey", "ListingId", "StandardStatus", "ListPrice", "ClosePrice", "UnparsedAddress", "StreetNumber",
     "StreetName", "StreetSuffix", "City", "StateOrProvince", "PostalCode", "BedroomsTotal",
     "BathroomsTotalInteger", "PropertyType", "PropertySubType", "ListOfficeName",
     "ListAgentFullName", "ListingContractDate", "CloseDate", "ModificationTimestamp", "PublicRemarks", "Latitude", "Longitude",

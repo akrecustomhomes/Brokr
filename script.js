@@ -130,6 +130,7 @@ const doneQrScanButton = document.querySelector("#done-qr-scan-button");
 const overviewMetrics = {
   activeListings: document.querySelector("#overview-active-listings"),
   pendingDeals: document.querySelector("#overview-pending-deals"),
+  listingVolume: document.querySelector("#overview-listing-volume"),
   salesVolume: document.querySelector("#overview-sales-volume"),
   agentCommission: document.querySelector("#overview-agent-commission"),
   brokerageCommission: document.querySelector("#overview-brokerage-commission"),
@@ -2169,13 +2170,18 @@ function renderOverviewMetrics() {
     const currentYear = new Date().getFullYear();
     const activeListings = getActiveOfficeListings();
     const pendingListings = idxOfficeListings.filter((listing) => ["Pending", "Active Under Contract"].includes(listing.status));
+    const closedListings = idxOfficeListings.filter((listing) => listing.status === "Closed");
     const ytdListings = idxOfficeListings.filter((listing) => {
       const date = new Date(`${listing.listingDate || listing.modifiedAt || ""}`);
       return !Number.isNaN(date.getTime()) && date.getFullYear() === currentYear;
     });
     overviewMetrics.activeListings.textContent = activeListings.length;
     overviewMetrics.pendingDeals.textContent = pendingListings.length;
-    overviewMetrics.salesVolume.textContent = formatCurrency(activeListings.reduce((total, listing) => total + (Number(listing.price) || 0), 0));
+    overviewMetrics.listingVolume.textContent = formatCurrency(activeListings.reduce((total, listing) => total + (Number(listing.price) || 0), 0));
+    overviewMetrics.salesVolume.textContent = formatCurrency(closedListings.reduce(
+      (total, listing) => total + (Number(listing.closePrice) || Number(listing.price) || 0),
+      0,
+    ));
     overviewMetrics.agentCommission.textContent = formatCurrency(0);
     overviewMetrics.brokerageCommission.textContent = formatCurrency(0);
     overviewMetrics.ytdTransactions.textContent = ytdListings.length;
@@ -2185,8 +2191,11 @@ function renderOverviewMetrics() {
   const activeListings = getActiveOfficeListings().length;
   const pendingDeals = visibleTransactions.filter((transaction) => isUnderContractStatus(transaction.status)).length;
   const ytdTransactions = visibleTransactions.filter((transaction) => transaction.status !== "Cancelled").length;
+  const listingVolume = visibleTransactions
+    .filter((transaction) => transaction.side === "seller" && ["New", "Active"].includes(getListingStatus(transaction)))
+    .reduce((total, transaction) => total + (Number(transaction.listPrice) || 0), 0);
   const salesVolume = visibleTransactions
-    .filter((transaction) => transaction.status !== "Cancelled" && isUnderContractStatus(transaction.status))
+    .filter((transaction) => transaction.status === "Closed")
     .reduce((total, transaction) => total + (Number(transaction.contractPrice) || 0), 0);
   const agentCommission = visibleTransactions
     .filter((transaction) => transaction.status !== "Cancelled" && isUnderContractStatus(transaction.status))
@@ -2197,6 +2206,7 @@ function renderOverviewMetrics() {
 
   overviewMetrics.activeListings.textContent = activeListings;
   overviewMetrics.pendingDeals.textContent = pendingDeals;
+  overviewMetrics.listingVolume.textContent = formatCurrency(listingVolume);
   overviewMetrics.salesVolume.textContent = formatCurrency(salesVolume);
   overviewMetrics.agentCommission.textContent = formatCurrency(agentCommission);
   overviewMetrics.brokerageCommission.textContent = formatCurrency(brokerageCommission);
