@@ -1,16 +1,23 @@
 const crypto = require("crypto");
 
+// DocuSign client IDs are public OAuth application identifiers. Pin the
+// promoted Brokr production app so an outdated demo value cannot be used by a
+// stale deployment environment.
+const DOCUSIGN_PRODUCTION_CLIENT_ID = "249c6525-03f1-4798-bc4a-c529ce736dcc";
+
 const OAUTH_COOKIE = "brokr_docusign_oauth";
 const SESSION_COOKIE = "brokr_docusign_session";
 
 function getDocusignConfig(request) {
   const requestOrigin = `${request.headers["x-forwarded-proto"] || "https"}://${request.headers["x-forwarded-host"] || request.headers.host}`;
   const appBaseUrl = String(process.env.APP_BASE_URL || requestOrigin).replace(/\/$/, "");
+  const oauthBaseUrl = String(process.env.DOCUSIGN_OAUTH_BASE_URL || "https://account-d.docusign.com").replace(/\/$/, "");
+  const isProduction = oauthBaseUrl === "https://account.docusign.com";
   return {
-    clientId: process.env.DOCUSIGN_CLIENT_ID,
+    clientId: isProduction ? DOCUSIGN_PRODUCTION_CLIENT_ID : process.env.DOCUSIGN_CLIENT_ID,
     clientSecret: process.env.DOCUSIGN_CLIENT_SECRET,
     sessionSecret: process.env.DOCUSIGN_SESSION_SECRET,
-    oauthBaseUrl: String(process.env.DOCUSIGN_OAUTH_BASE_URL || "https://account-d.docusign.com").replace(/\/$/, ""),
+    oauthBaseUrl,
     redirectUri: process.env.DOCUSIGN_REDIRECT_URI || `${appBaseUrl}/api/docusign/callback`,
     appBaseUrl,
   };
