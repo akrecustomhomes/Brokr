@@ -345,6 +345,7 @@ const agentFields = {
   licenseExpiration: document.querySelector("#agent-license-expiration"),
   contractEffectiveDate: document.querySelector("#agent-contract-effective-date"),
   compensationOption: document.querySelector("#agent-compensation-option"),
+  commissionSplit: document.querySelector("#agent-commission-split"),
   flatTransactionFee: document.querySelector("#agent-flat-transaction-fee"),
   contractFile: document.querySelector("#agent-contract-file"),
   otherFile: document.querySelector("#agent-other-file"),
@@ -356,6 +357,8 @@ const previewAgentContractButton = document.querySelector("#preview-agent-contra
 const sendAgentContractButton = document.querySelector("#send-agent-contract-button");
 const printAgentContractButton = document.querySelector("#print-agent-contract-button");
 const contractDocusignButton = document.querySelector("#contract-docusign-button");
+const agentCommissionSplitField = document.querySelector("#agent-commission-split-field");
+const agentFlatTransactionFeeField = document.querySelector("#agent-flat-transaction-fee-field");
 
 menuItems.forEach((item) => {
   const label = item.querySelector("span:last-child")?.textContent?.trim() || pageTitles[item.dataset.page] || "Menu item";
@@ -1564,15 +1567,26 @@ function updateBrokerProfilePreview(src = brokerContact.profileImageSrc || "") {
 
 function getAgentContractDraft() {
   const savedAgent = agents.find((agent) => agent.id === editingAgentId);
-  return savedAgent || {
-    firstName: agentFields.firstName.value.trim(),
-    lastName: agentFields.lastName.value.trim(),
-    licenseNumber: agentFields.licenseNumber.value.trim(),
+  return {
+    ...(savedAgent || {}),
+    firstName: agentFields.firstName.value.trim() || savedAgent?.firstName || "",
+    lastName: agentFields.lastName.value.trim() || savedAgent?.lastName || "",
+    licenseNumber: agentFields.licenseNumber.value.trim() || savedAgent?.licenseNumber || "",
     contractEffectiveDate: agentFields.contractEffectiveDate.value,
     compensationOption: agentFields.compensationOption.value,
+    commissionSplit: Number(agentFields.commissionSplit.value) || 0,
     flatTransactionFee: Number(agentFields.flatTransactionFee.value) || 0,
-    commissionSplit: 70,
   };
+}
+
+function syncAgentCompensationFields() {
+  const usesSplit = agentFields.compensationOption.value === "split";
+  agentCommissionSplitField.hidden = !usesSplit;
+  agentFlatTransactionFeeField.hidden = usesSplit;
+  agentFields.commissionSplit.disabled = !usesSplit;
+  agentFields.commissionSplit.required = usesSplit;
+  agentFields.flatTransactionFee.disabled = usesSplit;
+  agentFields.flatTransactionFee.required = !usesSplit;
 }
 
 function renderAgentContract(agent) {
@@ -3608,7 +3622,9 @@ function openAgentModal(agentId = null) {
   agentFields.licenseExpiration.value = agent?.licenseExpiration || "";
   agentFields.contractEffectiveDate.value = agent?.contractEffectiveDate || toDateKey(new Date());
   agentFields.compensationOption.value = agent?.compensationOption || "split";
+  agentFields.commissionSplit.value = agent?.commissionSplit ?? 70;
   agentFields.flatTransactionFee.value = agent?.flatTransactionFee || "";
+  syncAgentCompensationFields();
   agentFields.licenseFile.value = "";
   agentFields.contractFile.value = "";
   agentFields.otherFile.value = "";
@@ -3797,6 +3813,7 @@ agentFields.otherFile.addEventListener("change", () => {
   updateAgentFileTile(agentOtherTile, agentOtherStatus, agentOtherFileName, agentFields.otherFile.files[0]?.name || "", "Optional");
 });
 attachPhoneFormatter(agentFields.phone);
+agentFields.compensationOption.addEventListener("change", syncAgentCompensationFields);
 
 [agentFields.firstName, agentFields.lastName].forEach((field) => {
   field.addEventListener("input", () => {
@@ -3827,7 +3844,7 @@ agentForm.addEventListener("submit", async (event) => {
     city: agentFields.city.value.trim(),
     state: agentFields.state.value.trim().toUpperCase(),
     zip: agentFields.zip.value.trim(),
-    commissionSplit: existingAgent?.commissionSplit ?? 70,
+    commissionSplit: Math.min(100, Math.max(0, Number(agentFields.commissionSplit.value) || 0)),
     compensationOption: agentFields.compensationOption.value,
     flatTransactionFee: Number(agentFields.flatTransactionFee.value) || 0,
     contractEffectiveDate: agentFields.contractEffectiveDate.value,
