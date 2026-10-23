@@ -9319,3 +9319,31 @@ body[data-theme="dark"] .task-status.overdue {
 .metric-grid .metric-card[role="button"]:focus-visible {
   background: color-mix(in srgb, var(--panel) 98%, var(--ink) 2%);
 }
+
+.has-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-button-icon {
+  width: 1.05em;
+  height: 1.05em;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.text-action.has-action-icon,
+.file-link-button.has-action-icon {
+  gap: 5px;
+}
+
+#agent-contract-modal {
+  z-index: 70;
+}

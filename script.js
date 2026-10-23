@@ -4978,3 +4978,91 @@ brandingForm.addEventListener("reset", () => {
     updateFavicon();
   }, 0);
 });
+
+const actionIconPaths = {
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  user: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-4 3.1-6 7-6s6.2 2 7 6"/>',
+  file: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  check: '<path d="m5 12 4 4L19 6"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/>',
+  edit: '<path d="m4 20 4.2-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m13.8 7.2 3 3"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/>',
+  archive: '<path d="M4 7h16v14H4zM3 3h18v4H3zM9 12h6"/>',
+  eye: '<path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/>',
+  send: '<path d="m3 4 18 8-18 8 3-8-3-8Z"/><path d="M6 12h15"/>',
+  upload: '<path d="M12 16V4M7 9l5-5 5 5M5 20h14"/>',
+  download: '<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>',
+  copy: '<rect x="8" y="8" width="11" height="11" rx="1"/><path d="M16 8V5H5v11h3"/>',
+  lock: '<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  qr: '<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM15 14h2v2h-2zM18 18h2v2h-2zM14 18h2v2h-2zM18 14h2v2h-2z"/>',
+  expand: '<path d="m7 10 5 5 5-5"/>',
+  collapse: '<path d="m7 14 5-5 5 5"/>',
+  left: '<path d="m15 18-6-6 6-6"/>',
+  right: '<path d="m9 18 6-6-6-6"/>',
+  print: '<path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-5h18v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/>',
+  refresh: '<path d="M20 7v5h-5M4 17v-5h5M6.5 7a7 7 0 0 1 11.5 1.5L20 12M4 12l2 3.5A7 7 0 0 0 17.5 17"/>',
+  pause: '<path d="M8 5v14M16 5v14"/>',
+  play: '<path d="m8 5 11 7-11 7Z"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/>',
+  grid: '<rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/>',
+};
+
+function getActionIconName(control) {
+  const text = `${control.textContent || ""} ${control.getAttribute("aria-label") || ""}`.trim().toLowerCase();
+  if (/face id|passkey|profile|agent|user/.test(text)) return "user";
+  if (/qr/.test(text)) return "qr";
+  if (/lockbox/.test(text)) return "lock";
+  if (/delete|remove/.test(text)) return "trash";
+  if (/archive/.test(text)) return "archive";
+  if (/edit/.test(text)) return "edit";
+  if (/preview|show|view/.test(text)) return "eye";
+  if (/print/.test(text)) return "print";
+  if (/download/.test(text)) return "download";
+  if (/upload|attach/.test(text)) return "upload";
+  if (/send|forward/.test(text)) return "send";
+  if (/copy/.test(text)) return "copy";
+  if (/collapse/.test(text)) return "collapse";
+  if (/expand/.test(text)) return "expand";
+  if (/pause/.test(text)) return "pause";
+  if (/resume/.test(text)) return "play";
+  if (/back|previous/.test(text)) return "left";
+  if (/next/.test(text)) return "right";
+  if (/forgot|reset/.test(text)) return "refresh";
+  if (/cancel|dismiss|close/.test(text)) return "left";
+  if (/save|approve|done|closed/.test(text)) return "check";
+  if (/pending/.test(text)) return "clock";
+  if (/expired/.test(text)) return "alert";
+  if (/today|month|week|day|event/.test(text)) return "calendar";
+  if (/all/.test(text)) return "grid";
+  if (/contract|document|file/.test(text)) return "file";
+  if (/add|new|create|task/.test(text) || /^\+/.test(text)) return "plus";
+  if (/sign in|login/.test(text)) return "right";
+  return "right";
+}
+
+function decorateActionControl(control) {
+  if (!control || control.classList.contains("has-action-icon")) return;
+  if (control.matches(".icon-button, .mobile-menu, .idx-carousel-image, .calendar-event, .overview-schedule-event, .file-link, .file-inline-link")) return;
+  if (control.querySelector("svg, img") || !control.textContent.trim()) return;
+  const iconName = getActionIconName(control);
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icon.setAttribute("viewBox", "0 0 24 24");
+  icon.setAttribute("aria-hidden", "true");
+  icon.classList.add("action-button-icon");
+  icon.innerHTML = actionIconPaths[iconName] || actionIconPaths.right;
+  control.classList.add("has-action-icon");
+  control.prepend(icon);
+}
+
+function decorateActionControls(root = document) {
+  if (root.matches?.("button, .file-upload-action")) decorateActionControl(root);
+  root.querySelectorAll?.("button, .file-upload-action").forEach(decorateActionControl);
+}
+
+decorateActionControls();
+new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+    if (node.nodeType === Node.ELEMENT_NODE) decorateActionControls(node);
+  }));
+}).observe(document.body, { childList: true, subtree: true });
