@@ -6810,6 +6810,52 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
   gap: 10px;
 }
 
+.office-listing-filters {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 20px 14px;
+}
+
+.office-listing-filters button {
+  min-height: 40px;
+  padding: 8px 20px;
+  border: 1px solid var(--line);
+  border-right: 0;
+  background: var(--panel);
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.office-listing-filters button:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.office-listing-filters button:last-child {
+  border-right: 1px solid var(--line);
+  border-radius: 0 10px 10px 0;
+}
+
+.office-listing-filters button.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  .office-listing-filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    padding: 0 14px 14px;
+  }
+
+  .office-listing-filters button {
+    min-width: 0;
+    padding-inline: 8px;
+  }
+}
+
 .office-listings-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

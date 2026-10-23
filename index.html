@@ -183,6 +183,12 @@
                 <button class="primary-action" id="topbar-new-transaction" type="button">+ New Transaction</button>
               </div>
             </div>
+            <div class="office-listing-filters" role="tablist" aria-label="Filter office listings">
+              <button class="active" type="button" role="tab" aria-selected="true" data-office-listing-filter="all">All</button>
+              <button type="button" role="tab" aria-selected="false" data-office-listing-filter="active">Active</button>
+              <button type="button" role="tab" aria-selected="false" data-office-listing-filter="pending">Pending</button>
+              <button type="button" role="tab" aria-selected="false" data-office-listing-filter="closed">Closed</button>
+            </div>
             <div class="office-listings-grid" id="office-listings-grid"></div>
           </section>
 
@@ -1413,6 +1419,6 @@
 
     <script src="config.js"></script>
     <script src="supabase-adapter.js"></script>
-    <script src="script.js?v=20261022-agent-contract"></script>
+    <script src="script.js?v=20261022-auth-identity"></script>
   </body>
 </html>

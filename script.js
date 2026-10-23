@@ -142,6 +142,7 @@ const overviewSchedulePrev = document.querySelector("#overview-schedule-prev");
 const overviewScheduleNext = document.querySelector("#overview-schedule-next");
 const officeListingsGrid = document.querySelector("#office-listings-grid");
 const officeListingsToggle = document.querySelector("#office-listings-toggle");
+const officeListingFilters = [...document.querySelectorAll("[data-office-listing-filter]")];
 const idxListingModal = document.querySelector("#idx-listing-modal");
 const idxListingModalTitle = document.querySelector("#idx-listing-title");
 const idxListingModalStatus = document.querySelector("#idx-listing-status");
@@ -529,6 +530,7 @@ let overviewScheduleStartOffset = 0;
 const overviewScheduleWindowDays = 10;
 const officeListingsPreviewLimit = 8;
 let showAllOfficeListings = false;
+let officeListingsFilter = "all";
 let editingUserId = null;
 let companyTasks = [];
 const defaultLockboxes = [
@@ -786,7 +788,17 @@ function getAuthDisplayName(user) {
 function getWelcomeMessage(displayName = "there") {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  return `${greeting}, ${displayName}.`;
+  const firstName = String(displayName).trim().split(/\s+/)[0] || "there";
+  return `${greeting}, ${firstName}.`;
+}
+
+function getAuthRoleLabel(user = currentUser) {
+  const role = user?.role || currentUserRole;
+  if (role === "Broker") return "Principal Broker";
+  if (role === "Admin") return "Administrator";
+  if (role === "Agent") return getCurrentUserAgent()?.roleTitle || "Realtor";
+  if (role === "Read only") return "Read only";
+  return isSignedIn() ? "Signed in" : "Signed out";
 }
 
 function getAuthAvatarMarkup(user, displayName) {
@@ -817,7 +829,7 @@ function renderAuthIdentity(user = currentUser) {
   const displayName = getAuthDisplayName(user);
   const email = user?.email?.includes("@") ? user.email : brokerContact.email || "broker@lumerealestate.com";
 
-  authStatus.textContent = isLoggedIn ? currentUserRole : "Signed out";
+  authStatus.textContent = getAuthRoleLabel(user);
   authName.textContent = isLoggedIn ? displayName : "Guest";
   if (sidebarMobileUser) sidebarMobileUser.textContent = isLoggedIn ? displayName : "Guest";
   authAvatar.innerHTML = getAuthAvatarMarkup(user, displayName);
@@ -1762,13 +1774,40 @@ function getTransactionFileSummary(transaction) {
   };
 }
 
-function getActiveOfficeListings() {
+function isWithinLastTwoYears(dateValue) {
+  if (!dateValue) return false;
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return false;
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - 2);
+  return date >= cutoff;
+}
+
+function getOfficeListings() {
   if (idxOfficeListingsLoaded) {
-    return idxOfficeListings.filter((listing) => ["Active", "Coming Soon", "Active Under Contract"].includes(listing.status));
+    return idxOfficeListings.filter((listing) => listing.status !== "Closed" || isWithinLastTwoYears(listing.closeDate));
   }
   return getVisibleTransactions({ includeCancelled: false }).filter(
-    (transaction) => transaction.side === "seller" && ["New", "Active"].includes(getListingStatus(transaction)),
+    (transaction) => transaction.side === "seller",
   );
+}
+
+function getActiveOfficeListings() {
+  return getOfficeListings().filter((listing) => getOfficeListingCategory(listing) === "active");
+}
+
+function getOfficeListingCategory(listing) {
+  const status = listing.isIdxListing ? listing.status : getListingStatus(listing);
+  if (["Active", "Coming Soon", "New"].includes(status)) return "active";
+  if (["Pending", "Active Under Contract", "Under Contract"].includes(status)) return "pending";
+  if (["Closed", "Sold"].includes(status)) return "closed";
+  return "other";
+}
+
+function getFilteredOfficeListings() {
+  const listings = getOfficeListings();
+  if (officeListingsFilter === "all") return listings;
+  return listings.filter((listing) => getOfficeListingCategory(listing) === officeListingsFilter);
 }
 
 function getListingTitle(transaction) {
@@ -1780,11 +1819,12 @@ function getListingTitle(transaction) {
 
 function renderOfficeListings() {
   if (!officeListingsGrid) return;
-  const listings = getActiveOfficeListings();
+  const listings = getFilteredOfficeListings();
   const visibleListings = showAllOfficeListings ? listings : listings.slice(0, officeListingsPreviewLimit);
 
   if (!listings.length) {
-    officeListingsGrid.innerHTML = '<p class="empty-panel-copy">No active office listings yet.</p>';
+    const label = officeListingsFilter === "all" ? "office" : officeListingsFilter;
+    officeListingsGrid.innerHTML = `<p class="empty-panel-copy">No ${label} listings found.</p>`;
     if (officeListingsToggle) officeListingsToggle.hidden = true;
     return;
   }
@@ -3813,6 +3853,18 @@ addTransactionButton.addEventListener("click", () => {
 officeListingsToggle?.addEventListener("click", () => {
   showAllOfficeListings = !showAllOfficeListings;
   renderOfficeListings();
+});
+officeListingFilters.forEach((button) => {
+  button.addEventListener("click", () => {
+    officeListingsFilter = button.dataset.officeListingFilter;
+    showAllOfficeListings = false;
+    officeListingFilters.forEach((filterButton) => {
+      const isActive = filterButton === button;
+      filterButton.classList.toggle("active", isActive);
+      filterButton.setAttribute("aria-selected", String(isActive));
+    });
+    renderOfficeListings();
+  });
 });
 headerInboxButton.addEventListener("click", openInbox);
 closeInboxDetailModal.addEventListener("click", closeInboxDetail);
