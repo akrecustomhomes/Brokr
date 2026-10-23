@@ -434,200 +434,76 @@ const transactionDocumentDetails = {
 let agents = [
   {
     id: 1,
-    firstName: "Maren",
-    lastName: "Cole",
-    email: "maren@lumerealestate.com",
-    phone: "(555) 214-1034",
-    street: "418 Pine Street, Suite 200",
-    city: "Denver",
-    state: "CO",
-    zip: "80202",
+    firstName: "Jared",
+    lastName: "Alvey",
+    roleTitle: "Principal Broker",
+    email: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "UT",
+    zip: "",
     calendarColor: "#837a6d",
     commissionSplit: 70,
-    licenseFileName: "maren-cole-license.pdf",
-    licenseExpiration: "2026-07-05",
     archived: false,
   },
   {
     id: 2,
-    firstName: "Elliot",
-    lastName: "Reyes",
-    email: "elliot@lumerealestate.com",
-    phone: "(555) 890-4412",
-    street: "1180 Pearl Street",
-    city: "Boulder",
-    state: "CO",
-    zip: "80302",
+    firstName: "Shannon",
+    lastName: "Alvey",
+    roleTitle: "Realtor",
+    email: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "UT",
+    zip: "",
     calendarColor: "#5f7588",
-    commissionSplit: 75,
-    licenseFileName: "elliot-reyes-license.pdf",
-    licenseExpiration: "2027-03-18",
+    commissionSplit: 70,
     archived: false,
   },
   {
     id: 3,
-    firstName: "Dana",
-    lastName: "Wirth",
-    email: "dana@lumerealestate.com",
-    phone: "(555) 309-7780",
-    street: "900 Lincoln Avenue",
-    city: "Fort Collins",
-    state: "CO",
-    zip: "80524",
+    firstName: "Andrea",
+    lastName: "Herzog",
+    roleTitle: "Realtor",
+    email: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "UT",
+    zip: "",
     calendarColor: "#9a7a48",
-    commissionSplit: 60,
-    licenseFileName: "dana-wirth-license.pdf",
-    licenseExpiration: "2025-12-10",
-    archived: true,
+    commissionSplit: 70,
+    archived: false,
+  },
+  {
+    id: 4,
+    firstName: "Michael",
+    lastName: "Christensen",
+    roleTitle: "Realtor",
+    email: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "UT",
+    zip: "",
+    calendarColor: "#667a68",
+    commissionSplit: 70,
+    archived: false,
   },
 ];
-let transactions = [
-  {
-    id: 1,
-    agentId: 1,
-    side: "seller",
-    clientName: "Harper Stone",
-    clientEmail: "harper@example.com",
-    clientPhone: "(555) 119-4200",
-    propertyAddress: "742 Maple Ridge Road, Golden, CO 80401",
-    contractDate: "2026-06-12",
-    listPrice: 875000,
-    contractPrice: 862000,
-    deadlines: {
-      sellerDisclosure: "2026-06-13",
-      dueDiligence: "2026-06-15",
-      financingAppraisal: "2026-06-18",
-      settlement: "2026-07-10",
-    },
-    fileNames: ["listing-agreement.pdf", "seller-disclosure.pdf"],
-    documents: {
-      "MLS Listing Input Form": "listing-input.pdf",
-      "Exclusive Right To Sell": "listing-agreement.pdf",
-      "Wire Fraud Disclosure": "wire-fraud.pdf",
-      "Seller Property Condition Disclosures": "seller-disclosure.pdf",
-      "Real Estate Purchase Contract": "purchase-contract.pdf",
-    },
-    status: "Under Contract",
-  },
-  {
-    id: 2,
-    agentId: 2,
-    side: "buyer",
-    clientName: "Jordan Blake",
-    clientEmail: "jordan@example.com",
-    clientPhone: "(555) 664-9821",
-    propertyAddress: "1560 Tejon Street, Denver, CO 80211",
-    contractDate: "2026-06-20",
-    contractPrice: 640000,
-    deadlines: {
-      sellerDisclosure: "2026-06-22",
-      dueDiligence: "2026-06-24",
-      financingAppraisal: "2026-06-27",
-      settlement: "2026-07-18",
-    },
-    fileNames: ["buyer-agency.pdf"],
-    documents: {
-      "Buyer Broker Agreement": "buyer-agency.pdf",
-    },
-    status: "Review Needed",
-  },
-];
-transactions = JSON.parse(localStorage.getItem("brokr-transactions") || "null") || transactions;
-const sampleListings = [
-  {
-    id: 901,
-    agentId: 1,
-    side: "seller",
-    clientName: "Avery Collins",
-    listingTitle: "Forest View Modern Retreat",
-    listingPhotoSrc: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-    clientEmail: "avery.collins@example.com",
-    clientPhone: "(555) 431-2088",
-    propertyAddress: "2818 Forest View Lane, Evergreen, CO 80439",
-    listingDate: "2026-06-10",
-    contractDate: "",
-    listPrice: 1195000,
-    contractPrice: 0,
-    commissionType: "percent",
-    commissionRate: 2.8,
-    commissionFlatFee: 0,
-    deadlines: {},
-    fileNames: ["exclusive-right-to-sell-collins.pdf", "mls-input-evergreen.pdf"],
-    documents: {
-      "MLS Listing Input Form": "mls-input-evergreen.pdf",
-      "Exclusive Right To Sell": "exclusive-right-to-sell-collins.pdf",
-      "Wire Fraud Disclosure": "wire-fraud-collins.pdf",
-    },
-    additionalDocuments: [],
-    status: "Active",
-  },
-  {
-    id: 902,
-    agentId: 2,
-    side: "seller",
-    clientName: "Nora Whitaker",
-    listingTitle: "Clay Street Bungalow",
-    listingPhotoSrc: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80",
-    clientEmail: "nora.whitaker@example.com",
-    clientPhone: "(555) 782-4109",
-    propertyAddress: "3940 Clay Street, Denver, CO 80211",
-    listingDate: "2026-06-10",
-    contractDate: "",
-    listPrice: 735000,
-    contractPrice: 0,
-    commissionType: "flat",
-    commissionRate: 0,
-    commissionFlatFee: 18500,
-    deadlines: {},
-    fileNames: ["seller-disclosures-whitaker.pdf"],
-    documents: {
-      "Seller Property Condition Disclosures": "seller-disclosures-whitaker.pdf",
-      "Wire Fraud Disclosure": "wire-fraud-whitaker.pdf",
-    },
-    additionalDocuments: [
-      {
-        id: 1,
-        type: "Disclosure",
-        name: "Lead-Based Paint Disclosure",
-        date: "2026-06-10",
-        fileName: "lead-based-paint-whitaker.pdf",
-        notes: "Added during listing prep.",
-      },
-    ],
-    status: "Active",
-  },
-];
-
-if (!localStorage.getItem("brokr-sample-listings-v1")) {
-  const existingTransactionIds = new Set(transactions.map((transaction) => Number(transaction.id)));
-  const missingSampleListings = sampleListings.filter((listing) => !existingTransactionIds.has(Number(listing.id)));
-  if (missingSampleListings.length) {
-    transactions = [...missingSampleListings, ...transactions];
-    saveTransactions();
-  }
-  localStorage.setItem("brokr-sample-listings-v1", "true");
+const cleanStartMigrationKey = "brokr-clean-start-idx-v1";
+if (!localStorage.getItem(cleanStartMigrationKey)) {
+  [
+    "brokr-transactions",
+    "brokr-sample-listings-v1",
+    "brokr-file-upload-notifications",
+    "brokr-inbox-item-states",
+  ].forEach((key) => localStorage.removeItem(key));
+  localStorage.setItem(cleanStartMigrationKey, "true");
 }
-
-const sampleListingById = Object.fromEntries(sampleListings.map((listing) => [Number(listing.id), listing]));
-let sampleListingsUpdated = false;
-transactions = transactions.map((transaction) => {
-  const sampleListing = sampleListingById[Number(transaction.id)];
-  if (!sampleListing) return transaction;
-
-  const updatedTransaction = {
-    ...transaction,
-    listingTitle: transaction.listingTitle || sampleListing.listingTitle,
-    listingPhotoSrc: transaction.listingPhotoSrc || sampleListing.listingPhotoSrc,
-    listingDate: transaction.listingDate || sampleListing.listingDate,
-    additionalDocuments: transaction.additionalDocuments || sampleListing.additionalDocuments || [],
-  };
-  sampleListingsUpdated ||=
-    updatedTransaction.listingTitle !== transaction.listingTitle ||
-    updatedTransaction.listingPhotoSrc !== transaction.listingPhotoSrc ||
-    updatedTransaction.listingDate !== transaction.listingDate;
-  return updatedTransaction;
-});
-if (sampleListingsUpdated) saveTransactions();
+let transactions = JSON.parse(localStorage.getItem("brokr-transactions") || "[]");
 let calendarView = "month";
 let calendarDate = new Date();
 calendarDate.setHours(0, 0, 0, 0);
@@ -636,32 +512,7 @@ const overviewScheduleWindowDays = 10;
 const officeListingsPreviewLimit = 8;
 let showAllOfficeListings = false;
 let editingUserId = null;
-let companyTasks = [
-  {
-    id: 1,
-    title: "Review expiring agent licenses",
-    owner: "Brokerage admin",
-    deadline: "2026-06-15",
-    status: "Open",
-    completed: false,
-  },
-  {
-    id: 2,
-    title: "Confirm missing transaction files",
-    owner: "Compliance",
-    deadline: "2026-06-12",
-    status: "High",
-    completed: false,
-  },
-  {
-    id: 3,
-    title: "Archive closed June transaction packets",
-    owner: "Operations",
-    deadline: "2026-06-07",
-    status: "Done",
-    completed: true,
-  },
-];
+let companyTasks = [];
 const defaultLockboxes = [
   {
     id: 1,
@@ -750,30 +601,7 @@ let fileUploadNotifications = JSON.parse(localStorage.getItem("brokr-file-upload
 let inboxItemStates = JSON.parse(localStorage.getItem("brokr-inbox-item-states") || "{}");
 let activeInboxItemId = null;
 let transactionFilter = "all";
-let users = [
-  {
-    id: 1,
-    agentId: 1,
-    firstName: "Maren",
-    lastName: "Cole",
-    email: "maren@lumerealestate.com",
-    role: "Agent",
-    canUpload: true,
-    permissionScope: "Own transactions only",
-    status: "Active",
-  },
-  {
-    id: 2,
-    agentId: 2,
-    firstName: "Elliot",
-    lastName: "Rey",
-    email: "elliot@lumerealestate.com",
-    role: "Agent",
-    canUpload: true,
-    permissionScope: "Own transactions only",
-    status: "Active",
-  },
-];
+let users = [];
 
 overviewDate.textContent = new Intl.DateTimeFormat("en", {
   weekday: "long",
@@ -1704,7 +1532,7 @@ function renderAgents() {
           ${renderAgentAvatar(agent)}
           <div class="agent-name">
             <strong>${agent.firstName} ${agent.lastName}</strong>
-            <span>${agent.archived ? "Archived agent" : "Office agent"}</span>
+            <span>${agent.archived ? "Archived agent" : agent.roleTitle || "Office agent"}</span>
           </div>
         </div>
       </td>
@@ -1855,7 +1683,9 @@ function getTransactionFileSummary(transaction) {
 }
 
 function getActiveOfficeListings() {
-  if (idxOfficeListingsLoaded) return idxOfficeListings;
+  if (idxOfficeListingsLoaded) {
+    return idxOfficeListings.filter((listing) => ["Active", "Coming Soon", "Active Under Contract"].includes(listing.status));
+  }
   return getVisibleTransactions({ includeCancelled: false }).filter(
     (transaction) => transaction.side === "seller" && ["New", "Active"].includes(getListingStatus(transaction)),
   );
@@ -2178,6 +2008,22 @@ function setTransactionFilter(filter) {
 }
 
 function renderOverviewMetrics() {
+  if (idxOfficeListingsLoaded) {
+    const currentYear = new Date().getFullYear();
+    const activeListings = getActiveOfficeListings();
+    const pendingListings = idxOfficeListings.filter((listing) => ["Pending", "Active Under Contract"].includes(listing.status));
+    const ytdListings = idxOfficeListings.filter((listing) => {
+      const date = new Date(`${listing.listingDate || listing.modifiedAt || ""}`);
+      return !Number.isNaN(date.getTime()) && date.getFullYear() === currentYear;
+    });
+    overviewMetrics.activeListings.textContent = activeListings.length;
+    overviewMetrics.pendingDeals.textContent = pendingListings.length;
+    overviewMetrics.salesVolume.textContent = formatCurrency(activeListings.reduce((total, listing) => total + (Number(listing.price) || 0), 0));
+    overviewMetrics.agentCommission.textContent = formatCurrency(0);
+    overviewMetrics.brokerageCommission.textContent = formatCurrency(0);
+    overviewMetrics.ytdTransactions.textContent = ytdListings.length;
+    return;
+  }
   const visibleTransactions = getVisibleTransactions({ includeCancelled: true });
   const activeListings = getActiveOfficeListings().length;
   const pendingDeals = visibleTransactions.filter((transaction) => isUnderContractStatus(transaction.status)).length;

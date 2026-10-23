@@ -1,6 +1,6 @@
 const SPARK_PROPERTY_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Property";
 const SPARK_OFFICE_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Office";
-const ACTIVE_STATUSES = new Set(["Active", "Coming Soon", "Active Under Contract"]);
+const DASHBOARD_STATUSES = new Set(["Active", "Coming Soon", "Active Under Contract", "Pending", "Closed"]);
 
 function sparkHeaders(accessToken) {
   return {
@@ -160,7 +160,7 @@ module.exports = async function idxListings(request, response) {
         "$expand": "Media($top=1)",
         "$filter": officeKey
           ? `ListOfficeKey eq '${String(officeKey).replaceAll("'", "''")}'`
-          : "StandardStatus eq 'Active'",
+          : "StandardStatus in ('Active','Coming Soon','Active Under Contract','Pending','Closed')",
         "$orderby": "ModificationTimestamp desc",
       });
       sparkResponse = await fetch(`${SPARK_PROPERTY_ENDPOINT}?${query}`, {
@@ -187,7 +187,7 @@ module.exports = async function idxListings(request, response) {
     const normalizedOfficeName = officeName.trim().toLowerCase();
     const listings = (payload.value || [])
       .filter((listing) => String(listing.ListOfficeName || "").trim().toLowerCase() === normalizedOfficeName)
-      .filter((listing) => ACTIVE_STATUSES.has(listing.StandardStatus))
+      .filter((listing) => DASHBOARD_STATUSES.has(listing.StandardStatus))
       .map(normalizeListing);
     response.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=900");
     return response.status(200).json({ listings, officeName, source: "Spark IDX" });
