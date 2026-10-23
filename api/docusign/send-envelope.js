@@ -63,7 +63,7 @@ function signer({ email, name, recipientId, routingOrder, signatureAnchor, dateA
         anchorString: initialsAnchor,
         anchorUnits: "pixels",
         anchorXOffset: "24",
-        anchorYOffset: "44",
+        anchorYOffset: "20",
       }],
     },
   };
