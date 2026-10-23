@@ -121,6 +121,66 @@
     };
   }
 
+  function mapAgentFromRow(row) {
+    const details = row?.details && typeof row.details === "object" ? row.details : {};
+    return {
+      ...details,
+      id: Number(row.id),
+      profileImageSrc: row.profile_image_url || details.profileImageSrc || "",
+      firstName: row.first_name || "",
+      lastName: row.last_name || "",
+      roleTitle: row.role_title || details.roleTitle || "Realtor",
+      licenseNumber: row.license_number || details.licenseNumber || "",
+      email: row.email || "",
+      phone: row.phone || "",
+      street: row.street || "",
+      city: row.city || "",
+      state: row.state || "",
+      zip: row.zip || "",
+      calendarColor: row.calendar_color || "#837a6d",
+      commissionSplit: Number(row.commission_split ?? 70),
+      compensationOption: row.compensation_option || "split",
+      flatTransactionFee: Number(row.flat_transaction_fee || 0),
+      contractEffectiveDate: row.contract_effective_date || "",
+      contractStatus: row.contract_status || "Draft",
+      licenseFileName: row.license_file_name || "",
+      contractFileName: row.contract_file_name || "",
+      otherFileName: row.other_file_name || "",
+      licenseExpiration: row.license_expires_on || "",
+      archived: Boolean(row.archived),
+    };
+  }
+
+  function mapAgentToRow(agent) {
+    return {
+      id: Number(agent.id),
+      profile_image_url: agent.profileImageSrc || null,
+      first_name: agent.firstName || "",
+      last_name: agent.lastName || "",
+      role_title: agent.roleTitle || "Realtor",
+      license_number: agent.licenseNumber || null,
+      email: agent.email || "",
+      phone: agent.phone || null,
+      street: agent.street || null,
+      city: agent.city || null,
+      state: agent.state || null,
+      zip: agent.zip || null,
+      calendar_color: agent.calendarColor || "#837a6d",
+      commission_split: Number(agent.commissionSplit ?? 70),
+      compensation_option: agent.compensationOption || "split",
+      flat_transaction_fee: Number(agent.flatTransactionFee || 0),
+      contract_effective_date: agent.contractEffectiveDate || null,
+      contract_status: agent.contractStatus || "Draft",
+      license_file_name: agent.licenseFileName || null,
+      contract_file_name: agent.contractFileName || null,
+      other_file_name: agent.otherFileName || null,
+      license_expires_on: agent.licenseExpiration || null,
+      archived: Boolean(agent.archived),
+      details: agent,
+      updated_at: new Date().toISOString(),
+    };
+  }
+
   async function getSession() {
     const client = await getClient();
     if (!client) return null;
@@ -261,6 +321,37 @@
       return [];
     }
     return (data || []).map(mapUserFromRow);
+  }
+
+  async function loadAgents() {
+    const client = await getClient();
+    if (!client) return [];
+
+    const { data, error } = await client.from("agents").select("*").order("created_at", { ascending: true });
+    if (error) {
+      console.warn("Unable to load shared agents.", error);
+      return [];
+    }
+    return (data || []).map(mapAgentFromRow);
+  }
+
+  async function saveAgents(agentList) {
+    const client = await getClient();
+    if (!client || !Array.isArray(agentList) || !agentList.length) return [];
+
+    const { data, error } = await client
+      .from("agents")
+      .upsert(agentList.map(mapAgentToRow), { onConflict: "id" })
+      .select("*");
+    if (error) throw error;
+    return (data || []).map(mapAgentFromRow);
+  }
+
+  async function deleteAgent(agentId) {
+    const client = await getClient();
+    if (!client) return;
+    const { error } = await client.from("agents").delete().eq("id", Number(agentId));
+    if (error) throw error;
   }
 
   async function loadCurrentUser() {
@@ -522,6 +613,9 @@
     clearAuthCallbackUrl,
     loadCurrentUser,
     loadUsers,
+    loadAgents,
+    saveAgents,
+    deleteAgent,
     saveUserProfile,
     deleteUserProfile,
     inviteUser,

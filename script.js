@@ -521,10 +521,36 @@ let agents = [
   },
 ];
 const savedAgents = JSON.parse(localStorage.getItem("brokr-agents") || "null");
-if (Array.isArray(savedAgents) && savedAgents.length) agents = savedAgents;
+const hasSavedAgentData = Array.isArray(savedAgents) && savedAgents.length > 0;
+if (hasSavedAgentData) agents = savedAgents;
 
 function saveAgents() {
   localStorage.setItem("brokr-agents", JSON.stringify(agents));
+  window.BrokrBackend?.saveAgents?.(agents).catch((error) => {
+    console.warn("Unable to save shared agent records.", error);
+  });
+}
+
+async function loadAgentsFromBackend() {
+  const remoteAgents = await window.BrokrBackend?.loadAgents?.();
+  if (Array.isArray(remoteAgents) && remoteAgents.length) {
+    agents = remoteAgents;
+    localStorage.setItem("brokr-agents", JSON.stringify(agents));
+  } else if (hasSavedAgentData) {
+    const importedAgents = await window.BrokrBackend?.saveAgents?.(agents);
+    if (Array.isArray(importedAgents) && importedAgents.length) {
+      agents = importedAgents;
+      localStorage.setItem("brokr-agents", JSON.stringify(agents));
+    }
+  }
+
+  renderAgents();
+  renderAgentOptions();
+  renderUsers();
+  renderCommissionRules();
+  renderCalendar();
+  renderOverviewSchedule();
+  renderInbox();
 }
 const cleanStartMigrationKey = "brokr-clean-start-idx-v1";
 if (!localStorage.getItem(cleanStartMigrationKey)) {
@@ -1004,6 +1030,7 @@ async function refreshAuthUser(session = currentSession) {
   setAuthState(profile, session);
   closeAuthGate();
   await loadUsersFromBackend();
+  await loadAgentsFromBackend();
 }
 
 async function initializeAuth() {
@@ -3737,6 +3764,9 @@ function deleteAgent(agentId) {
   if (!window.confirm(`Delete ${agentName} from the roster? This cannot be undone.${warning}`)) return false;
 
   agents = agents.filter((item) => item.id !== agentId);
+  window.BrokrBackend?.deleteAgent?.(agentId).catch((error) => {
+    console.warn("Unable to delete the shared agent record.", error);
+  });
   saveAgents();
   users = users.map((user) => (Number(user.agentId) === Number(agentId) ? { ...user, agentId: null } : user));
   renderAgents();

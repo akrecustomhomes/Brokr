@@ -40,7 +40,9 @@ create table if not exists public.agents (
   profile_image_url text,
   first_name text not null,
   last_name text not null,
-  email text not null unique,
+  role_title text not null default 'Realtor',
+  license_number text,
+  email text not null default '',
   phone text,
   street text,
   city text,
@@ -48,13 +50,23 @@ create table if not exists public.agents (
   zip text,
   calendar_color text not null default '#837a6d',
   commission_split numeric(5,2) not null default 70,
+  compensation_option text not null default 'split' check (compensation_option in ('split', 'flat')),
+  flat_transaction_fee numeric(12,2) not null default 0,
+  contract_effective_date date,
+  contract_status text not null default 'Draft',
   license_file_name text,
+  contract_file_name text,
+  other_file_name text,
   license_storage_path text,
   license_expires_on date,
   archived boolean not null default false,
+  details jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.agents drop constraint if exists agents_email_key;
+create unique index if not exists agents_email_unique on public.agents (lower(email)) where length(btrim(email)) > 0;
 
 create table if not exists public.app_users (
   id uuid primary key default gen_random_uuid(),
