@@ -1081,6 +1081,7 @@ body.overview-active .topbar > div:not(.overview-actions) {
 
 .transaction-list-section .transaction-tile-row.is-expanded > td {
   border-bottom-color: transparent;
+  background: color-mix(in srgb, var(--panel) 96%, var(--soft));
 }
 
 .transaction-list-section .transaction-tile-row.is-expanded > td:first-child {
@@ -1095,6 +1096,11 @@ body.overview-active .topbar > div:not(.overview-actions) {
   border: 1px solid var(--line);
   border-top: 0;
   border-radius: 0 0 6px 6px;
+}
+
+.transaction-list-section .transaction-expanded-row {
+  position: relative;
+  top: -0.7rem;
 }
 
 .transaction-list-heading {
@@ -8308,6 +8314,10 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
     min-width: 0;
   }
 
+  #transactions .transaction-table {
+    border-spacing: 0;
+  }
+
   #agents .agent-table thead,
   #users .agent-table thead,
   #transactions .agent-table thead {
@@ -8341,6 +8351,7 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   }
 
   #transactions .agent-table .transaction-expanded-row {
+    top: 0;
     border-top: 0;
     border-radius: 0 0 6px 6px;
   }
