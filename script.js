@@ -3616,8 +3616,13 @@ function buildInboxItems() {
     .map(({ transaction, summary }) => ({
       id: `files-${transaction.id}`,
       type: "Files",
-      title: `${transaction.clientName} file vault incomplete`,
-      detail: `${summary.uploadedCount}/${summary.requiredDocs.length} required files uploaded for contract date ${formatDate(transaction.contractDate)}.`,
+      title: `${transaction.propertyAddress || transaction.clientName || "Transaction"} file vault incomplete`,
+      detail: [
+        transaction.mlsNumber ? `MLS # ${transaction.mlsNumber}.` : "",
+        `Agent: ${transaction.mlsAgentName || getAgentName(transaction.agentId) || "Not assigned"}.`,
+        transaction.clientName && transaction.clientName !== "Seller details needed" ? `Client: ${transaction.clientName}.` : "Seller details are still needed.",
+        `${summary.uploadedCount}/${summary.requiredDocs.length} required files uploaded for contract date ${formatDate(transaction.contractDate)}.`,
+      ].filter(Boolean).join(" "),
       status: "Files due",
       receivedDate: todayKey,
       actionLabel: "Open File Vault",
