@@ -943,6 +943,23 @@ function closePasswordSetupGate() {
   passwordSetupGate.hidden = true;
 }
 
+function getSessionDisplayProfile(session) {
+  const sessionEmail = session?.user?.email?.trim().toLowerCase();
+  const brokerEmail = brokerContact.email?.trim().toLowerCase();
+  const metadata = session?.user?.user_metadata || {};
+  const displayName = sessionEmail && brokerEmail && sessionEmail === brokerEmail
+    ? brokerContact.name
+    : metadata.full_name || metadata.name || toDisplayNameFromEmail(session?.user?.email || "");
+  const [firstName = "", ...lastNameParts] = displayName.trim().split(/\s+/);
+  return {
+    authUserId: session.user.id,
+    firstName,
+    lastName: lastNameParts.join(" "),
+    email: session.user.email,
+    status: "Loading",
+  };
+}
+
 async function refreshAuthUser(session = currentSession) {
   if (pendingPasswordSetupType) {
     if (session) openPasswordSetupGate(pendingPasswordSetupType);
@@ -960,6 +977,8 @@ async function refreshAuthUser(session = currentSession) {
     openAuthGate();
     return;
   }
+
+  setAuthState(getSessionDisplayProfile(session), session);
 
   const profile = await window.BrokrBackend.loadCurrentUser();
   if (!profile || profile.status !== "Active") {
