@@ -3195,7 +3195,7 @@ img.uploaded-contract-preview {
   }
 }
 
-.agent-contract-document header {
+.agent-contract-document .contract-document-header {
   margin-bottom: 28px;
   text-align: center;
 }

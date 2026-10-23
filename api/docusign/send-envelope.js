@@ -86,8 +86,8 @@ module.exports = async function sendDocusignEnvelope(request, response) {
     if (!session.email) throw new Error("The connected DocuSign account does not include a broker email address.");
 
     const printableHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
-      body{font-family:Arial,sans-serif;color:#27231f;font-size:11pt;line-height:1.45;margin:42px}
-      header{text-align:center;margin-bottom:28px} header img{max-width:260px;max-height:90px}
+      body{font-family:Arial,sans-serif;color:#27231f;font-size:11pt;line-height:1.45;margin:24px 42px 42px}
+      .contract-document-header{text-align:center;margin:0 0 28px}.contract-document-header img{display:block;max-width:260px;max-height:90px;margin:0 auto 14px}
       h2{font-size:24pt;margin:14px 0} h4{font-size:14pt;margin:20px 0 8px}
       section{margin-top:18px}section h4{break-after:avoid-page}.contract-party-grid,.contract-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px}.contract-signature-section{break-before:page;break-inside:avoid-page}.contract-signature-section .contract-signatures{grid-template-columns:1fr;gap:42px}
       .contract-compensation{border:1px solid #bdb6ae;padding:14px;margin:12px 0;break-inside:avoid-page}.contract-compensation:not(.selected){display:none}.contract-initials{width:100%;margin-top:18px;border-collapse:collapse;table-layout:fixed}.contract-initials td{width:50%;padding:0 28px 54px 0;vertical-align:top}.contract-initials td+td{padding-left:36px}

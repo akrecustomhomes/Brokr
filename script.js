@@ -1715,7 +1715,7 @@ function renderAgentContract(agent) {
     : `<div class="contract-document-wordmark" aria-label="Lume Real Estate"><span>LUME</span><small>REAL ESTATE</small></div>`;
 
   agentContractDocument.innerHTML = `
-    <header>${contractBrand}<h2>Independent Contractor Agreement</h2></header>
+    <div class="contract-document-header">${contractBrand}<h2>Independent Contractor Agreement</h2></div>
     <p>This Independent Contractor Agreement ("Agreement") is entered into on <strong>${escapeLockboxText(effectiveDate)}</strong>, by and between:</p>
     <div class="contract-party-grid"><div><span>Brokerage</span><strong>Lume Real Estate</strong><p>Principal Broker: Jared Alvey<br>212 E Blue Fields Ln.<br>Washington, UT 84780</p></div><div><span>Agent</span><strong>${escapeLockboxText(name)}</strong><p>License Number: ${escapeLockboxText(agent.licenseNumber || "________________")}</p></div></div>
     <p>Collectively referred to as the "Parties."</p>
