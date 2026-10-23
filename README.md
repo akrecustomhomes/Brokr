@@ -62,6 +62,7 @@ Currently wired to Supabase:
 - First broker super-admin setup
 - Broker/Admin user records and invite emails through the Vercel `/api/invite-user` function
 - Branding load/save when Supabase config exists
+- Brokerage logos and compact icon uploaded to shared Supabase Storage
 - Required broker contact load/save when Supabase config exists
 - Google Drive archive settings load/save when Supabase config exists
 - Broker/Admin QR code management, tracked redirects, and scan reporting

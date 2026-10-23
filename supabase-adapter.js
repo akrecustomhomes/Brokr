@@ -470,9 +470,51 @@
     return data;
   }
 
+  async function uploadBrandingAsset(client, source, assetName) {
+    if (!source || !source.startsWith("data:")) return source || "";
+
+    const response = await fetch(source);
+    const blob = await response.blob();
+    const extensionByType = {
+      "image/svg+xml": "svg",
+      "image/png": "png",
+      "image/jpeg": "jpg",
+      "image/webp": "webp",
+      "image/gif": "gif",
+    };
+    const extension = extensionByType[blob.type] || "png";
+    const storagePath = `default/${assetName}.${extension}`;
+    const { error } = await client.storage.from("branding-assets").upload(storagePath, blob, {
+      contentType: blob.type || "image/png",
+      cacheControl: "3600",
+      upsert: true,
+    });
+    if (error) throw error;
+
+    const { data } = client.storage.from("branding-assets").getPublicUrl(storagePath);
+    return `${data.publicUrl}?v=${Date.now()}`;
+  }
+
   async function saveBranding(settings) {
     const client = await getClient();
     if (!client) return;
+
+    let darkLogoSrc = settings.darkLogoSrc || settings.logoSrc || "";
+    let lightLogoSrc = settings.lightLogoSrc || darkLogoSrc || "";
+    let iconSrc = settings.iconSrc || "";
+    const shareAsset = async (source, assetName) => {
+      try {
+        return await uploadBrandingAsset(client, source, assetName);
+      } catch (error) {
+        console.warn(`Unable to upload ${assetName} to shared storage.`, error);
+        return source;
+      }
+    };
+    [darkLogoSrc, lightLogoSrc, iconSrc] = await Promise.all([
+      shareAsset(darkLogoSrc, "logo-dark"),
+      shareAsset(lightLogoSrc, "logo-light"),
+      shareAsset(iconSrc, "icon"),
+    ]);
 
     const payload = {
       id: "default",
@@ -480,10 +522,10 @@
       system_name: settings.systemName,
       primary_color: settings.primaryColor,
       accent_color: settings.accentColor,
-      logo_src: settings.darkLogoSrc || settings.logoSrc,
-      dark_logo_src: settings.darkLogoSrc || settings.logoSrc,
-      light_logo_src: settings.lightLogoSrc || settings.darkLogoSrc || settings.logoSrc,
-      icon_src: settings.iconSrc,
+      logo_src: darkLogoSrc,
+      dark_logo_src: darkLogoSrc,
+      light_logo_src: lightLogoSrc,
+      icon_src: iconSrc,
       updated_at: new Date().toISOString(),
     };
     let { error } = await client.from("branding_settings").upsert(payload);
