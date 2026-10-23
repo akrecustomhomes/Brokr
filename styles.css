@@ -10075,8 +10075,46 @@ body[data-theme="dark"] .task-status.overdue {
     transform: translate(3px, -0.02em);
   }
 
-  body.sidebar-collapsed .brand .sidebar-toggle::before {
+body.sidebar-collapsed .brand .sidebar-toggle::before {
     content: "❯ ❯";
     transform: translate(-0.02em, -0.02em);
+  }
+}
+
+/* Keep DocuSign contract metadata readable at every card width. */
+#agent-contract-tile .file-tile-meta {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+#agent-contract-tile .file-tile-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+/* Keep login controls aligned; the global button hover must not move the eye. */
+.password-visibility-toggle:not(:disabled):hover,
+.password-visibility-toggle[aria-pressed="true"] {
+  transform: translateY(-50%);
+}
+
+.auth-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.auth-actions > button {
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  justify-content: center;
+  line-height: 1.15;
+}
+
+@media (max-width: 640px) {
+  .auth-actions {
+    grid-template-columns: 1fr;
   }
 }
