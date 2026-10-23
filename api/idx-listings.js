@@ -1,10 +1,6 @@
 const SPARK_PROPERTY_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Property";
 const ACTIVE_STATUSES = new Set(["Active", "Coming Soon", "Active Under Contract"]);
 
-function escapeODataString(value) {
-  return String(value || "").replaceAll("'", "''");
-}
-
 function getPrimaryPhoto(media = []) {
   return [...media]
     .filter((item) => item?.MediaURL && (!item.MediaCategory || item.MediaCategory === "Photo"))
@@ -68,10 +64,9 @@ module.exports = async function idxListings(request, response) {
     const selectedFields = [...fields];
     for (let attempt = 0; attempt < fields.length; attempt += 1) {
       const query = new URLSearchParams({
-        "$top": "100",
+        "$top": "1000",
         "$select": selectedFields.join(","),
         "$expand": "Media($top=1)",
-        "$filter": `ListOfficeName eq '${escapeODataString(officeName)}'`,
         "$orderby": "ModificationTimestamp desc",
       });
       sparkResponse = await fetch(`${SPARK_PROPERTY_ENDPOINT}?${query}`, {
@@ -99,7 +94,9 @@ module.exports = async function idxListings(request, response) {
       });
     }
 
+    const normalizedOfficeName = officeName.trim().toLowerCase();
     const listings = (payload.value || [])
+      .filter((listing) => String(listing.ListOfficeName || "").trim().toLowerCase() === normalizedOfficeName)
       .filter((listing) => ACTIVE_STATUSES.has(listing.StandardStatus))
       .map(normalizeListing);
     response.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=900");
