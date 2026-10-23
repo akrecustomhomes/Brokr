@@ -1899,14 +1899,14 @@ async function openIdxListingPreview(listingKey) {
   if (idxListingModal.hidden) return;
   const area = listing.buildingArea || listing.livingArea || 0;
   const facts = [
-    ["MLS #", listing.listingId || "—"],
     ["Bedrooms", listing.bedrooms || "—"],
     ["Bathrooms", listing.bathrooms || "—"],
     ["Square feet", area ? Number(area).toLocaleString() : "—"],
-    ["Property type", listing.propertyType || "—"],
-    ["Year built", listing.yearBuilt || "—"],
-    ["Lot size", listing.lotAcres ? `${listing.lotAcres} acres` : "—"],
     ["Garage", listing.garageSpaces ? `${listing.garageSpaces} spaces` : "—"],
+    ["Lot size", listing.lotAcres ? `${listing.lotAcres} acres` : "—"],
+    ["Year built", listing.yearBuilt || "—"],
+    ["Price / sq. ft.", area ? formatCurrency((listing.price || 0) / area) : "—"],
+    ["Property type", listing.propertyType || "—"],
   ];
   const listingFacts = [
     ["Listing agent", listing.agentName || "—"],
@@ -1937,7 +1937,20 @@ async function openIdxListingPreview(listingKey) {
     ["Water", listing.waterSource],
     ["Property condition", listing.propertyCondition],
   ].filter(([, value]) => value);
-  const detailGrid = (items) => items.map(([label, value]) => `<div><span>${escapeLockboxText(label)}</span><strong>${escapeLockboxText(value)}</strong></div>`).join("");
+  const factIcon = (label) => {
+    const paths = {
+      Bedrooms: '<path d="M3 18v-8m0 5h18v3m-14-3v-4h6a4 4 0 0 1 4 4M7 11V8h3a3 3 0 0 1 3 3"/>',
+      Bathrooms: '<path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4v-3Zm2 0V7a3 3 0 0 1 6 0"/>',
+      "Square feet": '<path d="M4 4v16h16M8 16v4m4-7v7m4-11v11M4 8h4m-4 4h7"/>',
+      Garage: '<path d="M4 20V8l8-4 8 4v12M7 20v-8h10v8M9 15h6"/>',
+      "Lot size": '<path d="M12 3 5 8l2 3-3 3 5 2-1 5h8l-1-5 5-2-3-3 2-3-7-5Z"/>',
+      "Year built": '<path d="M4 20h16M7 20V9l5-4 5 4v11M10 20v-6h4v6"/>',
+      "Price / sq. ft.": '<path d="M4 7h16v11H4zM8 4h8v3M8 11h8m-8 3h5"/>',
+      "Property type": '<path d="m3 11 9-7 9 7M5 10v10h14V10M9 20v-6h6v6"/>',
+    };
+    return `<svg class="idx-fact-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths[label] || paths["Property type"]}</svg>`;
+  };
+  const detailGrid = (items, withIcons = false) => items.map(([label, value]) => `<div class="${withIcons ? "idx-icon-fact" : ""}">${withIcons ? factIcon(label) : ""}<span>${escapeLockboxText(label)}</span><strong>${escapeLockboxText(value)}</strong></div>`).join("");
   idxListingModalTitle.textContent = listing.address || listing.title || "Listing Details";
   idxListingModalStatus.textContent = listing.status || "MLS listing";
   const photos = listing.photoUrls?.length ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : [];
@@ -1951,7 +1964,7 @@ async function openIdxListingPreview(listingKey) {
         <p>MLS # ${escapeLockboxText(listing.listingId || "—")}</p>
       </div>
     </div>
-    <section class="idx-listing-section"><h4>Property overview</h4><div class="idx-listing-facts">${detailGrid(facts)}</div></section>
+    <section class="idx-listing-section"><h4>Property overview</h4><div class="idx-listing-facts idx-listing-icon-facts">${detailGrid(facts, true)}</div></section>
     ${listing.remarks ? `<section class="idx-listing-section idx-listing-remarks"><h4>Public remarks</h4><p>${escapeLockboxText(listing.remarks)}</p></section>` : ""}
     <section class="idx-listing-section"><h4>Listing details</h4><div class="idx-listing-facts">${detailGrid(listingFacts)}</div></section>
     <section class="idx-listing-section"><h4>Financial &amp; tax</h4><div class="idx-listing-facts">${detailGrid(financialFacts)}</div></section>
