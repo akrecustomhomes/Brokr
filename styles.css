@@ -9381,6 +9381,53 @@ body[data-theme="dark"] .task-status.overdue {
 
 #agent-contract-modal {
   z-index: 70;
+  align-items: start;
+}
+
+#agent-contract-modal .agent-contract-modal {
+  margin: 0;
+  padding: 0;
+}
+
+#agent-contract-modal .agent-contract-modal > .modal-header {
+  min-height: 0;
+  margin: 0;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+#agent-contract-modal .agent-contract-modal > .agent-contract-document {
+  margin-top: 18px;
+}
+
+.contract-document-logo {
+  display: block;
+  width: auto;
+  max-width: min(250px, 70%);
+  max-height: 72px;
+  margin: 0 auto 22px;
+  object-fit: contain;
+}
+
+.contract-document-wordmark {
+  display: inline-grid;
+  justify-items: center;
+  margin: 0 auto 22px;
+  color: #28241f;
+  line-height: 1;
+}
+
+.contract-document-wordmark span {
+  font-size: 1.45rem;
+  font-weight: 650;
+  letter-spacing: 0.22em;
+}
+
+.contract-document-wordmark small {
+  margin-top: 6px;
+  font-size: 0.64rem;
+  font-weight: 580;
+  letter-spacing: 0.32em;
 }
 
 .brokerage-form-logo {

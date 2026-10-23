@@ -1600,9 +1600,13 @@ function renderAgentContract(agent) {
   const flatFee = Number(agent.flatTransactionFee) || 0;
   const section = (title, body) => `<section><h4>${title}</h4>${body}</section>`;
   const bullets = (items) => `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+  const contractLogoSrc = agentContractLogo?.getAttribute("src") || "";
+  const contractBrand = contractLogoSrc
+    ? `<img class="contract-document-logo" src="${escapeLockboxText(contractLogoSrc)}" alt="Lume Real Estate" />`
+    : `<div class="contract-document-wordmark" aria-label="Lume Real Estate"><span>LUME</span><small>REAL ESTATE</small></div>`;
 
   agentContractDocument.innerHTML = `
-    <header><p class="eyebrow">Lume Real Estate</p><h2>Independent Contractor Agreement</h2></header>
+    <header>${contractBrand}<h2>Independent Contractor Agreement</h2></header>
     <p>This Independent Contractor Agreement ("Agreement") is entered into on <strong>${escapeLockboxText(effectiveDate)}</strong>, by and between:</p>
     <div class="contract-party-grid"><div><span>Brokerage</span><strong>Lume Real Estate</strong><p>Principal Broker: Jared Alvey<br>212 E Blue Fields Ln.<br>Washington, UT 84780</p></div><div><span>Agent</span><strong>${escapeLockboxText(name)}</strong><p>License Number: ${escapeLockboxText(agent.licenseNumber || "________________")}</p></div></div>
     <p>Collectively referred to as the "Parties."</p>
