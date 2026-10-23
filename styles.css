@@ -1128,6 +1128,28 @@ body.overview-active .topbar > div:not(.overview-actions) {
   white-space: nowrap;
 }
 
+.transaction-list-section .transaction-tile-row > td[data-label="Expand"] {
+  padding: 0;
+  border-left: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.transaction-list-section .transaction-tile-row > td[data-label="Expand"] .transaction-expand-button {
+  width: 100%;
+  min-height: 64px;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  box-shadow: none;
+}
+
+.transaction-list-section .transaction-tile-row > td[data-label="Expand"] .transaction-expand-button:hover {
+  background: color-mix(in srgb, var(--panel) 96%, var(--soft));
+}
+
 .transaction-expanded-row > td {
   padding: 0;
   background: color-mix(in srgb, var(--panel) 94%, var(--soft));
@@ -8359,6 +8381,21 @@ body.sidebar-collapsed .menu-item:focus-visible::after {
   #transactions .agent-table .transaction-expanded-row > td {
     border: 0;
     border-radius: inherit;
+  }
+
+  #transactions .agent-table .transaction-tile-row > td[data-label="Expand"] {
+    display: block;
+    border-top: 1px solid var(--line);
+    border-left: 0;
+    padding: 0;
+  }
+
+  #transactions .agent-table .transaction-tile-row > td[data-label="Expand"]::before {
+    content: none;
+  }
+
+  #transactions .agent-table .transaction-tile-row > td[data-label="Expand"] .transaction-expand-button {
+    min-height: 44px;
   }
 
   #agents .agent-table tr:hover,
