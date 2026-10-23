@@ -3023,6 +3023,17 @@ body.menu-open .sidebar {
   white-space: nowrap;
 }
 
+.idx-listing-summary-copy > * {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
+.idx-listing-summary-copy > * + * {
+  border-left: 1px solid var(--line);
+  padding-left: 24px;
+}
+
 @media (max-width: 720px) {
   .idx-listing-summary-copy {
     grid-template-columns: 1fr auto;
@@ -3032,6 +3043,16 @@ body.menu-open .sidebar {
   .idx-listing-summary-copy > strong,
   .idx-listing-summary-copy p:last-child {
     justify-self: end;
+  }
+
+  .idx-listing-summary-copy > * + * {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .idx-listing-summary-copy > :nth-child(even) {
+    border-left: 1px solid var(--line);
+    padding-left: 14px;
   }
 }
 
