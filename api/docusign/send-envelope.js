@@ -89,7 +89,7 @@ module.exports = async function sendDocusignEnvelope(request, response) {
       body{font-family:Arial,sans-serif;color:#27231f;font-size:11pt;line-height:1.45;margin:42px}
       header{text-align:center;margin-bottom:28px} header img{max-width:260px;max-height:90px}
       h2{font-size:24pt;margin:14px 0} h4{font-size:14pt;margin:20px 0 8px}
-      section{margin-top:18px}section h4{break-after:avoid-page}.contract-party-grid,.contract-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+      section{margin-top:18px}section h4{break-after:avoid-page}.contract-party-grid,.contract-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px}.contract-signature-section{break-before:page;break-inside:avoid-page}.contract-signature-section .contract-signatures{grid-template-columns:1fr;gap:28px}
       .contract-compensation{border:1px solid #bdb6ae;padding:14px;margin:12px 0;break-inside:avoid-page}.contract-compensation:not(.selected){display:none}
       .contract-signatures>div{break-inside:avoid-page}.contract-signatures>div>p:not(.contract-signature-field){margin-bottom:20px}
       .docusign-anchor{font-size:2px;line-height:1px;color:#fff}.contract-signature-field{position:relative;min-height:104px;margin:18px 0 0;border:0}.contract-signature-field>span:first-child{display:block}.contract-signature-line{position:absolute;right:0;bottom:0;left:0;border-bottom:1px solid #27231f}.contract-signature-field .docusign-anchor{position:absolute;left:0;bottom:-4px}
