@@ -142,6 +142,8 @@ const overviewSchedulePrev = document.querySelector("#overview-schedule-prev");
 const overviewScheduleNext = document.querySelector("#overview-schedule-next");
 const officeListingsGrid = document.querySelector("#office-listings-grid");
 const officeListingsToggle = document.querySelector("#office-listings-toggle");
+let idxOfficeListings = [];
+let idxOfficeListingsLoaded = false;
 const companyTaskList = document.querySelector("#company-task-list");
 const companyTaskOpenCount = document.querySelector("#company-task-open-count");
 const addCompanyTaskButton = document.querySelector("#add-company-task-button");
@@ -1811,12 +1813,14 @@ function getTransactionFileSummary(transaction) {
 }
 
 function getActiveOfficeListings() {
+  if (idxOfficeListingsLoaded) return idxOfficeListings;
   return getVisibleTransactions({ includeCancelled: false }).filter(
     (transaction) => transaction.side === "seller" && ["New", "Active"].includes(getListingStatus(transaction)),
   );
 }
 
 function getListingTitle(transaction) {
+  if (transaction.isIdxListing) return transaction.title || transaction.address || "Lume listing";
   if (transaction.listingTitle) return transaction.listingTitle;
   if (transaction.propertyAddress) return transaction.propertyAddress.split(",")[0];
   return `${transaction.clientName} Listing`;
@@ -1841,26 +1845,46 @@ function renderOfficeListings() {
   officeListingsGrid.innerHTML = visibleListings
     .map((listing) => {
       const title = getListingTitle(listing);
-      const listingStatus = getListingStatus(listing);
-      const photo = listing.listingPhotoSrc
-        ? `<img src="${listing.listingPhotoSrc}" alt="${title}" />`
-        : `<div class="listing-photo-placeholder"><span>${title.slice(0, 1)}</span></div>`;
+      const listingStatus = listing.isIdxListing ? listing.status : getListingStatus(listing);
+      const photoSrc = listing.isIdxListing ? listing.photoUrl : listing.listingPhotoSrc;
+      const address = listing.isIdxListing ? listing.address : listing.propertyAddress;
+      const price = listing.isIdxListing ? listing.price : listing.listPrice;
+      const photo = photoSrc
+        ? `<img src="${escapeLockboxText(photoSrc)}" alt="${escapeLockboxText(title)}" />`
+        : `<div class="listing-photo-placeholder"><span>${escapeLockboxText(title.slice(0, 1))}</span></div>`;
+      const interactionAttributes = listing.isIdxListing
+        ? `data-idx-listing-key="${escapeLockboxText(listing.id)}"`
+        : `role="button" tabindex="0" data-listing-id="${listing.id}" aria-label="Open listing ${escapeLockboxText(title)}"`;
 
       return `
-        <article class="office-listing-card" role="button" tabindex="0" data-listing-id="${listing.id}" aria-label="Open listing ${title}">
+        <article class="office-listing-card" ${interactionAttributes}>
           <div class="office-listing-photo">${photo}</div>
           <div class="office-listing-copy">
-            <h4>${title}</h4>
-            <p>${listing.propertyAddress || "No property address"}</p>
+            <h4>${escapeLockboxText(title)}</h4>
+            <p>${escapeLockboxText(address || "No property address")}</p>
           </div>
           <div class="office-listing-meta">
-            <span><i aria-hidden="true"></i>${listingStatus}</span>
-            <strong>${formatCurrency(listing.listPrice || 0)}</strong>
+            <span><i aria-hidden="true"></i>${escapeLockboxText(listingStatus)}</span>
+            <strong>${formatCurrency(price || 0)}</strong>
           </div>
         </article>
       `;
     })
     .join("");
+}
+
+async function loadOfficeListingsFromIdx() {
+  try {
+    const response = await fetch("/api/idx-listings", { headers: { Accept: "application/json" } });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "Unable to load IDX listings.");
+    idxOfficeListings = (payload.listings || []).map((listing) => ({ ...listing, isIdxListing: true }));
+    idxOfficeListingsLoaded = true;
+    renderOfficeListings();
+    renderOverviewMetrics();
+  } catch (error) {
+    console.warn("Using local office listings because IDX is unavailable:", error.message);
+  }
 }
 
 function getTransactionCalendarEvents(sourceTransactions) {
@@ -3615,6 +3639,7 @@ function renderAll() {
 
 renderAll();
 initializeAuth();
+loadOfficeListingsFromIdx();
 
 topbarNewTransaction.addEventListener("click", () => {
   if (isAgentUser()) {
