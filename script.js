@@ -2682,7 +2682,7 @@ function renderTransactions() {
     const fileSummary = getTransactionFileSummary(transaction);
     const isExpanded = expandedFileTransactionIds.has(Number(transaction.id));
     const row = document.createElement("tr");
-    row.className = "clickable-row";
+    row.className = `clickable-row transaction-tile-row${isExpanded ? " is-expanded" : ""}`;
     row.dataset.transactionExpand = transaction.id;
     row.tabIndex = 0;
     row.setAttribute("role", "button");
