@@ -7,9 +7,14 @@ create table if not exists public.branding_settings (
   primary_color text not null default '#bdb8b2',
   accent_color text not null default '#837a6d',
   logo_src text,
+  dark_logo_src text,
+  light_logo_src text,
   icon_src text,
   updated_at timestamptz not null default now()
 );
+
+alter table public.branding_settings add column if not exists dark_logo_src text;
+alter table public.branding_settings add column if not exists light_logo_src text;
 
 create table if not exists public.broker_contacts (
   id text primary key default 'primary',

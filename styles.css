@@ -2263,13 +2263,57 @@ img.agent-avatar,
 
 .logo-preview {
   display: none;
-  justify-self: end;
-  width: 180px;
-  height: 58px;
+  width: 150px;
+  height: 48px;
 }
 
 .logo-preview.has-image {
   display: block;
+}
+
+.logo-preview-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
+  gap: 8px;
+  justify-self: end;
+}
+
+.logo-preview-surface {
+  display: grid;
+  min-height: 78px;
+  place-items: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+}
+
+.logo-preview-surface > span {
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.logo-preview-light {
+  background: #ffffff;
+  color: #6f675c;
+}
+
+.logo-preview-dark {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: #302f2e;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+@media (max-width: 760px) {
+  .brand-preview {
+    grid-template-columns: 56px minmax(0, 1fr);
+  }
+
+  .logo-preview-group {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-self: stretch;
+  }
 }
 
 .commission-list {

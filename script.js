@@ -53,14 +53,16 @@ const companyInput = document.querySelector("#company-name");
 const systemInput = document.querySelector("#system-name");
 const primaryColorInput = document.querySelector("#primary-color");
 const accentColorInput = document.querySelector("#accent-color");
-const logoUpload = document.querySelector("#logo-upload");
+const darkLogoUpload = document.querySelector("#logo-dark-upload");
+const lightLogoUpload = document.querySelector("#logo-light-upload");
 const iconUpload = document.querySelector("#icon-upload");
 const appFavicon = document.querySelector("#app-favicon");
 const appAppleTouchIcon = document.querySelector("#app-apple-touch-icon");
 const appAppleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
 const companyPreview = document.querySelector("#company-preview");
 const systemPreview = document.querySelector("#system-preview");
-const logoPreview = document.querySelector("#logo-preview");
+const darkLogoPreview = document.querySelector("#logo-dark-preview");
+const lightLogoPreview = document.querySelector("#logo-light-preview");
 const sidebarLogo = document.querySelector("#sidebar-logo");
 const sidebarBrokerageLogo = document.querySelector("#sidebar-brokerage-logo");
 const sidebarBrokerageLogoImage = document.querySelector("#sidebar-brokerage-logo-image");
@@ -4865,28 +4867,33 @@ function saveBrandingSetting(key, value) {
 let isRestoringBranding = false;
 const defaultFaviconHref = appFavicon?.getAttribute("href") || "";
 
-function setSidebarBrokerageLogo(src = "") {
+function setBrokerageLogos(darkSrc = "", lightSrc = "") {
+  const lightBackgroundLogo = darkSrc || lightSrc;
+  const darkBackgroundLogo = lightSrc || darkSrc;
+
   [agentFormLogo, agentContractLogo].forEach((image) => {
     if (!image) return;
-    if (src) image.src = src;
+    if (lightBackgroundLogo) image.src = lightBackgroundLogo;
     else image.removeAttribute("src");
-    image.hidden = !src;
+    image.hidden = !lightBackgroundLogo;
   });
 
-  if (src) {
+  if (darkBackgroundLogo) {
     if (sidebarBrokerageLogo && sidebarBrokerageLogoImage) {
-      sidebarBrokerageLogoImage.src = src;
+      sidebarBrokerageLogoImage.src = darkBackgroundLogo;
       sidebarBrokerageLogo.classList.add("has-image");
     }
+  } else if (sidebarBrokerageLogo && sidebarBrokerageLogoImage) {
+    sidebarBrokerageLogoImage.removeAttribute("src");
+    sidebarBrokerageLogo.classList.remove("has-image");
+  }
+
+  if (lightBackgroundLogo) {
     if (topbarBrokerageLogo && topbarBrokerageLogoImage) {
-      topbarBrokerageLogoImage.src = src;
+      topbarBrokerageLogoImage.src = lightBackgroundLogo;
       topbarBrokerageLogo.classList.add("has-image");
     }
   } else {
-    if (sidebarBrokerageLogo && sidebarBrokerageLogoImage) {
-      sidebarBrokerageLogoImage.removeAttribute("src");
-      sidebarBrokerageLogo.classList.remove("has-image");
-    }
     if (topbarBrokerageLogo && topbarBrokerageLogoImage) {
       topbarBrokerageLogoImage.removeAttribute("src");
       topbarBrokerageLogo.classList.remove("has-image");
@@ -4900,7 +4907,9 @@ function getCurrentBrandingSettings() {
     systemName: systemInput.value.trim() || "Brokr",
     primaryColor: primaryColorInput.value,
     accentColor: accentColorInput.value,
-    logoSrc: sidebarBrokerageLogoImage?.getAttribute("src") || "",
+    darkLogoSrc: darkLogoPreview?.getAttribute("src") || "",
+    lightLogoSrc: lightLogoPreview?.getAttribute("src") || "",
+    logoSrc: darkLogoPreview?.getAttribute("src") || "",
     iconSrc: iconPreview.querySelector("img")?.getAttribute("src") || localStorage.getItem("brokr-icon-src") || "",
   };
 }
@@ -4969,12 +4978,23 @@ accentColorInput.addEventListener("input", () => {
   saveBrandingToBackend();
 });
 
-logoUpload.addEventListener("change", () => {
-  readImage(logoUpload.files[0], (src) => {
-    logoPreview.src = src;
-    logoPreview.classList.add("has-image");
-    setSidebarBrokerageLogo(src);
+darkLogoUpload.addEventListener("change", () => {
+  readImage(darkLogoUpload.files[0], (src) => {
+    darkLogoPreview.src = src;
+    darkLogoPreview.classList.add("has-image");
+    setBrokerageLogos(src, lightLogoPreview.getAttribute("src") || "");
+    saveBrandingSetting("brokr-dark-logo-src", src);
     saveBrandingSetting("brokr-logo-src", src);
+    saveBrandingToBackend();
+  });
+});
+
+lightLogoUpload.addEventListener("change", () => {
+  readImage(lightLogoUpload.files[0], (src) => {
+    lightLogoPreview.src = src;
+    lightLogoPreview.classList.add("has-image");
+    setBrokerageLogos(darkLogoPreview.getAttribute("src") || "", src);
+    saveBrandingSetting("brokr-light-logo-src", src);
     saveBrandingToBackend();
   });
 });
@@ -4996,7 +5016,9 @@ function restoreBrandingSettings() {
   const savedSystemName = localStorage.getItem("brokr-system-name");
   const savedPrimaryColor = localStorage.getItem("brokr-primary-color");
   const savedAccentColor = localStorage.getItem("brokr-accent-color");
-  const savedLogoSrc = localStorage.getItem("brokr-logo-src");
+  const savedLegacyLogoSrc = localStorage.getItem("brokr-logo-src");
+  const savedDarkLogoSrc = localStorage.getItem("brokr-dark-logo-src") || savedLegacyLogoSrc;
+  const savedLightLogoSrc = localStorage.getItem("brokr-light-logo-src") || savedLegacyLogoSrc;
   const savedIconSrc = localStorage.getItem("brokr-icon-src");
 
   if (savedCompanyName) companyInput.value = savedCompanyName;
@@ -5008,11 +5030,15 @@ function restoreBrandingSettings() {
   setBrandColor(primaryColorInput, "--forest", "--button-text");
   setBrandColor(accentColorInput, "--brass", "--button-hover-text");
 
-  if (savedLogoSrc) {
-    logoPreview.src = savedLogoSrc;
-    logoPreview.classList.add("has-image");
-    setSidebarBrokerageLogo(savedLogoSrc);
+  if (savedDarkLogoSrc) {
+    darkLogoPreview.src = savedDarkLogoSrc;
+    darkLogoPreview.classList.add("has-image");
   }
+  if (savedLightLogoSrc) {
+    lightLogoPreview.src = savedLightLogoSrc;
+    lightLogoPreview.classList.add("has-image");
+  }
+  setBrokerageLogos(savedDarkLogoSrc || "", savedLightLogoSrc || "");
 
   if (savedIconSrc) {
     const iconImage = `<img src="${savedIconSrc}" alt="Brokr logo icon" />`;
@@ -5039,11 +5065,19 @@ async function restoreBrandingFromBackend() {
   setBrandColor(primaryColorInput, "--forest", "--button-text");
   setBrandColor(accentColorInput, "--brass", "--button-hover-text");
 
-  if (savedBranding.logo_src) {
-    logoPreview.src = savedBranding.logo_src;
-    logoPreview.classList.add("has-image");
-    setSidebarBrokerageLogo(savedBranding.logo_src);
+  const backendDarkLogoSrc = savedBranding.dark_logo_src || savedBranding.logo_src || "";
+  const backendLightLogoSrc = savedBranding.light_logo_src || savedBranding.logo_src || "";
+  if (backendDarkLogoSrc) {
+    darkLogoPreview.src = backendDarkLogoSrc;
+    darkLogoPreview.classList.add("has-image");
+    saveBrandingSetting("brokr-dark-logo-src", backendDarkLogoSrc);
   }
+  if (backendLightLogoSrc) {
+    lightLogoPreview.src = backendLightLogoSrc;
+    lightLogoPreview.classList.add("has-image");
+    saveBrandingSetting("brokr-light-logo-src", backendLightLogoSrc);
+  }
+  setBrokerageLogos(backendDarkLogoSrc, backendLightLogoSrc);
 
   if (savedBranding.icon_src) {
     const iconImage = `<img src="${savedBranding.icon_src}" alt="Brokr logo icon" />`;
@@ -5064,14 +5098,18 @@ brandingForm.addEventListener("reset", () => {
       "brokr-primary-color",
       "brokr-accent-color",
       "brokr-logo-src",
+      "brokr-dark-logo-src",
+      "brokr-light-logo-src",
       "brokr-icon-src",
     ].forEach((key) => localStorage.removeItem(key));
     syncBrandText();
     setBrandColor(primaryColorInput, "--forest", "--button-text");
     setBrandColor(accentColorInput, "--brass", "--button-hover-text");
-    logoPreview.removeAttribute("src");
-    logoPreview.classList.remove("has-image");
-    setSidebarBrokerageLogo();
+    [darkLogoPreview, lightLogoPreview].forEach((preview) => {
+      preview.removeAttribute("src");
+      preview.classList.remove("has-image");
+    });
+    setBrokerageLogos();
     iconPreview.textContent = "B";
     if (brandMark) brandMark.textContent = "B";
     updateFavicon();

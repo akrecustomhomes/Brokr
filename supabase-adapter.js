@@ -383,16 +383,24 @@
     const client = await getClient();
     if (!client) return;
 
-    const { error } = await client.from("branding_settings").upsert({
+    const payload = {
       id: "default",
       company_name: settings.companyName,
       system_name: settings.systemName,
       primary_color: settings.primaryColor,
       accent_color: settings.accentColor,
-      logo_src: settings.logoSrc,
+      logo_src: settings.darkLogoSrc || settings.logoSrc,
+      dark_logo_src: settings.darkLogoSrc || settings.logoSrc,
+      light_logo_src: settings.lightLogoSrc || settings.darkLogoSrc || settings.logoSrc,
       icon_src: settings.iconSrc,
       updated_at: new Date().toISOString(),
-    });
+    };
+    let { error } = await client.from("branding_settings").upsert(payload);
+
+    if (error && /dark_logo_src|light_logo_src/i.test(error.message || "")) {
+      const { dark_logo_src: _darkLogo, light_logo_src: _lightLogo, ...legacyPayload } = payload;
+      ({ error } = await client.from("branding_settings").upsert(legacyPayload));
+    }
 
     if (error) console.warn("Unable to save Supabase branding settings.", error);
   }
