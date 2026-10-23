@@ -1910,14 +1910,14 @@ async function openIdxListingPreview(listingKey) {
   if (idxListingModal.hidden) return;
   const area = listing.buildingArea || listing.livingArea || 0;
   const facts = [
-    ["Bedrooms", listing.bedrooms || "—"],
-    ["Bathrooms", listing.bathrooms || "—"],
-    ["Square feet", area ? Number(area).toLocaleString() : "—"],
-    ["Garage", listing.garageSpaces ? `${listing.garageSpaces} spaces` : "—"],
-    ["Lot size", listing.lotAcres ? `${listing.lotAcres} acres` : "—"],
-    ["Year built", listing.yearBuilt || "—"],
-    ["Price / sq. ft.", area ? formatCurrency((listing.price || 0) / area) : "—"],
-    ["Property type", listing.propertyType || "—"],
+    ["Bedrooms", listing.bedrooms || "—", "beds"],
+    ["Bathrooms", listing.bathrooms || "—", "baths"],
+    ["Square feet", area ? Number(area).toLocaleString() : "—", "sqft"],
+    ["Garage", listing.garageSpaces || "—", "car garage"],
+    ["Lot size", listing.lotAcres || "—", "acre lot"],
+    ["Year built", listing.yearBuilt || "—", "year built"],
+    ["Price / sq. ft.", area ? formatCurrency((listing.price || 0) / area) : "—", "per sqft"],
+    ["Property type", listing.propertyType || "—", ""],
   ];
   const listingFacts = [
     ["Listing agent", listing.agentName || "—"],
@@ -1961,7 +1961,9 @@ async function openIdxListingPreview(listingKey) {
     };
     return `<svg class="idx-fact-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${paths[label] || paths["Property type"]}</svg>`;
   };
-  const detailGrid = (items, withIcons = false) => items.map(([label, value]) => `<div class="${withIcons ? "idx-icon-fact" : ""}">${withIcons ? factIcon(label) : ""}<span>${escapeLockboxText(label)}</span><strong>${escapeLockboxText(value)}</strong></div>`).join("");
+  const detailGrid = (items, withIcons = false) => items.map(([label, value, suffix = ""]) => withIcons
+    ? `<div class="idx-icon-fact">${factIcon(label)}<p><strong>${escapeLockboxText(value)}</strong>${suffix ? ` <span>${escapeLockboxText(suffix)}</span>` : ""}</p></div>`
+    : `<div><span>${escapeLockboxText(label)}</span><strong>${escapeLockboxText(value)}</strong></div>`).join("");
   idxListingModalTitle.textContent = listing.address || listing.title || "Listing Details";
   idxListingModalStatus.textContent = listing.status || "MLS listing";
   const photos = listing.photoUrls?.length ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : [];
