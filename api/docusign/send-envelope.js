@@ -118,7 +118,7 @@ module.exports = async function sendDocusignEnvelope(request, response) {
           }),
         ],
       },
-      status: "sent",
+      status: "created",
     };
 
     const envelopeResponse = await fetch(
@@ -133,7 +133,7 @@ module.exports = async function sendDocusignEnvelope(request, response) {
     if (!envelopeResponse.ok) {
       throw new Error(envelopeData.message || envelopeData.errorCode || "DocuSign could not create the envelope.");
     }
-    return sendJson(response, 200, { envelopeId: envelopeData.envelopeId, status: envelopeData.status || "sent" });
+    return sendJson(response, 200, { envelopeId: envelopeData.envelopeId, status: envelopeData.status || "created" });
   } catch (error) {
     return sendJson(response, 400, { error: error.message || "DocuSign could not send the contract." });
   }

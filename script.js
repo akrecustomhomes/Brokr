@@ -1813,7 +1813,7 @@ async function sendAgentContractWithDocusign() {
   const buttons = [sendAgentContractButton, contractDocusignButton];
   buttons.forEach((button) => {
     button.disabled = true;
-    button.textContent = "Sending…";
+    button.textContent = "Creating…";
   });
   try {
     const response = await fetch("/api/docusign/send-envelope", {
@@ -1830,14 +1830,14 @@ async function sendAgentContractWithDocusign() {
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "DocuSign could not send the contract.");
-    window.alert(`DocuSign envelope sent to ${agentName}. Envelope ID: ${result.envelopeId}`);
+    window.alert(`DocuSign draft created for ${agentName}. Review and send it from DocuSign when ready. Envelope ID: ${result.envelopeId}`);
   } catch (error) {
     window.alert(error.message || "DocuSign could not send the contract.");
   } finally {
     sendAgentContractButton.disabled = false;
     contractDocusignButton.disabled = false;
-    sendAgentContractButton.textContent = "Send with DocuSign";
-    contractDocusignButton.textContent = "Send with DocuSign";
+    sendAgentContractButton.textContent = "Create DocuSign Draft";
+    contractDocusignButton.textContent = "Create DocuSign Draft";
   }
 }
 
