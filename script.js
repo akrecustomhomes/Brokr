@@ -365,6 +365,7 @@ const agentContractDocument = document.querySelector("#agent-contract-document")
 const closeAgentContractModal = document.querySelector("#close-agent-contract-modal");
 const previewAgentContractButton = document.querySelector("#preview-agent-contract-button");
 const sendAgentContractButton = document.querySelector("#send-agent-contract-button");
+const deleteAgentContractButton = document.querySelector("#delete-agent-contract-button");
 const printAgentContractButton = document.querySelector("#print-agent-contract-button");
 const contractDocusignButton = document.querySelector("#contract-docusign-button");
 const agentCommissionSplitField = document.querySelector("#agent-commission-split-field");
@@ -525,7 +526,11 @@ const hasSavedAgentData = Array.isArray(savedAgents) && savedAgents.length > 0;
 if (hasSavedAgentData) agents = savedAgents;
 
 function saveAgents() {
-  localStorage.setItem("brokr-agents", JSON.stringify(agents));
+  try {
+    localStorage.setItem("brokr-agents", JSON.stringify(agents));
+  } catch (error) {
+    console.warn("Agent records are too large for local browser storage; saving to the shared database instead.", error);
+  }
   window.BrokrBackend?.saveAgents?.(agents).catch((error) => {
     console.warn("Unable to save shared agent records.", error);
   });
@@ -1586,6 +1591,10 @@ function updateAgentFileTile(tile, status, name, fileName = "", emptyLabel = "Ne
 function updateAgentFileVault(agent = {}) {
   updateAgentFileTile(agentLicenseTile, agentLicenseStatus, agentLicenseFileName, agent.licenseFileName || "");
   updateAgentFileTile(agentContractTile, agentContractStatus, agentContractFileName, agent.contractFileName || "");
+  const hasUploadedContract = Boolean(agent.contractFileName || agentFields.contractFile.files[0]);
+  const hasCreatedContract = Boolean(agent.contractGenerated);
+  previewAgentContractButton.textContent = hasUploadedContract ? "Preview Uploaded Contract" : "Preview Contract";
+  deleteAgentContractButton.hidden = !hasUploadedContract && !hasCreatedContract;
   updateAgentFileTile(agentOtherTile, agentOtherStatus, agentOtherFileName, agent.otherFileName || "", "Optional");
 }
 
@@ -1669,9 +1678,34 @@ function renderAgentContract(agent) {
 }
 
 function openAgentContract(agent = getAgentContractDraft()) {
+  const selectedFile = agentFields.contractFile.files[0];
+  const uploadedContractUrl = selectedFile ? URL.createObjectURL(selectedFile) : agent.contractFileData || "";
+  const uploadedContractType = selectedFile?.type || agent.contractFileType || "";
+
+  if (uploadedContractUrl) {
+    const isImage = uploadedContractType.startsWith("image/");
+    agentContractDocument.innerHTML = isImage
+      ? `<img class="uploaded-contract-preview" src="${escapeLockboxText(uploadedContractUrl)}" alt="Uploaded broker agent contract" />`
+      : `<iframe class="uploaded-contract-preview" src="${escapeLockboxText(uploadedContractUrl)}" title="Uploaded broker agent contract"></iframe>`;
+    agentContractModal.hidden = false;
+    closeAgentContractModal.focus();
+    return;
+  }
+
+  if (agent.contractFileName) {
+    window.alert("This contract was uploaded before document previews were enabled. Please delete it, upload the file again, and save the agent record.");
+    return;
+  }
+
   renderAgentContract(agent);
   agentContractModal.hidden = false;
   closeAgentContractModal.focus();
+
+  if (editingAgentId) {
+    agents = agents.map((item) => (item.id === editingAgentId ? { ...item, contractGenerated: true } : item));
+    saveAgents();
+    updateAgentFileVault(agents.find((item) => item.id === editingAgentId));
+  }
 }
 
 function closeAgentContract() {
@@ -3906,10 +3940,42 @@ agentFields.licenseFile.addEventListener("change", () => {
   updateAgentFileTile(agentLicenseTile, agentLicenseStatus, agentLicenseFileName, agentFields.licenseFile.files[0]?.name || "");
 });
 agentFields.contractFile.addEventListener("change", () => {
-  updateAgentFileTile(agentContractTile, agentContractStatus, agentContractFileName, agentFields.contractFile.files[0]?.name || "");
+  const savedAgent = agents.find((agent) => agent.id === editingAgentId) || {};
+  const selectedFile = agentFields.contractFile.files[0];
+  updateAgentFileVault({
+    ...savedAgent,
+    contractFileName: selectedFile?.name || savedAgent.contractFileName || "",
+  });
 });
 agentFields.otherFile.addEventListener("change", () => {
   updateAgentFileTile(agentOtherTile, agentOtherStatus, agentOtherFileName, agentFields.otherFile.files[0]?.name || "", "Optional");
+});
+
+deleteAgentContractButton.addEventListener("click", () => {
+  const savedAgent = agents.find((agent) => agent.id === editingAgentId);
+  const hasContract = Boolean(agentFields.contractFile.files[0] || savedAgent?.contractFileName || savedAgent?.contractGenerated);
+  if (!hasContract) return;
+  if (!window.confirm("Delete this broker / agent contract? This cannot be undone.")) return;
+
+  agentFields.contractFile.value = "";
+  if (savedAgent) {
+    agents = agents.map((agent) =>
+      agent.id === savedAgent.id
+        ? {
+            ...agent,
+            contractFileName: "",
+            contractFileData: "",
+            contractFileType: "",
+            contractGenerated: false,
+            contractStatus: "Draft",
+          }
+        : agent,
+    );
+    saveAgents();
+    updateAgentFileVault(agents.find((agent) => agent.id === savedAgent.id));
+  } else {
+    updateAgentFileVault({});
+  }
 });
 attachPhoneFormatter(agentFields.phone);
 agentFields.compensationOption.addEventListener("change", syncAgentCompensationFields);
@@ -3926,6 +3992,11 @@ agentForm.addEventListener("submit", async (event) => {
   const existingAgent = agents.find((agent) => agent.id === editingAgentId);
   const licenseFileName = agentFields.licenseFile.files[0]?.name || existingAgent?.licenseFileName || "";
   const contractFileName = agentFields.contractFile.files[0]?.name || existingAgent?.contractFileName || "";
+  const selectedContractFile = agentFields.contractFile.files[0];
+  const contractFileData = selectedContractFile
+    ? await readImageDataUrl(selectedContractFile)
+    : existingAgent?.contractFileData || "";
+  const contractFileType = selectedContractFile?.type || existingAgent?.contractFileType || "";
   const otherFileName = agentFields.otherFile.files[0]?.name || existingAgent?.otherFileName || "";
   const profileImageSrc =
     (await readImageDataUrl(agentFields.profileImage.files[0])) || existingAgent?.profileImageSrc || "";
@@ -3950,6 +4021,9 @@ agentForm.addEventListener("submit", async (event) => {
     contractStatus: existingAgent?.contractStatus || "Draft",
     licenseFileName,
     contractFileName,
+    contractFileData,
+    contractFileType,
+    contractGenerated: selectedContractFile ? false : Boolean(existingAgent?.contractGenerated),
     otherFileName,
     licenseExpiration: agentFields.licenseExpiration.value,
     archived: existingAgent?.archived || false,

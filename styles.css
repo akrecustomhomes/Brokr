@@ -2951,6 +2951,24 @@ body.menu-open .sidebar {
   line-height: 1.55;
 }
 
+.uploaded-contract-preview {
+  display: block;
+  width: 100%;
+  min-height: min(72vh, 900px);
+  border: 0;
+  object-fit: contain;
+  background: #fff;
+}
+
+img.uploaded-contract-preview {
+  height: auto;
+  max-height: none;
+}
+
+.agent-contract-actions .destructive-action {
+  color: #8a3434;
+}
+
 .agent-contract-document header {
   margin-bottom: 28px;
   text-align: center;
