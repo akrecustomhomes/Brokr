@@ -9525,3 +9525,24 @@ body[data-theme="dark"] .task-status.overdue {
 .agent-contract-document .contract-compensation:not(.selected) {
   display: none;
 }
+
+/* Use a clear directional control for the desktop sidebar. */
+@media (min-width: 981px) {
+  .brand .sidebar-toggle svg,
+  body.sidebar-collapsed .brand .sidebar-toggle svg {
+    display: none;
+  }
+
+  .brand .sidebar-toggle::before {
+    content: "<<";
+    font-size: 0.92rem;
+    font-weight: 650;
+    letter-spacing: -0.12em;
+    line-height: 1;
+    transform: translateX(-0.05em);
+  }
+
+  body.sidebar-collapsed .brand .sidebar-toggle::before {
+    content: ">>";
+  }
+}
