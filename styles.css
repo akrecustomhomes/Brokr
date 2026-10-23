@@ -2873,6 +2873,64 @@ body.menu-open .sidebar {
   }
 }
 
+/* Full-width listing hero with a compact summary bar below it. */
+.idx-listing-summary {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.idx-listing-carousel,
+.idx-carousel-image {
+  width: 100%;
+}
+
+.idx-carousel-image {
+  display: grid;
+  place-items: center;
+}
+
+.idx-listing-carousel .idx-listing-hero {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  margin-inline: auto;
+  object-fit: contain;
+}
+
+.idx-listing-summary-copy {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px 24px;
+  padding: 16px 18px;
+}
+
+.idx-listing-summary-copy > strong {
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+}
+
+.idx-listing-summary-copy p {
+  margin: 0;
+}
+
+.idx-listing-summary-copy p:last-child {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .idx-listing-summary-copy {
+    grid-template-columns: 1fr auto;
+    gap: 8px 14px;
+  }
+
+  .idx-listing-summary-copy > strong,
+  .idx-listing-summary-copy p:last-child {
+    justify-self: end;
+  }
+}
+
 .idx-listing-summary {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(220px, 0.7fr);
@@ -8974,5 +9032,63 @@ body[data-theme="dark"] .task-status.overdue {
 
   .idx-listing-modal > .modal-actions {
     padding: 14px 16px 18px;
+  }
+}
+
+/* Final listing-hero layout overrides. */
+.idx-listing-summary {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
+
+.idx-listing-carousel,
+.idx-carousel-image {
+  width: 100%;
+}
+
+.idx-carousel-image {
+  display: grid;
+  place-items: center;
+}
+
+.idx-listing-carousel .idx-listing-hero {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  margin-inline: auto;
+  object-fit: contain;
+}
+
+.idx-listing-summary-copy {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px 24px;
+  padding: 16px 18px;
+}
+
+.idx-listing-summary-copy > strong {
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+}
+
+.idx-listing-summary-copy p {
+  margin: 0;
+}
+
+.idx-listing-summary-copy p:last-child {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .idx-listing-summary-copy {
+    grid-template-columns: 1fr auto;
+    gap: 8px 14px;
+  }
+
+  .idx-listing-summary-copy > strong,
+  .idx-listing-summary-copy p:last-child {
+    justify-self: end;
   }
 }
