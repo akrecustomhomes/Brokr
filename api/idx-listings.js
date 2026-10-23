@@ -54,7 +54,7 @@ module.exports = async function idxListings(request, response) {
   const fields = [
     "ListingKey", "ListingId", "StandardStatus", "ListPrice", "UnparsedAddress", "StreetNumber",
     "StreetName", "StreetSuffix", "City", "StateOrProvince", "PostalCode", "BedroomsTotal",
-    "BathroomsTotalInteger", "LivingArea", "PropertyType", "PropertySubType", "ListOfficeName",
+    "BathroomsTotalInteger", "PropertyType", "PropertySubType", "ListOfficeName",
     "ListAgentFullName", "ListingContractDate", "ModificationTimestamp", "PublicRemarks", "Latitude", "Longitude",
   ];
 
@@ -64,7 +64,7 @@ module.exports = async function idxListings(request, response) {
     const selectedFields = [...fields];
     for (let attempt = 0; attempt < fields.length; attempt += 1) {
       const query = new URLSearchParams({
-        "$top": "1000",
+        "$top": "250",
         "$select": selectedFields.join(","),
         "$expand": "Media($top=1)",
         "$orderby": "ModificationTimestamp desc",
