@@ -9534,15 +9534,14 @@ body[data-theme="dark"] .task-status.overdue {
   }
 
   .brand .sidebar-toggle::before {
-    content: "<<";
-    font-size: 0.92rem;
-    font-weight: 650;
-    letter-spacing: -0.12em;
+    content: "❮  ❮";
+    font-size: 1.15rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     line-height: 1;
-    transform: translateX(-0.05em);
   }
 
   body.sidebar-collapsed .brand .sidebar-toggle::before {
-    content: ">>";
+    content: "❯  ❯";
   }
 }
