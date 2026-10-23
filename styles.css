@@ -6096,7 +6096,7 @@ body.menu-open .sidebar {
   }
 }
 :root {
-  --surface-radius: 9px;
+  --surface-radius: 7px;
   --surface-shadow: 0 8px 22px rgba(42, 36, 28, 0.035);
 }
 
@@ -6472,7 +6472,7 @@ body.sidebar-collapsed .topbar .user-chip .auth-avatar {
 
 /* Shared button radius and stable topbar placement */
 :root {
-  --button-radius: 7px;
+  --button-radius: 5px;
 }
 
 button,
