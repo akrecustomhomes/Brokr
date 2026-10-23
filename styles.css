@@ -9431,10 +9431,6 @@ body[data-theme="dark"] .task-status.overdue {
   max-width: min(250px, 70%);
   max-height: 72px;
   margin: 0 auto 22px;
-  box-sizing: content-box;
-  border-radius: 4px;
-  background: #28241f;
-  padding: 14px 22px;
   object-fit: contain;
 }
 
@@ -9465,10 +9461,6 @@ body[data-theme="dark"] .task-status.overdue {
   max-width: min(220px, 60vw);
   height: auto;
   max-height: 58px;
-  box-sizing: content-box;
-  border-radius: 4px;
-  background: #28241f;
-  padding: 10px 16px;
   object-fit: contain;
   object-position: left center;
   margin: 0 0 14px;
