@@ -2929,10 +2929,15 @@ body.menu-open .sidebar {
 
 .agent-contract-document li + li { margin-top: 6px; }
 
-.contract-party-grid,
-.contract-signatures {
+.contract-party-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.contract-signatures {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
 }
 
@@ -2952,13 +2957,43 @@ body.menu-open .sidebar {
   text-transform: uppercase;
 }
 
+.contract-signatures > div {
+  min-height: 220px;
+  padding: 24px;
+}
+
+.contract-signatures > div > strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 1.08rem;
+}
+
+.contract-signature-field {
+  display: grid;
+  grid-template-columns: minmax(130px, max-content) minmax(0, 1fr);
+  align-items: end;
+  gap: 14px;
+  margin: 32px 0 0;
+}
+
+.contract-signature-line {
+  display: block;
+  min-width: 0;
+  height: 1.7em;
+  border-bottom: 1px solid currentColor;
+}
+
 .contract-compensation + .contract-compensation { margin-top: 10px; }
 .contract-compensation.selected { border-color: var(--forest); background: #f6f8f5; }
 
 @media (max-width: 620px) {
-  .contract-party-grid,
-  .contract-signatures {
+  .contract-party-grid {
     grid-template-columns: 1fr;
+  }
+
+  .contract-signature-field {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   .agent-contract-document { margin-inline: 12px; }
@@ -9346,4 +9381,30 @@ body[data-theme="dark"] .task-status.overdue {
 
 #agent-contract-modal {
   z-index: 70;
+}
+
+.brokerage-form-logo {
+  display: block;
+  width: auto;
+  max-width: min(220px, 60vw);
+  height: auto;
+  max-height: 58px;
+  object-fit: contain;
+  object-position: left center;
+  margin: 0 0 14px;
+}
+
+.brokerage-form-logo[hidden] {
+  display: none;
+}
+
+/* Compensation fields are mutually exclusive based on the broker's selection. */
+#agent-commission-split-field[hidden],
+#agent-flat-transaction-fee-field[hidden] {
+  display: none;
+}
+
+/* The broker chooses one compensation structure on the agent record. */
+.agent-contract-document .contract-compensation:not(.selected) {
+  display: none;
 }
