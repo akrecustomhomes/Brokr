@@ -2877,26 +2877,6 @@ body.menu-open .sidebar {
   cursor: pointer;
 }
 
-.idx-carousel-arrow {
-  position: absolute;
-  top: 50%;
-  display: grid;
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 50%;
-  background: rgba(31, 28, 24, 0.72);
-  color: #fff;
-  place-items: center;
-  font-size: 1.8rem;
-  line-height: 1;
-  transform: translateY(-50%);
-  cursor: pointer;
-}
-
-.idx-carousel-arrow.previous { left: 14px; }
-.idx-carousel-arrow.next { right: 14px; }
-
 .idx-carousel-count {
   position: absolute;
   right: 14px;
@@ -2912,6 +2892,91 @@ body.menu-open .sidebar {
   margin: 0;
   padding: 24px;
   color: var(--muted);
+}
+
+.idx-gallery-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 72px;
+  align-items: center;
+  background: rgba(18, 17, 15, 0.96);
+  padding: 24px;
+}
+
+.idx-gallery-lightbox[hidden] { display: none; }
+
+.idx-lightbox-stage {
+  display: grid;
+  min-width: 0;
+  max-height: calc(100vh - 48px);
+  margin: 0;
+  place-items: center;
+}
+
+.idx-lightbox-stage img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 92px);
+  object-fit: contain;
+}
+
+.idx-lightbox-stage figcaption {
+  color: rgba(255, 255, 255, 0.84);
+  padding-top: 12px;
+  font-size: 0.9rem;
+}
+
+.idx-lightbox-close,
+.idx-lightbox-arrow {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  place-items: center;
+  padding: 0;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.idx-lightbox-close:hover,
+.idx-lightbox-arrow:hover {
+  border-color: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.idx-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+}
+
+.idx-lightbox-arrow {
+  position: static;
+  justify-self: center;
+  transform: none;
+}
+
+.idx-lightbox-open { overflow: hidden; }
+
+@media (max-width: 720px) {
+  .idx-gallery-lightbox {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
+    padding: 12px;
+  }
+
+  .idx-lightbox-close,
+  .idx-lightbox-arrow {
+    width: 40px;
+    height: 40px;
+  }
 }
 
 .idx-listing-summary-copy {

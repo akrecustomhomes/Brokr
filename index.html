@@ -9,7 +9,7 @@
     <title>Brokr | Lume Real Estate</title>
     <link id="app-favicon" rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23bdb8b2"/><text x="32" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="500" fill="%232a251f">B</text></svg>' />
     <link id="app-apple-touch-icon" rel="apple-touch-icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%23bdb8b2"/><text x="90" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="84" font-weight="500" fill="%232a251f">B</text></svg>' />
-    <link rel="stylesheet" href="styles.css?v=20261022-map-button" />
+    <link rel="stylesheet" href="styles.css?v=20261022-idx-lightbox" />
   </head>
   <body class="overview-active" data-theme="light">
     <div class="app-shell">
@@ -1107,6 +1107,16 @@
       </section>
     </div>
 
+    <div class="idx-gallery-lightbox" id="idx-gallery-lightbox" role="dialog" aria-modal="true" aria-label="Listing photo gallery" hidden>
+      <button class="idx-lightbox-close" id="idx-lightbox-close" type="button" aria-label="Close photo gallery">×</button>
+      <button class="idx-lightbox-arrow previous" id="idx-lightbox-previous" type="button" aria-label="Previous photo">‹</button>
+      <figure class="idx-lightbox-stage">
+        <img id="idx-lightbox-image" alt="" />
+        <figcaption id="idx-lightbox-caption"></figcaption>
+      </figure>
+      <button class="idx-lightbox-arrow next" id="idx-lightbox-next" type="button" aria-label="Next photo">›</button>
+    </div>
+
     <div class="modal-backdrop" id="company-task-modal" hidden>
       <section class="modal" role="dialog" aria-modal="true" aria-labelledby="company-task-modal-title">
         <form id="company-task-form">
@@ -1356,6 +1366,6 @@
 
     <script src="config.js"></script>
     <script src="supabase-adapter.js"></script>
-    <script src="script.js?v=20261022-map-button"></script>
+    <script src="script.js?v=20261022-idx-lightbox"></script>
   </body>
 </html>

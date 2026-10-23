@@ -148,8 +148,19 @@ const idxListingModalStatus = document.querySelector("#idx-listing-status");
 const idxListingDetail = document.querySelector("#idx-listing-detail");
 const closeIdxListingModal = document.querySelector("#close-idx-listing-modal");
 const doneIdxListingModal = document.querySelector("#done-idx-listing-modal");
+const idxGalleryLightbox = document.querySelector("#idx-gallery-lightbox");
+const idxLightboxImage = document.querySelector("#idx-lightbox-image");
+const idxLightboxCaption = document.querySelector("#idx-lightbox-caption");
+const idxLightboxClose = document.querySelector("#idx-lightbox-close");
+const idxLightboxPrevious = document.querySelector("#idx-lightbox-previous");
+const idxLightboxNext = document.querySelector("#idx-lightbox-next");
 let idxOfficeListings = [];
 let idxOfficeListingsLoaded = false;
+let idxGalleryPhotos = [];
+let idxGalleryIndex = 0;
+let idxGalleryLabel = "Listing photo";
+let idxGalleryTouchStartX = null;
+let idxGalleryWheelLocked = false;
 const companyTaskList = document.querySelector("#company-task-list");
 const companyTaskOpenCount = document.querySelector("#company-task-open-count");
 const addCompanyTaskButton = document.querySelector("#add-company-task-button");
@@ -1956,7 +1967,7 @@ async function openIdxListingPreview(listingKey) {
   const photos = listing.photoUrls?.length ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : [];
   idxListingDetail.innerHTML = `
     <div class="idx-listing-summary">
-      ${photos.length ? `<div class="idx-listing-carousel"><button class="idx-carousel-image" type="button" aria-label="Show next listing photo"><img class="idx-listing-hero" src="${escapeLockboxText(photos[0])}" alt="${escapeLockboxText(listing.address || listing.title || "MLS listing")}" /></button>${photos.length > 1 ? `<button class="idx-carousel-arrow previous" type="button" aria-label="Previous photo">‹</button><button class="idx-carousel-arrow next" type="button" aria-label="Next photo">›</button><span class="idx-carousel-count">1 / ${photos.length}</span>` : ""}</div>` : ""}
+      ${photos.length ? `<div class="idx-listing-carousel"><button class="idx-carousel-image" type="button" aria-label="Open all ${photos.length} listing photos"><img class="idx-listing-hero" src="${escapeLockboxText(photos[0])}" alt="${escapeLockboxText(listing.address || listing.title || "MLS listing")}" />${photos.length > 1 ? `<span class="idx-carousel-count">View all ${photos.length} photos</span>` : ""}</button></div>` : ""}
       <div class="idx-listing-summary-copy">
         <span>${escapeLockboxText(listing.status || "MLS listing")}</span>
         <strong>${formatCurrency(listing.price || 0)}</strong>
@@ -1971,19 +1982,43 @@ async function openIdxListingPreview(listingKey) {
     ${features.length ? `<section class="idx-listing-section"><h4>Features &amp; utilities</h4><div class="idx-listing-feature-list">${features.map(([label, value]) => `<div><strong>${escapeLockboxText(label)}</strong><p>${escapeLockboxText(value)}</p></div>`).join("")}</div></section>` : ""}
     ${(listing.directions || (listing.latitude && listing.longitude)) ? `<section class="idx-listing-section"><h4>Location</h4>${listing.directions ? `<p>${escapeLockboxText(listing.directions)}</p>` : ""}${listing.latitude && listing.longitude ? `<a class="secondary-action idx-map-link" href="https://www.google.com/maps?q=${encodeURIComponent(`${listing.latitude},${listing.longitude}`)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg><span>Open in Maps</span></a>` : ""}</section>` : ""}
   `;
-  if (photos.length > 1) {
-    let photoIndex = 0;
-    const image = idxListingDetail.querySelector(".idx-listing-hero");
-    const count = idxListingDetail.querySelector(".idx-carousel-count");
-    const showPhoto = (nextIndex) => {
-      photoIndex = (nextIndex + photos.length) % photos.length;
-      image.src = photos[photoIndex];
-      count.textContent = `${photoIndex + 1} / ${photos.length}`;
-    };
-    idxListingDetail.querySelector(".idx-carousel-image")?.addEventListener("click", () => showPhoto(photoIndex + 1));
-    idxListingDetail.querySelector(".idx-carousel-arrow.previous")?.addEventListener("click", () => showPhoto(photoIndex - 1));
-    idxListingDetail.querySelector(".idx-carousel-arrow.next")?.addEventListener("click", () => showPhoto(photoIndex + 1));
-  }
+  idxListingDetail.querySelector(".idx-carousel-image")?.addEventListener("click", () => {
+    openIdxGallery(photos, listing.address || listing.title || "Listing photo");
+  });
+}
+
+function preloadIdxGalleryNeighbors() {
+  if (idxGalleryPhotos.length < 2) return;
+  [-1, 1].forEach((offset) => {
+    const preload = new Image();
+    preload.src = idxGalleryPhotos[(idxGalleryIndex + offset + idxGalleryPhotos.length) % idxGalleryPhotos.length];
+  });
+}
+
+function showIdxGalleryPhoto(nextIndex) {
+  if (!idxGalleryPhotos.length) return;
+  idxGalleryIndex = (nextIndex + idxGalleryPhotos.length) % idxGalleryPhotos.length;
+  idxLightboxImage.src = idxGalleryPhotos[idxGalleryIndex];
+  idxLightboxImage.alt = `${idxGalleryLabel}, photo ${idxGalleryIndex + 1} of ${idxGalleryPhotos.length}`;
+  idxLightboxCaption.textContent = `${idxGalleryIndex + 1} / ${idxGalleryPhotos.length}`;
+  preloadIdxGalleryNeighbors();
+}
+
+function openIdxGallery(photos, label) {
+  if (!photos.length || !idxGalleryLightbox) return;
+  idxGalleryPhotos = photos;
+  idxGalleryLabel = label;
+  idxGalleryLightbox.hidden = false;
+  document.body.classList.add("idx-lightbox-open");
+  showIdxGalleryPhoto(0);
+  idxLightboxClose.focus();
+}
+
+function closeIdxGallery() {
+  if (!idxGalleryLightbox) return;
+  idxGalleryLightbox.hidden = true;
+  document.body.classList.remove("idx-lightbox-open");
+  idxLightboxImage.removeAttribute("src");
 }
 
 function closeIdxListingPreview() {
@@ -3864,6 +3899,34 @@ closeIdxListingModal?.addEventListener("click", closeIdxListingPreview);
 doneIdxListingModal?.addEventListener("click", closeIdxListingPreview);
 idxListingModal?.addEventListener("click", (event) => {
   if (event.target === idxListingModal) closeIdxListingPreview();
+});
+idxLightboxClose?.addEventListener("click", closeIdxGallery);
+idxLightboxPrevious?.addEventListener("click", () => showIdxGalleryPhoto(idxGalleryIndex - 1));
+idxLightboxNext?.addEventListener("click", () => showIdxGalleryPhoto(idxGalleryIndex + 1));
+idxGalleryLightbox?.addEventListener("click", (event) => {
+  if (event.target === idxGalleryLightbox) closeIdxGallery();
+});
+idxGalleryLightbox?.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  if (idxGalleryWheelLocked) return;
+  idxGalleryWheelLocked = true;
+  showIdxGalleryPhoto(idxGalleryIndex + (event.deltaY > 0 || event.deltaX > 0 ? 1 : -1));
+  window.setTimeout(() => { idxGalleryWheelLocked = false; }, 280);
+}, { passive: false });
+idxGalleryLightbox?.addEventListener("touchstart", (event) => {
+  idxGalleryTouchStartX = event.changedTouches[0]?.clientX ?? null;
+}, { passive: true });
+idxGalleryLightbox?.addEventListener("touchend", (event) => {
+  if (idxGalleryTouchStartX === null) return;
+  const distance = (event.changedTouches[0]?.clientX ?? idxGalleryTouchStartX) - idxGalleryTouchStartX;
+  if (Math.abs(distance) > 45) showIdxGalleryPhoto(idxGalleryIndex + (distance < 0 ? 1 : -1));
+  idxGalleryTouchStartX = null;
+}, { passive: true });
+document.addEventListener("keydown", (event) => {
+  if (!idxGalleryLightbox || idxGalleryLightbox.hidden) return;
+  if (event.key === "Escape") closeIdxGallery();
+  if (event.key === "ArrowLeft") showIdxGalleryPhoto(idxGalleryIndex - 1);
+  if (event.key === "ArrowRight") showIdxGalleryPhoto(idxGalleryIndex + 1);
 });
 
 transactionFileGrid.addEventListener("change", (event) => {
