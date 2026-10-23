@@ -9314,3 +9314,8 @@ body[data-theme="dark"] .task-status.overdue {
   text-align: center;
   text-transform: uppercase;
 }
+
+.metric-grid .metric-card[role="button"]:hover,
+.metric-grid .metric-card[role="button"]:focus-visible {
+  background: color-mix(in srgb, var(--panel) 98%, var(--ink) 2%);
+}
