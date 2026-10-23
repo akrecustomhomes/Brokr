@@ -88,6 +88,11 @@ const licenseNotificationFields = {
   agentEnabled: document.querySelector("#license-reminder-agent-enabled"),
   brokerEnabled: document.querySelector("#license-reminder-broker-enabled"),
 };
+const deadlineNotificationFields = {
+  days: document.querySelector("#deadline-reminder-days"),
+  agentEnabled: document.querySelector("#deadline-reminder-agent-enabled"),
+  brokerEnabled: document.querySelector("#deadline-reminder-broker-enabled"),
+};
 const archiveStorageForm = document.querySelector("#archive-storage-form");
 const archiveStorageFields = {
   folderUrl: document.querySelector("#archive-folder-url"),
@@ -563,6 +568,25 @@ async function loadAgentsFromBackend() {
   renderOverviewSchedule();
   renderInbox();
 }
+
+async function loadTransactionsFromBackend() {
+  const remoteTransactions = await window.BrokrBackend?.loadTransactions?.();
+  if (Array.isArray(remoteTransactions) && remoteTransactions.length) {
+    transactions = remoteTransactions;
+    localStorage.setItem("brokr-transactions", JSON.stringify(transactions));
+  } else if (transactions.length) {
+    const importedTransactions = await window.BrokrBackend?.saveTransactions?.(transactions);
+    if (Array.isArray(importedTransactions) && importedTransactions.length) {
+      transactions = importedTransactions;
+      localStorage.setItem("brokr-transactions", JSON.stringify(transactions));
+    }
+  }
+  renderTransactions();
+  renderCalendar();
+  renderOverviewMetrics();
+  renderOverviewSchedule();
+  renderInbox();
+}
 const cleanStartMigrationKey = "brokr-clean-start-idx-v1";
 if (!localStorage.getItem(cleanStartMigrationKey)) {
   [
@@ -665,6 +689,9 @@ let brokerContact = {
   licenseReminderDays: 60,
   licenseReminderAgentEnabled: true,
   licenseReminderBrokerEnabled: true,
+  deadlineReminderDays: 2,
+  deadlineReminderAgentEnabled: true,
+  deadlineReminderBrokerEnabled: true,
 };
 let archiveSettings = {
   folderUrl: "",
@@ -1045,6 +1072,7 @@ async function refreshAuthUser(session = currentSession) {
   closeAuthGate();
   await loadUsersFromBackend();
   await loadAgentsFromBackend();
+  await loadTransactionsFromBackend();
 }
 
 async function initializeAuth() {
@@ -1268,6 +1296,9 @@ brokerContactForm.addEventListener("submit", (event) => {
 });
 
 Object.values(licenseNotificationFields).forEach((field) => {
+  field.addEventListener("change", syncLicenseNotificationSettings);
+});
+Object.values(deadlineNotificationFields).forEach((field) => {
   field.addEventListener("change", syncLicenseNotificationSettings);
 });
 
@@ -2812,6 +2843,9 @@ function syncBrokerContact() {
     licenseReminderDays: brokerContact.licenseReminderDays || 60,
     licenseReminderAgentEnabled: brokerContact.licenseReminderAgentEnabled !== false,
     licenseReminderBrokerEnabled: brokerContact.licenseReminderBrokerEnabled !== false,
+    deadlineReminderDays: brokerContact.deadlineReminderDays || 2,
+    deadlineReminderAgentEnabled: brokerContact.deadlineReminderAgentEnabled !== false,
+    deadlineReminderBrokerEnabled: brokerContact.deadlineReminderBrokerEnabled !== false,
   };
   updateBrokerProfilePreview();
   renderAuthIdentity();
@@ -2824,6 +2858,9 @@ function syncLicenseNotificationFields() {
   licenseNotificationFields.days.value = brokerContact.licenseReminderDays || 60;
   licenseNotificationFields.agentEnabled.checked = brokerContact.licenseReminderAgentEnabled !== false;
   licenseNotificationFields.brokerEnabled.checked = brokerContact.licenseReminderBrokerEnabled !== false;
+  deadlineNotificationFields.days.value = brokerContact.deadlineReminderDays || 2;
+  deadlineNotificationFields.agentEnabled.checked = brokerContact.deadlineReminderAgentEnabled !== false;
+  deadlineNotificationFields.brokerEnabled.checked = brokerContact.deadlineReminderBrokerEnabled !== false;
 }
 
 function syncLicenseNotificationSettings() {
@@ -2833,6 +2870,9 @@ function syncLicenseNotificationSettings() {
     licenseReminderDays: Math.min(365, Math.max(1, Number(licenseNotificationFields.days.value) || 60)),
     licenseReminderAgentEnabled: licenseNotificationFields.agentEnabled.checked,
     licenseReminderBrokerEnabled: licenseNotificationFields.brokerEnabled.checked,
+    deadlineReminderDays: Math.min(30, Math.max(1, Number(deadlineNotificationFields.days.value) || 2)),
+    deadlineReminderAgentEnabled: deadlineNotificationFields.agentEnabled.checked,
+    deadlineReminderBrokerEnabled: deadlineNotificationFields.brokerEnabled.checked,
   };
   syncLicenseNotificationFields();
   saveBrokerContact();
@@ -2866,6 +2906,9 @@ async function restoreBrokerContactFromBackend() {
     licenseReminderDays: Number(savedContact.license_reminder_days || brokerContact.licenseReminderDays || 60),
     licenseReminderAgentEnabled: savedContact.license_reminder_agent_enabled ?? brokerContact.licenseReminderAgentEnabled,
     licenseReminderBrokerEnabled: savedContact.license_reminder_broker_enabled ?? brokerContact.licenseReminderBrokerEnabled,
+    deadlineReminderDays: Number(savedContact.deadline_reminder_days || brokerContact.deadlineReminderDays || 2),
+    deadlineReminderAgentEnabled: savedContact.deadline_reminder_agent_enabled ?? brokerContact.deadlineReminderAgentEnabled,
+    deadlineReminderBrokerEnabled: savedContact.deadline_reminder_broker_enabled ?? brokerContact.deadlineReminderBrokerEnabled,
   };
 
   brokerContactFields.name.value = brokerContact.name;
@@ -2889,6 +2932,9 @@ function saveFileUploadNotifications() {
 
 function saveTransactions() {
   localStorage.setItem("brokr-transactions", JSON.stringify(transactions));
+  window.BrokrBackend?.saveTransactions?.(transactions).catch((error) => {
+    console.warn("Unable to save shared transaction records.", error);
+  });
 }
 
 function saveInboxItemStates() {
@@ -3764,6 +3810,9 @@ function deleteTransaction(transactionId) {
   if (!confirmed) return false;
 
   transactions = transactions.filter((item) => item.id !== transaction.id);
+  window.BrokrBackend?.deleteTransaction?.(transaction.id).catch((error) => {
+    console.warn("Unable to delete the shared transaction record.", error);
+  });
   saveTransactions();
   renderTransactions();
   renderCalendar();

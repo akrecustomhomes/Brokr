@@ -139,9 +139,79 @@ module.exports = async function handler(request, response) {
     }
   }
 
+  const deadlineLeadDays = Math.min(30, Math.max(1, Number(broker?.deadline_reminder_days || 2)));
+  const deadlineAgentEnabled = broker?.deadline_reminder_agent_enabled !== false;
+  const deadlineBrokerEnabled = broker?.deadline_reminder_broker_enabled !== false;
+  const deadlineCutoff = dateKey(addDays(new Date(`${today}T12:00:00Z`), deadlineLeadDays));
+  const { data: transactions, error: transactionsError } = await adminClient
+    .from("transactions")
+    .select("id,agent_id,client_name,property_address,status,deadlines")
+    .not("status", "in", '("Closed","Cancelled")');
+  if (transactionsError) return sendJson(response, 500, { error: transactionsError.message });
+
+  const agentIds = [...new Set((transactions || []).map((transaction) => transaction.agent_id).filter(Boolean))];
+  let transactionAgents = [];
+  if (agentIds.length) {
+    const { data, error } = await adminClient
+      .from("agents")
+      .select("id,first_name,last_name,email")
+      .in("id", agentIds);
+    if (error) return sendJson(response, 500, { error: error.message });
+    transactionAgents = data || [];
+  }
+  const agentsById = new Map(transactionAgents.map((agent) => [Number(agent.id), agent]));
+  const deadlineLabels = {
+    sellerDisclosure: "Seller Disclosure Deadline",
+    dueDiligence: "Due Diligence Deadline",
+    financingAppraisal: "Financing & Appraisal Deadline",
+    settlement: "Settlement Deadline",
+  };
+
+  for (const transaction of transactions || []) {
+    const agent = agentsById.get(Number(transaction.agent_id));
+    const agentName = agent ? `${agent.first_name || ""} ${agent.last_name || ""}`.trim() : "Assigned agent";
+    for (const [deadlineKey, deadlineDate] of Object.entries(transaction.deadlines || {})) {
+      if (!deadlineDate || deadlineDate < today || deadlineDate > deadlineCutoff) continue;
+      const deadlineLabel = deadlineLabels[deadlineKey] || deadlineKey;
+      const remainingDays = daysUntil(deadlineDate, today);
+      const title = `${deadlineLabel} is due in ${remainingDays} day${remainingDays === 1 ? "" : "s"}`;
+      const detail = `${transaction.client_name || "Transaction"}${transaction.property_address ? ` — ${transaction.property_address}` : ""}. Deadline: ${formatDate(deadlineDate)}.`;
+      const html = `<h2>${escapeHtml(title)}</h2><p>${escapeHtml(detail)}</p><p>Assigned agent: ${escapeHtml(agentName)}. Open Brokr to review the transaction file and deadline.</p>`;
+      const recipients = [];
+      if (deadlineAgentEnabled && agent?.email) recipients.push({ type: "agent", email: agent.email });
+      if (deadlineBrokerEnabled && broker?.broker_email) recipients.push({ type: "broker", email: broker.broker_email });
+
+      for (const recipient of recipients) {
+        const notificationKey = `contract-deadline:${transaction.id}:${deadlineKey}:${deadlineDate}:${recipient.type}`;
+        if (await alreadySent(adminClient, notificationKey)) {
+          results.push({ transactionId: transaction.id, deadline: deadlineKey, recipient: recipient.type, status: "already-sent" });
+          continue;
+        }
+        try {
+          await sendEmail({ to: recipient.email, subject: title, html });
+          const { error } = await adminClient.from("notifications").insert({
+            notification_key: notificationKey,
+            type: "Deadline",
+            title,
+            detail,
+            status: "Email sent",
+            state: "open",
+            related_agent_id: transaction.agent_id || null,
+            related_transaction_id: transaction.id,
+          });
+          if (error && error.code !== "23505") throw error;
+          results.push({ transactionId: transaction.id, deadline: deadlineKey, recipient: recipient.type, status: "sent" });
+        } catch (error) {
+          results.push({ transactionId: transaction.id, deadline: deadlineKey, recipient: recipient.type, status: "failed", error: error.message });
+        }
+      }
+    }
+  }
+
   return sendJson(response, 200, {
     checked: (agents || []).length,
     leadDays,
+    deadlineLeadDays,
     sent: results.filter((item) => item.status === "sent").length,
     failed: results.filter((item) => item.status === "failed").length,
     results,

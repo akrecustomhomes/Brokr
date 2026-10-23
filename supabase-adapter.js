@@ -354,6 +354,83 @@
     if (error) throw error;
   }
 
+  function mapTransactionFromRow(row) {
+    const details = row?.details && typeof row.details === "object" ? row.details : {};
+    return {
+      ...details,
+      id: Number(row.id),
+      agentId: row.agent_id ? Number(row.agent_id) : null,
+      side: row.side,
+      clientName: row.client_name,
+      clientEmail: row.client_email || "",
+      clientPhone: row.client_phone || "",
+      propertyAddress: row.property_address || "",
+      contractDate: row.contract_date || "",
+      listPrice: Number(row.list_price || 0),
+      contractPrice: Number(row.contract_price || 0),
+      status: row.status === "New" ? "Active" : row.status,
+      deadlines: row.deadlines || {},
+      documents: row.required_documents || {},
+      additionalDocuments: row.additional_documents || [],
+      archivedAt: row.archived_at || "",
+      archiveDestination: row.archive_destination || "",
+      archivePackageFormat: row.archive_package_format || "",
+    };
+  }
+
+  function mapTransactionToRow(transaction) {
+    return {
+      id: Number(transaction.id),
+      agent_id: transaction.agentId ? Number(transaction.agentId) : null,
+      side: transaction.side,
+      client_name: transaction.clientName || "",
+      client_email: transaction.clientEmail || null,
+      client_phone: transaction.clientPhone || null,
+      property_address: transaction.propertyAddress || null,
+      contract_date: transaction.contractDate,
+      list_price: Number(transaction.listPrice || 0),
+      contract_price: Number(transaction.contractPrice || 0),
+      status: transaction.status === "Active" ? "New" : transaction.status,
+      deadlines: transaction.deadlines || {},
+      required_documents: transaction.documents || {},
+      additional_documents: transaction.additionalDocuments || [],
+      archived_at: transaction.archivedAt || null,
+      archive_destination: transaction.archiveDestination || null,
+      archive_package_format: transaction.archivePackageFormat || null,
+      details: transaction,
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  async function loadTransactions() {
+    const client = await getClient();
+    if (!client) return [];
+    const { data, error } = await client.from("transactions").select("*").order("created_at", { ascending: false });
+    if (error) {
+      console.warn("Unable to load shared transactions.", error);
+      return [];
+    }
+    return (data || []).map(mapTransactionFromRow);
+  }
+
+  async function saveTransactions(transactionList) {
+    const client = await getClient();
+    if (!client || !Array.isArray(transactionList) || !transactionList.length) return [];
+    const { data, error } = await client
+      .from("transactions")
+      .upsert(transactionList.map(mapTransactionToRow), { onConflict: "id" })
+      .select("*");
+    if (error) throw error;
+    return (data || []).map(mapTransactionFromRow);
+  }
+
+  async function deleteTransaction(transactionId) {
+    const client = await getClient();
+    if (!client) return;
+    const { error } = await client.from("transactions").delete().eq("id", Number(transactionId));
+    if (error) throw error;
+  }
+
   async function loadCurrentUser() {
     const authUser = await getCurrentAuthUser();
     if (!authUser) return null;
@@ -563,17 +640,23 @@
       license_reminder_days: Number(contact.licenseReminderDays || 60),
       license_reminder_agent_enabled: contact.licenseReminderAgentEnabled !== false,
       license_reminder_broker_enabled: contact.licenseReminderBrokerEnabled !== false,
+      deadline_reminder_days: Number(contact.deadlineReminderDays || 2),
+      deadline_reminder_agent_enabled: contact.deadlineReminderAgentEnabled !== false,
+      deadline_reminder_broker_enabled: contact.deadlineReminderBrokerEnabled !== false,
       updated_at: new Date().toISOString(),
     };
 
     const { error } = await client.from("broker_contacts").upsert(payload);
 
-    if (error && /profile_image_src|license_reminder_/i.test(error.message || "")) {
+    if (error && /profile_image_src|license_reminder_|deadline_reminder_/i.test(error.message || "")) {
       const {
         profile_image_src: _profileImageSrc,
         license_reminder_days: _licenseReminderDays,
         license_reminder_agent_enabled: _licenseReminderAgentEnabled,
         license_reminder_broker_enabled: _licenseReminderBrokerEnabled,
+        deadline_reminder_days: _deadlineReminderDays,
+        deadline_reminder_agent_enabled: _deadlineReminderAgentEnabled,
+        deadline_reminder_broker_enabled: _deadlineReminderBrokerEnabled,
         ...legacyPayload
       } = payload;
       const { error: legacyError } = await client.from("broker_contacts").upsert(legacyPayload);
@@ -667,6 +750,9 @@
     loadAgents,
     saveAgents,
     deleteAgent,
+    loadTransactions,
+    saveTransactions,
+    deleteTransaction,
     saveUserProfile,
     deleteUserProfile,
     inviteUser,

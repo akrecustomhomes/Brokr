@@ -602,6 +602,38 @@
                     </div>
                   </div>
                 </details>
+                <details class="notification-setting-item">
+                  <summary class="notification-setting-heading">
+                    <div>
+                      <p class="eyebrow">Transaction compliance</p>
+                      <h4>Contract Deadlines</h4>
+                    </div>
+                    <span class="notification-setting-summary">
+                      <span class="notification-frequency">Runs daily</span>
+                      <span class="notification-expand-label"><span class="expand-copy">Expand</span><span class="collapse-copy">Collapse</span></span>
+                    </span>
+                  </summary>
+                  <div class="notification-setting-body">
+                    <p class="notification-setting-description">Send one reminder for each approaching seller disclosure, due diligence, financing and appraisal, or settlement deadline.</p>
+                    <div class="notification-setting-controls">
+                      <label class="notification-days-field">
+                        <span>Reminder lead time</span>
+                        <span class="input-with-suffix">
+                          <input id="deadline-reminder-days" type="number" min="1" max="30" step="1" value="2" required />
+                          <span>days</span>
+                        </span>
+                      </label>
+                      <label class="notification-recipient-option">
+                        <input id="deadline-reminder-agent-enabled" type="checkbox" checked />
+                        <span><strong>Email agent</strong><small>Uses the assigned agent's profile email.</small></span>
+                      </label>
+                      <label class="notification-recipient-option">
+                        <input id="deadline-reminder-broker-enabled" type="checkbox" checked />
+                        <span><strong>Email broker</strong><small>Uses the primary broker email saved above.</small></span>
+                      </label>
+                    </div>
+                  </div>
+                </details>
               </div>
             </form>
 
