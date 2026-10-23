@@ -27,13 +27,18 @@ async function getOfficeKey(accessToken, officeName) {
 }
 
 function getPrimaryPhoto(media = []) {
+  return getPhotoUrls(media)[0] || "";
+}
+
+function getPhotoUrls(media = []) {
   return [...media]
     .filter((item) => item?.MediaURL && (!item.MediaCategory || item.MediaCategory === "Photo"))
     .sort((left, right) => {
       if (left.PreferredPhotoYN && !right.PreferredPhotoYN) return -1;
       if (!left.PreferredPhotoYN && right.PreferredPhotoYN) return 1;
       return Number(left.Order || 0) - Number(right.Order || 0);
-    })[0]?.MediaURL || "";
+    })
+    .map((item) => item.MediaURL);
 }
 
 function getAddress(listing) {
@@ -41,6 +46,11 @@ function getAddress(listing) {
   const street = [listing.StreetNumber, listing.StreetName, listing.StreetSuffix].filter(Boolean).join(" ");
   const locality = [listing.City, listing.StateOrProvince, listing.PostalCode].filter(Boolean).join(", ");
   return [street, locality].filter(Boolean).join(", ");
+}
+
+function normalizeValue(value) {
+  if (Array.isArray(value)) return value.filter(Boolean).join(", ");
+  return value ?? "";
 }
 
 function normalizeListing(listing) {
@@ -54,6 +64,7 @@ function normalizeListing(listing) {
     bedrooms: Number(listing.BedroomsTotal) || 0,
     bathrooms: Number(listing.BathroomsTotalInteger) || 0,
     livingArea: Number(listing.LivingArea) || 0,
+    buildingArea: Number(listing.BuildingAreaTotal) || 0,
     propertyType: listing.PropertySubType || listing.PropertyType || "",
     agentName: listing.ListAgentFullName || "",
     officeName: listing.ListOfficeName || "",
@@ -62,7 +73,31 @@ function normalizeListing(listing) {
     remarks: listing.PublicRemarks || "",
     latitude: Number(listing.Latitude) || null,
     longitude: Number(listing.Longitude) || null,
+    daysOnMarket: Number(listing.DaysOnMarket) || 0,
+    cumulativeDaysOnMarket: Number(listing.CumulativeDaysOnMarket) || 0,
+    levels: normalizeValue(listing.Levels),
+    yearBuilt: Number(listing.YearBuilt) || null,
+    county: listing.CountyOrParish || "",
+    subdivision: listing.SubdivisionName || "",
+    lotAcres: Number(listing.LotSizeAcres) || null,
+    garageSpaces: Number(listing.GarageSpaces) || null,
+    poolPrivate: listing.PoolPrivateYN ?? null,
+    parcelNumber: listing.ParcelNumber || "",
+    taxAnnualAmount: Number(listing.TaxAnnualAmount) || null,
+    taxYear: Number(listing.TaxYear) || null,
+    directions: listing.Directions || "",
+    cooling: normalizeValue(listing.Cooling),
+    heating: normalizeValue(listing.Heating),
+    parkingFeatures: normalizeValue(listing.ParkingFeatures),
+    interiorFeatures: normalizeValue(listing.InteriorFeatures),
+    appliances: normalizeValue(listing.Appliances),
+    utilities: normalizeValue(listing.Utilities),
+    sewer: normalizeValue(listing.Sewer),
+    waterSource: normalizeValue(listing.WaterSource),
+    zoning: normalizeValue(listing.Zoning),
+    propertyCondition: normalizeValue(listing.PropertyCondition),
     photoUrl: getPrimaryPhoto(listing.Media),
+    photoUrls: getPhotoUrls(listing.Media),
   };
 }
 
@@ -81,9 +116,39 @@ module.exports = async function idxListings(request, response) {
     "StreetName", "StreetSuffix", "City", "StateOrProvince", "PostalCode", "BedroomsTotal",
     "BathroomsTotalInteger", "PropertyType", "PropertySubType", "ListOfficeName",
     "ListAgentFullName", "ListingContractDate", "ModificationTimestamp", "PublicRemarks", "Latitude", "Longitude",
+    "BuildingAreaTotal", "DaysOnMarket", "CumulativeDaysOnMarket", "Levels", "YearBuilt",
+    "CountyOrParish", "SubdivisionName", "LotSizeAcres", "GarageSpaces", "PoolPrivateYN",
+    "ParcelNumber", "TaxAnnualAmount", "TaxYear", "Directions", "Cooling", "Heating",
+    "ParkingFeatures", "InteriorFeatures", "Appliances", "Utilities", "Sewer", "WaterSource",
+    "Zoning", "PropertyCondition",
   ];
 
   try {
+    const listingKey = String(request.query?.listingKey || "").trim();
+    if (listingKey) {
+      let detailResponse;
+      let detailPayload;
+      const selectedFields = [...fields];
+      for (let attempt = 0; attempt < fields.length; attempt += 1) {
+        const query = new URLSearchParams({
+          "$select": selectedFields.join(","),
+          "$expand": "Media",
+        });
+        const safeListingKey = listingKey.replaceAll("'", "''");
+        detailResponse = await fetch(`${SPARK_PROPERTY_ENDPOINT}('${safeListingKey}')?${query}`, {
+          headers: sparkHeaders(accessToken),
+        });
+        detailPayload = await detailResponse.json().catch(() => ({}));
+        const message = String(detailPayload?.error?.message || detailPayload?.Message || "");
+        const unsupportedField = message.match(/\$select contains non-matching element:\s*([A-Za-z0-9_]+)/i)?.[1];
+        if (detailResponse.ok || !unsupportedField || !selectedFields.includes(unsupportedField)) break;
+        selectedFields.splice(selectedFields.indexOf(unsupportedField), 1);
+      }
+      if (!detailResponse.ok) return response.status(502).json({ error: "The full MLS listing could not be loaded." });
+      response.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=900");
+      return response.status(200).json({ listing: normalizeListing(detailPayload), source: "Spark IDX" });
+    }
+
     const officeKey = await getOfficeKey(accessToken, officeName);
     let sparkResponse;
     let payload;

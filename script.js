@@ -1879,29 +1879,98 @@ function renderOfficeListings() {
     .join("");
 }
 
-function openIdxListingPreview(listingKey) {
-  const listing = idxOfficeListings.find((item) => String(item.id) === String(listingKey));
+async function openIdxListingPreview(listingKey) {
+  let listing = idxOfficeListings.find((item) => String(item.id) === String(listingKey));
   if (!listing || !idxListingModal) return;
-  const facts = [
-    ["MLS #", listing.listingId || "—"],
-    ["Price", formatCurrency(listing.price || 0)],
-    ["Bedrooms", listing.bedrooms || "—"],
-    ["Bathrooms", listing.bathrooms || "—"],
-    ["Property type", listing.propertyType || "—"],
-    ["Listing agent", listing.agentName || "—"],
-    ["Listed", listing.listingDate ? formatDate(listing.listingDate) : "—"],
-  ];
   idxListingModalTitle.textContent = listing.address || listing.title || "Listing Details";
   idxListingModalStatus.textContent = listing.status || "MLS listing";
-  idxListingDetail.innerHTML = `
-    ${listing.photoUrl ? `<img class="idx-listing-hero" src="${escapeLockboxText(listing.photoUrl)}" alt="${escapeLockboxText(listing.address || listing.title || "MLS listing")}" />` : ""}
-    <div class="idx-listing-facts">
-      ${facts.map(([label, value]) => `<div><span>${escapeLockboxText(label)}</span><strong>${escapeLockboxText(value)}</strong></div>`).join("")}
-    </div>
-    ${listing.remarks ? `<div class="idx-listing-remarks"><h4>Property description</h4><p>${escapeLockboxText(listing.remarks)}</p></div>` : ""}
-  `;
+  idxListingDetail.innerHTML = '<p class="idx-listing-loading">Loading full MLS listing…</p>';
   idxListingModal.hidden = false;
   closeIdxListingModal?.focus();
+  try {
+    const response = await fetch(`/api/idx-listings?listingKey=${encodeURIComponent(listingKey)}`, {
+      headers: { Accept: "application/json" },
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (response.ok && payload.listing) listing = { ...listing, ...payload.listing, isIdxListing: true };
+  } catch (error) {
+    console.warn("Using summary IDX data because full listing details are unavailable:", error.message);
+  }
+  if (idxListingModal.hidden) return;
+  const area = listing.buildingArea || listing.livingArea || 0;
+  const facts = [
+    ["MLS #", listing.listingId || "—"],
+    ["Bedrooms", listing.bedrooms || "—"],
+    ["Bathrooms", listing.bathrooms || "—"],
+    ["Square feet", area ? Number(area).toLocaleString() : "—"],
+    ["Property type", listing.propertyType || "—"],
+    ["Year built", listing.yearBuilt || "—"],
+    ["Lot size", listing.lotAcres ? `${listing.lotAcres} acres` : "—"],
+    ["Garage", listing.garageSpaces ? `${listing.garageSpaces} spaces` : "—"],
+  ];
+  const listingFacts = [
+    ["Listing agent", listing.agentName || "—"],
+    ["Listed", listing.listingDate ? formatDate(listing.listingDate) : "—"],
+    ["Days on market", listing.daysOnMarket || "—"],
+    ["Cumulative DOM", listing.cumulativeDaysOnMarket || "—"],
+    ["Subdivision", listing.subdivision || "—"],
+    ["County", listing.county || "—"],
+    ["Levels", listing.levels || "—"],
+    ["Private pool", listing.poolPrivate === null ? "—" : listing.poolPrivate ? "Yes" : "No"],
+  ];
+  const financialFacts = [
+    ["List price", formatCurrency(listing.price || 0)],
+    ["Price / sq. ft.", area ? formatCurrency((listing.price || 0) / area) : "—"],
+    ["Parcel number", listing.parcelNumber || "—"],
+    ["Annual taxes", listing.taxAnnualAmount ? formatCurrency(listing.taxAnnualAmount) : "—"],
+    ["Tax year", listing.taxYear || "—"],
+    ["Zoning", listing.zoning || "—"],
+  ];
+  const features = [
+    ["Cooling", listing.cooling],
+    ["Heating", listing.heating],
+    ["Parking", listing.parkingFeatures],
+    ["Interior features", listing.interiorFeatures],
+    ["Appliances", listing.appliances],
+    ["Utilities", listing.utilities],
+    ["Sewer", listing.sewer],
+    ["Water", listing.waterSource],
+    ["Property condition", listing.propertyCondition],
+  ].filter(([, value]) => value);
+  const detailGrid = (items) => items.map(([label, value]) => `<div><span>${escapeLockboxText(label)}</span><strong>${escapeLockboxText(value)}</strong></div>`).join("");
+  idxListingModalTitle.textContent = listing.address || listing.title || "Listing Details";
+  idxListingModalStatus.textContent = listing.status || "MLS listing";
+  const photos = listing.photoUrls?.length ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : [];
+  idxListingDetail.innerHTML = `
+    <div class="idx-listing-summary">
+      ${photos.length ? `<div class="idx-listing-carousel"><button class="idx-carousel-image" type="button" aria-label="Show next listing photo"><img class="idx-listing-hero" src="${escapeLockboxText(photos[0])}" alt="${escapeLockboxText(listing.address || listing.title || "MLS listing")}" /></button>${photos.length > 1 ? `<button class="idx-carousel-arrow previous" type="button" aria-label="Previous photo">‹</button><button class="idx-carousel-arrow next" type="button" aria-label="Next photo">›</button><span class="idx-carousel-count">1 / ${photos.length}</span>` : ""}</div>` : ""}
+      <div class="idx-listing-summary-copy">
+        <span>${escapeLockboxText(listing.status || "MLS listing")}</span>
+        <strong>${formatCurrency(listing.price || 0)}</strong>
+        <p>${escapeLockboxText(listing.propertyType || "Residential property")}</p>
+        <p>MLS # ${escapeLockboxText(listing.listingId || "—")}</p>
+      </div>
+    </div>
+    <section class="idx-listing-section"><h4>Property overview</h4><div class="idx-listing-facts">${detailGrid(facts)}</div></section>
+    ${listing.remarks ? `<section class="idx-listing-section idx-listing-remarks"><h4>Public remarks</h4><p>${escapeLockboxText(listing.remarks)}</p></section>` : ""}
+    <section class="idx-listing-section"><h4>Listing details</h4><div class="idx-listing-facts">${detailGrid(listingFacts)}</div></section>
+    <section class="idx-listing-section"><h4>Financial &amp; tax</h4><div class="idx-listing-facts">${detailGrid(financialFacts)}</div></section>
+    ${features.length ? `<section class="idx-listing-section"><h4>Features &amp; utilities</h4><div class="idx-listing-feature-list">${features.map(([label, value]) => `<div><strong>${escapeLockboxText(label)}</strong><p>${escapeLockboxText(value)}</p></div>`).join("")}</div></section>` : ""}
+    ${(listing.directions || (listing.latitude && listing.longitude)) ? `<section class="idx-listing-section"><h4>Location</h4>${listing.directions ? `<p>${escapeLockboxText(listing.directions)}</p>` : ""}${listing.latitude && listing.longitude ? `<a class="secondary-action idx-map-link" href="https://www.google.com/maps?q=${encodeURIComponent(`${listing.latitude},${listing.longitude}`)}" target="_blank" rel="noopener">Open in Maps</a>` : ""}</section>` : ""}
+  `;
+  if (photos.length > 1) {
+    let photoIndex = 0;
+    const image = idxListingDetail.querySelector(".idx-listing-hero");
+    const count = idxListingDetail.querySelector(".idx-carousel-count");
+    const showPhoto = (nextIndex) => {
+      photoIndex = (nextIndex + photos.length) % photos.length;
+      image.src = photos[photoIndex];
+      count.textContent = `${photoIndex + 1} / ${photos.length}`;
+    };
+    idxListingDetail.querySelector(".idx-carousel-image")?.addEventListener("click", () => showPhoto(photoIndex + 1));
+    idxListingDetail.querySelector(".idx-carousel-arrow.previous")?.addEventListener("click", () => showPhoto(photoIndex - 1));
+    idxListingDetail.querySelector(".idx-carousel-arrow.next")?.addEventListener("click", () => showPhoto(photoIndex + 1));
+  }
 }
 
 function closeIdxListingPreview() {
