@@ -5026,6 +5026,7 @@ const actionIconPaths = {
 };
 
 function getActionIconName(control) {
+  if (control.dataset.actionIcon && actionIconPaths[control.dataset.actionIcon]) return control.dataset.actionIcon;
   const text = `${control.textContent || ""} ${control.getAttribute("aria-label") || ""}`.trim().toLowerCase();
   if (/face id|passkey|profile|agent|user/.test(text)) return "user";
   if (/qr/.test(text)) return "qr";
@@ -5062,7 +5063,7 @@ function decorateActionControl(control) {
   if (!control || control.classList.contains("has-action-icon")) return;
   if (control.matches(".icon-button, .mobile-menu, .idx-carousel-image, .calendar-event, .overview-schedule-event, .file-link, .file-inline-link")) return;
   const visibleText = control.textContent.trim();
-  if (control.querySelector("svg, img") || !visibleText || visibleText.startsWith("+")) return;
+  if (control.querySelector("svg, img") || !visibleText) return;
   const iconName = getActionIconName(control);
   const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   icon.setAttribute("viewBox", "0 0 24 24");

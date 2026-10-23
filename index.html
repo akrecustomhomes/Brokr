@@ -184,7 +184,7 @@
               </div>
               <div class="office-listings-actions">
                 <button class="secondary-action" id="office-listings-toggle" type="button" hidden>Show All</button>
-                <button class="primary-action" id="topbar-new-transaction" type="button">+ New Transaction</button>
+                <button class="primary-action" id="topbar-new-transaction" type="button" data-action-icon="plus">New Transaction</button>
               </div>
             </div>
             <div class="office-listing-filters" role="tablist" aria-label="Filter office listings">
@@ -220,7 +220,7 @@
               </div>
               <div class="task-panel-actions">
                 <span id="company-task-open-count">0 open</span>
-                <button class="primary-action" id="add-company-task-button" type="button">+ Task</button>
+                <button class="primary-action" id="add-company-task-button" type="button" data-action-icon="plus">Task</button>
               </div>
             </div>
             <div class="company-task-list" id="company-task-list"></div>
@@ -252,7 +252,7 @@
             </div>
 
             <div class="panel-action-row">
-              <button class="primary-action" id="add-agent-button" type="button">+ Agent</button>
+              <button class="primary-action" id="add-agent-button" type="button" data-action-icon="plus">Agent</button>
             </div>
 
             <div class="roster-panel">
@@ -314,7 +314,7 @@
             </div>
 
             <div class="panel-action-row">
-              <button class="primary-action" id="add-transaction-button" type="button">+ New Transaction</button>
+              <button class="primary-action" id="add-transaction-button" type="button" data-action-icon="plus">New Transaction</button>
             </div>
 
             <div class="roster-panel">
@@ -421,7 +421,7 @@
                 <p class="eyebrow">Access</p>
                 <h3 id="users-title">Users</h3>
               </div>
-              <button class="primary-action" id="add-user-button" type="button">+ User</button>
+              <button class="primary-action" id="add-user-button" type="button" data-action-icon="plus">User</button>
             </div>
 
             <div class="roster-panel">
@@ -595,7 +595,7 @@
                   <p class="eyebrow">Listing access</p>
                   <h3 id="lockbox-manager-title">Lockbox Manager</h3>
                 </div>
-                <button class="primary-action" id="add-lockbox-button" type="button">+ Lockbox</button>
+                <button class="primary-action" id="add-lockbox-button" type="button" data-action-icon="plus">Lockbox</button>
               </div>
               <div class="lockbox-list" id="lockbox-list"></div>
             </section>
@@ -606,7 +606,7 @@
                   <p class="eyebrow">Marketing analytics</p>
                   <h3 id="qr-manager-title">QR Code Manager</h3>
                 </div>
-                <button class="primary-action" id="add-qr-code-button" type="button">+ QR Code</button>
+                <button class="primary-action" id="add-qr-code-button" type="button" data-action-icon="plus">QR Code</button>
               </div>
               <div class="qr-manager-intro">
                 <p>Create a trackable QR code for a listing, sign, flyer, or campaign.</p>
@@ -983,7 +983,7 @@
                   Notes
                   <input id="additional-document-notes" type="text" placeholder="Contract change, extra disclosure, or broker note" />
                 </label>
-                <button class="secondary-action" id="add-additional-document-button" type="button">+ Document</button>
+                <button class="secondary-action" id="add-additional-document-button" type="button" data-action-icon="plus">Document</button>
               </div>
               <div class="additional-document-list" id="additional-document-list"></div>
             </div>
@@ -1428,6 +1428,6 @@
 
     <script src="config.js"></script>
     <script src="supabase-adapter.js"></script>
-    <script src="script.js?v=20261022-single-plus-actions"></script>
+    <script src="script.js?v=20261022-icon-plus-actions"></script>
   </body>
 </html>
