@@ -563,31 +563,41 @@
             <form class="broker-contact-panel license-notification-panel" id="license-notification-form" aria-label="License expiration notification settings">
               <div class="panel-header">
                 <div>
-                  <p class="eyebrow">Email reminders</p>
-                  <h3>License Expiration Notifications</h3>
+                  <p class="eyebrow">Communications</p>
+                  <h3>Notification Settings</h3>
                 </div>
-                <p class="panel-note">Runs daily</p>
+                <p class="panel-note">Brokerage-wide</p>
               </div>
 
-              <div class="form-grid broker-contact-grid">
-                <label>
-                  Notify this many days before expiration
-                  <span class="input-with-suffix">
-                    <input id="license-reminder-days" type="number" min="1" max="365" step="1" value="60" required />
-                    <span>days</span>
-                  </span>
-                </label>
-                <label class="checkbox-field">
-                  <input id="license-reminder-agent-enabled" type="checkbox" checked />
-                  Email the agent
-                </label>
-                <label class="checkbox-field">
-                  <input id="license-reminder-broker-enabled" type="checkbox" checked />
-                  Email the broker
-                </label>
+              <div class="notification-setting-list">
+                <section class="notification-setting-item" aria-labelledby="license-notification-title">
+                  <div class="notification-setting-heading">
+                    <div>
+                      <p class="eyebrow">License compliance</p>
+                      <h4 id="license-notification-title">License Expiration</h4>
+                    </div>
+                    <span class="notification-frequency">Runs daily</span>
+                  </div>
+                  <p class="notification-setting-description">Send one reminder per expiration date when an active agent's license enters the reminder window.</p>
+                  <div class="notification-setting-controls">
+                    <label class="notification-days-field">
+                      <span>Reminder lead time</span>
+                      <span class="input-with-suffix">
+                        <input id="license-reminder-days" type="number" min="1" max="365" step="1" value="60" required />
+                        <span>days</span>
+                      </span>
+                    </label>
+                    <label class="notification-recipient-option">
+                      <input id="license-reminder-agent-enabled" type="checkbox" checked />
+                      <span><strong>Email agent</strong><small>Uses the email saved in the agent's profile.</small></span>
+                    </label>
+                    <label class="notification-recipient-option">
+                      <input id="license-reminder-broker-enabled" type="checkbox" checked />
+                      <span><strong>Email broker</strong><small>Uses the primary broker email saved above.</small></span>
+                    </label>
+                  </div>
+                </section>
               </div>
-
-              <p class="form-note">Brokr checks license dates daily. Each reminder is sent once per expiration date to the agent email on file and the primary broker email above.</p>
             </form>
 
             <form class="archive-storage-panel" id="archive-storage-form" aria-label="Archive storage settings">

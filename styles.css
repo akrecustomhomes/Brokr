@@ -2988,6 +2988,131 @@ img.uploaded-contract-preview {
   border-left: 1px solid var(--line);
 }
 
+.license-notification-panel .admin-panel-body {
+  padding: 28px;
+}
+
+.notification-setting-list {
+  display: grid;
+  gap: 16px;
+}
+
+.notification-setting-item {
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.notification-setting-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px 16px;
+}
+
+.notification-setting-heading h4,
+.notification-setting-heading p,
+.notification-setting-description {
+  margin: 0;
+}
+
+.notification-setting-heading h4 {
+  margin-top: 4px;
+  font-size: 1.15rem;
+}
+
+.notification-frequency {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.notification-setting-description {
+  padding: 0 24px 20px;
+  color: var(--muted);
+}
+
+.notification-setting-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) repeat(2, minmax(240px, 1fr));
+  border-top: 1px solid var(--line);
+}
+
+.notification-setting-controls > label {
+  min-width: 0;
+  padding: 20px 24px;
+}
+
+.notification-setting-controls > label + label {
+  border-left: 1px solid var(--line);
+}
+
+.notification-days-field {
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.notification-days-field .input-with-suffix {
+  width: 100%;
+}
+
+.notification-recipient-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.notification-recipient-option input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--brass);
+}
+
+.notification-recipient-option span {
+  display: grid;
+  gap: 3px;
+}
+
+.notification-recipient-option strong {
+  color: var(--ink);
+}
+
+.notification-recipient-option small {
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .notification-setting-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .notification-setting-controls > label + label {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 600px) {
+  .license-notification-panel .admin-panel-body {
+    padding: 16px;
+  }
+
+  .notification-setting-heading,
+  .notification-setting-controls > label {
+    padding-inline: 18px;
+  }
+
+  .notification-setting-heading {
+    align-items: flex-start;
+  }
+}
+
 .agent-contract-document header {
   margin-bottom: 28px;
   text-align: center;
