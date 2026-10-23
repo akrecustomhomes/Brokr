@@ -61,14 +61,16 @@
     return clientPromise;
   }
 
-  function getRedirectUrl() {
-    return `${window.location.origin}${window.location.pathname}`;
+  function getRedirectUrl(authFlow = "") {
+    const url = new URL(window.location.pathname, window.location.origin);
+    if (authFlow) url.searchParams.set("auth", authFlow);
+    return url.toString();
   }
 
   function getAuthCallbackType() {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
     const queryParams = new URLSearchParams(window.location.search);
-    const type = hashParams.get("type") || queryParams.get("type");
+    const type = hashParams.get("type") || queryParams.get("type") || queryParams.get("auth");
     const hasSetupToken =
       hashParams.has("access_token") ||
       hashParams.has("refresh_token") ||
@@ -264,7 +266,7 @@
           role: "Broker",
           app: "Brokr",
         },
-        emailRedirectTo: getRedirectUrl(),
+        emailRedirectTo: getRedirectUrl("invite"),
       },
     });
     if (error) throw error;
@@ -288,7 +290,7 @@
     if (!client) throw new Error("Supabase is not configured.");
 
     const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo: getRedirectUrl(),
+      redirectTo: getRedirectUrl("recovery"),
     });
     if (error) throw error;
   }
@@ -494,7 +496,7 @@
 
     if (userIdError) {
       console.warn("Unable to load current Brokr user.", userIdError);
-      return null;
+      throw userIdError;
     }
 
     let data = userIdMatch;
@@ -507,7 +509,7 @@
 
       if (emailError) {
         console.warn("Unable to load current Brokr user by email.", emailError);
-        return null;
+        throw emailError;
       }
       data = emailMatch;
     }
@@ -580,7 +582,7 @@
     const client = await getClient();
     if (!client) return null;
 
-    const { data } = client.auth.onAuthStateChange((_event, session) => callback(session));
+    const { data } = client.auth.onAuthStateChange((event, session) => callback(session, event));
     return data.subscription;
   }
 

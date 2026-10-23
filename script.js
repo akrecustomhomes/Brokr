@@ -1080,7 +1080,14 @@ async function refreshAuthUser(session = currentSession) {
 
   setAuthState(getSessionDisplayProfile(session), session);
 
-  const profile = await window.BrokrBackend.loadCurrentUser();
+  let profile;
+  try {
+    profile = await window.BrokrBackend.loadCurrentUser();
+  } catch (error) {
+    console.warn("Unable to finish loading the signed-in profile.", error);
+    closeAuthGate();
+    return;
+  }
   if (!profile || profile.status !== "Active") {
     setAuthState(null, null);
     openAuthGate("This login does not have an active Brokr user profile yet. Ask the broker/admin to add this user.");
@@ -1118,8 +1125,16 @@ async function initializeAuth() {
   } else {
     await refreshAuthUser(currentSession);
   }
-  authSubscription = await window.BrokrBackend.onAuthStateChange(async (session) => {
+  authSubscription = await window.BrokrBackend.onAuthStateChange(async (session, event) => {
     currentSession = session;
+    if (event === "PASSWORD_RECOVERY") {
+      pendingPasswordSetupType = "recovery";
+      if (session) {
+        setAuthState(null, session);
+        openPasswordSetupGate("recovery");
+      }
+      return;
+    }
     await refreshAuthUser(session);
   });
 }
