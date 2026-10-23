@@ -92,7 +92,7 @@ module.exports = async function sendDocusignEnvelope(request, response) {
       section{margin-top:18px}section h4{break-after:avoid-page}.contract-party-grid,.contract-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px}
       .contract-compensation{border:1px solid #bdb6ae;padding:14px;margin:12px 0;break-inside:avoid-page}.contract-compensation:not(.selected){display:none}
       .contract-signatures>div{break-inside:avoid-page}.contract-signatures>div>p:not(.contract-signature-field){margin-bottom:20px}
-      .contract-signature-field{position:relative;min-height:104px;margin:18px 0 0;border:0}.contract-signature-field>span:first-child{display:block}.contract-signature-line{position:absolute;right:0;bottom:0;left:0;border-bottom:1px solid #27231f}.contract-signature-field .docusign-anchor{position:absolute;left:0;bottom:-4px;font-size:2px;color:#fff}
+      .docusign-anchor{font-size:2px;line-height:1px;color:#fff}.contract-signature-field{position:relative;min-height:104px;margin:18px 0 0;border:0}.contract-signature-field>span:first-child{display:block}.contract-signature-line{position:absolute;right:0;bottom:0;left:0;border-bottom:1px solid #27231f}.contract-signature-field .docusign-anchor{position:absolute;left:0;bottom:-4px}
       ul{padding-left:22px}p{margin:7px 0}.contract-document-wordmark span{font-size:24pt;letter-spacing:.18em}.contract-document-wordmark small{display:block;letter-spacing:.25em}
     </style></head><body>${documentHtml}</body></html>`;
 
