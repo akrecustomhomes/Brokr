@@ -3079,7 +3079,7 @@ img.uploaded-contract-preview {
 
 .notification-setting-controls {
   display: grid;
-  grid-template-columns: minmax(220px, 0.8fr) repeat(2, minmax(240px, 1fr));
+  grid-template-columns: minmax(280px, 0.9fr) repeat(2, minmax(260px, 1fr));
   border-top: 1px solid var(--line);
 }
 
@@ -3093,16 +3093,15 @@ img.uploaded-contract-preview {
 }
 
 .notification-days-field {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+  display: grid;
+  align-content: center;
+  gap: 10px;
   color: var(--muted);
   font-weight: 600;
 }
 
 .notification-days-field .input-with-suffix {
-  flex: 0 0 170px;
+  width: 100%;
   height: 48px;
 }
 
@@ -3146,9 +3145,11 @@ img.uploaded-contract-preview {
   color: var(--muted);
   font-weight: 400;
   line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 980px) {
   .notification-setting-controls {
     grid-template-columns: 1fr;
   }
@@ -3187,11 +3188,9 @@ img.uploaded-contract-preview {
 
   .notification-days-field {
     align-items: stretch;
-    flex-direction: column;
   }
 
   .notification-days-field .input-with-suffix {
-    flex-basis: 48px;
     width: 100%;
   }
 }
