@@ -2048,7 +2048,7 @@ function renderAgents() {
   visibleAgents.forEach((agent) => {
     const licenseStatus = getLicenseStatus(agent.licenseExpiration);
     const row = document.createElement("tr");
-    row.className = `clickable-row transaction-tile-row${isExpanded ? " is-expanded" : ""}`;
+    row.className = "clickable-row";
     row.dataset.agentEdit = agent.id;
     row.tabIndex = 0;
     row.setAttribute("role", "button");
