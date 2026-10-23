@@ -2504,6 +2504,13 @@ async function syncMlsListingFiles() {
     const agent = findAgentForMlsListing(listing);
     const listingDate = String(listing.listingDate || "").slice(0, 10);
     const sourceStatus = getMlsTransactionStatus(listing.status);
+    const status = existing && sourceStatus === "Active" && isUnderContractStatus(existing.status)
+      ? existing.status
+      : existing && sourceStatus === "Under Contract" && ["Closing", "Closed", "Review Needed"].includes(existing.status)
+        ? existing.status
+        : existing?.status === "Closed" && sourceStatus === "Cancelled"
+          ? "Closed"
+          : sourceStatus;
     const mlsFields = {
       id: existing?.id || getMlsFileId(listingKey),
       agentId: agent?.id || existing?.agentId || null,
@@ -2526,7 +2533,7 @@ async function syncMlsListingFiles() {
       documents: existing?.documents || {},
       additionalDocuments: existing?.additionalDocuments || [],
       fileNames: existing?.fileNames || {},
-      status: sourceStatus,
+      status,
       mlsManaged: true,
       mlsListingKey: listingKey,
       mlsNumber: listing.listingId || existing?.mlsNumber || "",
