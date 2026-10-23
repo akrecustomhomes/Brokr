@@ -40,7 +40,7 @@ async function getActiveSession(request, response, config) {
   return refreshedSession;
 }
 
-function signer({ email, name, recipientId, routingOrder, signatureAnchor, dateAnchor }) {
+function signer({ email, name, recipientId, routingOrder, signatureAnchor, dateAnchor, initialsAnchor }) {
   return {
     email,
     name,
@@ -58,6 +58,12 @@ function signer({ email, name, recipientId, routingOrder, signatureAnchor, dateA
         anchorUnits: "pixels",
         anchorXOffset: "0",
         anchorYOffset: "12",
+      }],
+      initialHereTabs: [{
+        anchorString: initialsAnchor,
+        anchorUnits: "pixels",
+        anchorXOffset: "0",
+        anchorYOffset: "8",
       }],
     },
   };
@@ -83,8 +89,9 @@ module.exports = async function sendDocusignEnvelope(request, response) {
       body{font-family:Arial,sans-serif;color:#27231f;font-size:11pt;line-height:1.45;margin:42px}
       header{text-align:center;margin-bottom:28px} header img{max-width:260px;max-height:90px}
       h2{font-size:24pt;margin:14px 0} h4{font-size:14pt;margin:20px 0 8px}
-      section{break-inside:avoid;margin-top:18px}.contract-party-grid,.contract-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-      .contract-compensation{border:1px solid #bdb6ae;padding:14px;margin:12px 0}.contract-compensation:not(.selected){display:none}
+      section{margin-top:18px}section h4{break-after:avoid-page}.contract-party-grid,.contract-signatures{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+      .contract-compensation{border:1px solid #bdb6ae;padding:14px;margin:12px 0;break-inside:avoid-page}.contract-compensation:not(.selected){display:none}
+      .contract-signatures>div{break-inside:avoid-page}
       .contract-signature-field{min-height:52px;border-bottom:1px solid #27231f}.docusign-anchor{font-size:2px;color:#fff}
       ul{padding-left:22px}p{margin:7px 0}.contract-document-wordmark span{font-size:24pt;letter-spacing:.18em}.contract-document-wordmark small{display:block;letter-spacing:.25em}
     </style></head><body>${documentHtml}</body></html>`;
@@ -107,6 +114,7 @@ module.exports = async function sendDocusignEnvelope(request, response) {
             routingOrder: "1",
             signatureAnchor: "[[BROKER_SIGNATURE]]",
             dateAnchor: "[[BROKER_DATE]]",
+            initialsAnchor: "[[BROKER_INITIALS]]",
           }),
           signer({
             email: agentEmail,
@@ -115,6 +123,7 @@ module.exports = async function sendDocusignEnvelope(request, response) {
             routingOrder: "2",
             signatureAnchor: "[[AGENT_SIGNATURE]]",
             dateAnchor: "[[AGENT_DATE]]",
+            initialsAnchor: "[[AGENT_INITIALS]]",
           }),
         ],
       },
