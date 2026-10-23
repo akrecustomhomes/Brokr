@@ -3281,6 +3281,23 @@ img.uploaded-contract-preview {
 .contract-compensation + .contract-compensation { margin-top: 10px; }
 .contract-compensation.selected { border-color: var(--forest); background: #f6f8f5; }
 
+.contract-initials {
+  width: 100%;
+  margin-top: 18px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.contract-initials td {
+  width: 50%;
+  padding-right: 28px;
+  vertical-align: top;
+}
+
+.contract-initials td + td {
+  padding-left: 36px;
+}
+
 @media (max-width: 620px) {
   .contract-party-grid {
     grid-template-columns: 1fr;
