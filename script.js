@@ -1859,8 +1859,19 @@ function renderOfficeListings() {
       const title = getListingTitle(listing);
       const listingStatus = listing.isIdxListing ? listing.status : getListingStatus(listing);
       const photoSrc = listing.isIdxListing ? listing.photoUrl : listing.listingPhotoSrc;
-      const address = listing.isIdxListing ? listing.address : listing.propertyAddress;
       const price = listing.isIdxListing ? listing.price : listing.listPrice;
+      const listingAgent = listing.isIdxListing
+        ? null
+        : agents.find((agent) => String(agent.id) === String(listing.agentId));
+      const agentName = listing.isIdxListing
+        ? listing.agentName
+        : listingAgent
+          ? `${listingAgent.firstName} ${listingAgent.lastName}`
+          : "";
+      const listingByline = [agentName || "Lume Real Estate", `List price ${formatCurrency(price || 0)}`].join(" · ");
+      const listingReference = listing.isIdxListing && listing.listingId
+        ? `MLS # ${listing.listingId}`
+        : formatCurrency(price || 0);
       const photo = photoSrc
         ? `<img src="${escapeLockboxText(photoSrc)}" alt="${escapeLockboxText(title)}" />`
         : `<div class="listing-photo-placeholder"><span>${escapeLockboxText(title.slice(0, 1))}</span></div>`;
@@ -1873,11 +1884,11 @@ function renderOfficeListings() {
           <div class="office-listing-photo">${photo}</div>
           <div class="office-listing-copy">
             <h4>${escapeLockboxText(title)}</h4>
-            <p>${escapeLockboxText(address || "No property address")}</p>
+            <p>${escapeLockboxText(listingByline)}</p>
           </div>
           <div class="office-listing-meta">
             <span><i aria-hidden="true"></i>${escapeLockboxText(listingStatus)}</span>
-            <strong>${formatCurrency(price || 0)}</strong>
+            <strong>${escapeLockboxText(listingReference)}</strong>
           </div>
         </article>
       `;
