@@ -38,7 +38,6 @@ const authRememberLogin = document.querySelector("#auth-remember-login");
 const authPasskeySignin = document.querySelector("#auth-passkey-signin");
 const authMessage = document.querySelector("#auth-message");
 const authResetButton = document.querySelector("#auth-reset-button");
-const authCreateSuperButton = document.querySelector("#auth-create-super-button");
 const passwordSetupGate = document.querySelector("#password-setup-gate");
 const passwordSetupForm = document.querySelector("#password-setup-form");
 const passwordSetupNew = document.querySelector("#password-setup-new");
@@ -1209,23 +1208,6 @@ authPasskeySignin.addEventListener("click", async () => {
       : error.message || "Unable to sign in with Face ID / passkey.", "error");
   } finally {
     authPasskeySignin.disabled = false;
-  }
-});
-
-authCreateSuperButton?.addEventListener("click", async () => {
-  if (!authForm.reportValidity()) return;
-
-  setAuthMessage("Creating broker super admin...");
-  try {
-    window.BrokrBackend.setRememberLogin(authRememberLogin.checked);
-    const session = await window.BrokrBackend.createBrokerSuperAdmin(authEmail.value.trim(), authPassword.value);
-    if (session) {
-      await refreshAuthUser(session);
-    } else {
-      setAuthMessage("Check your email to confirm the broker account, then sign in.", "success");
-    }
-  } catch (error) {
-    setAuthMessage(error.message || "Unable to create broker super admin.", "error");
   }
 });
 
