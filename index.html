@@ -9,7 +9,7 @@
     <title>Brokr | Lume Real Estate</title>
     <link id="app-favicon" rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23bdb8b2"/><text x="32" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="500" fill="%232a251f">B</text></svg>' />
     <link id="app-apple-touch-icon" rel="apple-touch-icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%23bdb8b2"/><text x="90" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="84" font-weight="500" fill="%232a251f">B</text></svg>' />
-    <link rel="stylesheet" href="styles.css?v=20261023-broker-note-alignment" />
+    <link rel="stylesheet" href="styles.css?v=20261023-commission-rule-types" />
   </head>
   <body class="overview-active" data-theme="light">
     <div class="app-shell">
@@ -1101,7 +1101,7 @@
           <div class="modal-header">
             <div>
               <p class="eyebrow">Commission rules</p>
-              <h3 id="commission-modal-title">Edit Split</h3>
+              <h3 id="commission-modal-title">Edit Commission Rule</h3>
             </div>
             <button class="icon-button" id="close-commission-modal" type="button" aria-label="Close commission form">X</button>
           </div>
@@ -1111,23 +1111,43 @@
               Agent
               <input id="commission-agent-name" type="text" readonly />
             </label>
-            <label>
-              Agent split %
-              <input id="commission-agent-split" type="number" min="0" max="100" step="1" required />
+            <label class="wide-field">
+              Compensation option
+              <select id="commission-compensation-option">
+                <option value="split">Commission split</option>
+                <option value="flat">Flat transaction fee</option>
+              </select>
             </label>
-            <label>
+            <label id="commission-agent-split-field">
+              Agent split %
+              <span class="number-affix number-affix-suffix">
+                <input id="commission-agent-split" type="number" min="0" max="100" step="1" required />
+                <span aria-hidden="true">%</span>
+              </span>
+            </label>
+            <label id="commission-brokerage-split-field">
               Brokerage split %
-              <input id="commission-brokerage-split" type="number" readonly />
+              <span class="number-affix number-affix-suffix">
+                <input id="commission-brokerage-split" type="number" readonly />
+                <span aria-hidden="true">%</span>
+              </span>
+            </label>
+            <label class="wide-field" id="commission-flat-fee-field" hidden>
+              Flat transaction fee
+              <span class="number-affix number-affix-prefix">
+                <span aria-hidden="true">$</span>
+                <input id="commission-flat-fee" type="number" min="0" step="1" />
+              </span>
             </label>
           </div>
 
-          <p class="form-note">Set the default agent/brokerage commission split used for this agent's transactions.</p>
+          <p class="form-note" id="commission-form-note">Set the default agent/brokerage commission split used for this agent's transactions.</p>
 
           <div class="modal-actions">
             <span></span>
             <div>
               <button class="secondary-action" id="cancel-commission-button" type="button">Cancel</button>
-              <button class="primary-action" type="submit">Save Split</button>
+              <button class="primary-action" type="submit">Save Rule</button>
             </div>
           </div>
         </form>

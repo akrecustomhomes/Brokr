@@ -9484,6 +9484,12 @@ body[data-theme="dark"] .task-status.overdue {
   display: none;
 }
 
+#commission-agent-split-field[hidden],
+#commission-brokerage-split-field[hidden],
+#commission-flat-fee-field[hidden] {
+  display: none;
+}
+
 .number-affix {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 42px;

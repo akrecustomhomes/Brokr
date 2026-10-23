@@ -327,9 +327,15 @@ const closeCommissionModal = document.querySelector("#close-commission-modal");
 const cancelCommissionButton = document.querySelector("#cancel-commission-button");
 const commissionFields = {
   agentName: document.querySelector("#commission-agent-name"),
+  compensationOption: document.querySelector("#commission-compensation-option"),
   agentSplit: document.querySelector("#commission-agent-split"),
   brokerageSplit: document.querySelector("#commission-brokerage-split"),
+  flatTransactionFee: document.querySelector("#commission-flat-fee"),
 };
+const commissionAgentSplitField = document.querySelector("#commission-agent-split-field");
+const commissionBrokerageSplitField = document.querySelector("#commission-brokerage-split-field");
+const commissionFlatFeeField = document.querySelector("#commission-flat-fee-field");
+const commissionFormNote = document.querySelector("#commission-form-note");
 const agentFields = {
   profileImage: document.querySelector("#agent-profile-image"),
   firstName: document.querySelector("#agent-first-name"),
@@ -1519,8 +1525,12 @@ function getEstimatedGrossCommission(transaction) {
 
 function getAgentCommission(transaction) {
   const agent = agents.find((item) => item.id === Number(transaction.agentId));
+  const grossCommission = getEstimatedGrossCommission(transaction);
+  if ((agent?.compensationOption || "split") === "flat") {
+    return Math.max(0, grossCommission - (Number(agent.flatTransactionFee) || 0));
+  }
   const agentSplit = getCommissionSplit(agent);
-  return getEstimatedGrossCommission(transaction) * (agentSplit / 100);
+  return grossCommission * (agentSplit / 100);
 }
 
 function getBrokerageCommission(transaction) {
@@ -3176,6 +3186,8 @@ function renderCommissionRules() {
     .map((agent) => {
       const agentSplit = getCommissionSplit(agent);
       const brokerageSplit = 100 - agentSplit;
+      const usesFlatFee = (agent.compensationOption || "split") === "flat";
+      const flatFee = Number(agent.flatTransactionFee) || 0;
       const production = getAgentProduction(agent.id);
       const isExpanded = expandedCommissionAgentIds.has(agent.id);
 
@@ -3195,8 +3207,9 @@ function renderCommissionRules() {
             </div>
           </div>
           <div class="commission-split">
-            <span>${agentSplit}% Agent</span>
-            <span>${brokerageSplit}% Brokerage</span>
+            ${usesFlatFee
+              ? `<span>${formatCurrency(flatFee)} Flat fee</span><span>Agent retains remaining commission</span>`
+              : `<span>${agentSplit}% Agent</span><span>${brokerageSplit}% Brokerage</span>`}
             <span>${formatCurrency(production.volume)} Volume</span>
             <span>${formatCurrency(production.commission)} Agent Commission</span>
           </div>
@@ -3587,10 +3600,13 @@ function openCommissionModal(agentId) {
   const agentSplit = getCommissionSplit(agent);
 
   commissionFields.agentName.value = `${agent.firstName} ${agent.lastName}`;
+  commissionFields.compensationOption.value = agent.compensationOption || "split";
   commissionFields.agentSplit.value = agentSplit;
   commissionFields.brokerageSplit.value = 100 - agentSplit;
+  commissionFields.flatTransactionFee.value = agent.flatTransactionFee || "";
+  syncCommissionRuleFields();
   commissionModal.hidden = false;
-  commissionFields.agentSplit.focus();
+  (commissionFields.compensationOption.value === "flat" ? commissionFields.flatTransactionFee : commissionFields.agentSplit).focus();
 }
 
 function closeCommissionForm() {
@@ -3602,6 +3618,22 @@ function syncBrokerageSplit() {
   const agentSplit = Math.min(100, Math.max(0, Number(commissionFields.agentSplit.value) || 0));
   commissionFields.agentSplit.value = agentSplit;
   commissionFields.brokerageSplit.value = 100 - agentSplit;
+}
+
+function syncCommissionRuleFields() {
+  const usesSplit = commissionFields.compensationOption.value === "split";
+  commissionAgentSplitField.hidden = !usesSplit;
+  commissionBrokerageSplitField.hidden = !usesSplit;
+  commissionFlatFeeField.hidden = usesSplit;
+  commissionFields.agentSplit.disabled = !usesSplit;
+  commissionFields.agentSplit.required = usesSplit;
+  commissionFields.brokerageSplit.disabled = !usesSplit;
+  commissionFields.flatTransactionFee.disabled = usesSplit;
+  commissionFields.flatTransactionFee.required = !usesSplit;
+  commissionFormNote.textContent = usesSplit
+    ? "Set the default agent/brokerage commission split used for this agent's transactions."
+    : "Set the flat fee retained by the brokerage for each closed transaction.";
+  if (usesSplit) syncBrokerageSplit();
 }
 
 function closeTransactionForm() {
@@ -4533,6 +4565,7 @@ commissionList.addEventListener("keydown", (event) => {
 closeCommissionModal.addEventListener("click", closeCommissionForm);
 cancelCommissionButton.addEventListener("click", closeCommissionForm);
 commissionFields.agentSplit.addEventListener("input", syncBrokerageSplit);
+commissionFields.compensationOption.addEventListener("change", syncCommissionRuleFields);
 
 commissionModal.addEventListener("click", (event) => {
   if (event.target === commissionModal) closeCommissionForm();
@@ -4580,10 +4613,17 @@ archiveQueueList.addEventListener("click", (event) => {
 
 commissionForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  syncBrokerageSplit();
+  if (commissionFields.compensationOption.value === "split") syncBrokerageSplit();
 
   agents = agents.map((agent) =>
-    agent.id === editingCommissionAgentId ? { ...agent, commissionSplit: Number(commissionFields.agentSplit.value) } : agent,
+    agent.id === editingCommissionAgentId
+      ? {
+          ...agent,
+          compensationOption: commissionFields.compensationOption.value,
+          commissionSplit: Number(commissionFields.agentSplit.value) || 0,
+          flatTransactionFee: Number(commissionFields.flatTransactionFee.value) || 0,
+        }
+      : agent,
   );
   saveAgents();
 
