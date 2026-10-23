@@ -2969,6 +2969,25 @@ img.uploaded-contract-preview {
   color: #8a3434;
 }
 
+.input-with-suffix {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--input-bg);
+}
+
+.input-with-suffix input {
+  border: 0;
+  min-width: 0;
+}
+
+.input-with-suffix > span {
+  padding: 0 16px;
+  color: var(--muted);
+  border-left: 1px solid var(--line);
+}
+
 .agent-contract-document header {
   margin-bottom: 28px;
   text-align: center;

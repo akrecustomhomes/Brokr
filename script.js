@@ -82,6 +82,12 @@ const brokerContactFields = {
   profileImage: document.querySelector("#broker-profile-image"),
 };
 const brokerProfilePreview = document.querySelector("#broker-profile-preview");
+const licenseNotificationForm = document.querySelector("#license-notification-form");
+const licenseNotificationFields = {
+  days: document.querySelector("#license-reminder-days"),
+  agentEnabled: document.querySelector("#license-reminder-agent-enabled"),
+  brokerEnabled: document.querySelector("#license-reminder-broker-enabled"),
+};
 const archiveStorageForm = document.querySelector("#archive-storage-form");
 const archiveStorageFields = {
   folderUrl: document.querySelector("#archive-folder-url"),
@@ -656,6 +662,9 @@ let brokerContact = {
   email: "broker@lumerealestate.com",
   phone: "(555) 430-1000",
   profileImageSrc: "",
+  licenseReminderDays: 60,
+  licenseReminderAgentEnabled: true,
+  licenseReminderBrokerEnabled: true,
 };
 let archiveSettings = {
   folderUrl: "",
@@ -1256,6 +1265,15 @@ brokerContactForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (!brokerContactForm.reportValidity()) return;
   syncBrokerContact();
+});
+
+Object.values(licenseNotificationFields).forEach((field) => {
+  field.addEventListener("change", syncLicenseNotificationSettings);
+});
+
+licenseNotificationForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  syncLicenseNotificationSettings();
 });
 
 Object.values(archiveStorageFields).forEach((field) => {
@@ -2791,12 +2809,34 @@ function syncBrokerContact() {
     email: brokerContactFields.email.value.trim(),
     phone: brokerContactFields.phone.value.trim(),
     profileImageSrc: brokerContact.profileImageSrc || "",
+    licenseReminderDays: brokerContact.licenseReminderDays || 60,
+    licenseReminderAgentEnabled: brokerContact.licenseReminderAgentEnabled !== false,
+    licenseReminderBrokerEnabled: brokerContact.licenseReminderBrokerEnabled !== false,
   };
   updateBrokerProfilePreview();
   renderAuthIdentity();
   saveBrokerContact();
   saveBrokerContactToBackend();
   renderInbox();
+}
+
+function syncLicenseNotificationFields() {
+  licenseNotificationFields.days.value = brokerContact.licenseReminderDays || 60;
+  licenseNotificationFields.agentEnabled.checked = brokerContact.licenseReminderAgentEnabled !== false;
+  licenseNotificationFields.brokerEnabled.checked = brokerContact.licenseReminderBrokerEnabled !== false;
+}
+
+function syncLicenseNotificationSettings() {
+  if (!licenseNotificationForm.checkValidity()) return;
+  brokerContact = {
+    ...brokerContact,
+    licenseReminderDays: Math.min(365, Math.max(1, Number(licenseNotificationFields.days.value) || 60)),
+    licenseReminderAgentEnabled: licenseNotificationFields.agentEnabled.checked,
+    licenseReminderBrokerEnabled: licenseNotificationFields.brokerEnabled.checked,
+  };
+  syncLicenseNotificationFields();
+  saveBrokerContact();
+  saveBrokerContactToBackend();
 }
 
 function restoreBrokerContact() {
@@ -2810,6 +2850,7 @@ function restoreBrokerContact() {
   brokerContactFields.phone.value = brokerContact.phone;
   brokerContactFields.profileImage.value = "";
   updateBrokerProfilePreview();
+  syncLicenseNotificationFields();
   renderAuthIdentity();
 }
 
@@ -2822,6 +2863,9 @@ async function restoreBrokerContactFromBackend() {
     email: savedContact.broker_email || brokerContact.email,
     phone: formatPhoneNumber(savedContact.broker_phone || brokerContact.phone),
     profileImageSrc: savedContact.profile_image_src || brokerContact.profileImageSrc || "",
+    licenseReminderDays: Number(savedContact.license_reminder_days || brokerContact.licenseReminderDays || 60),
+    licenseReminderAgentEnabled: savedContact.license_reminder_agent_enabled ?? brokerContact.licenseReminderAgentEnabled,
+    licenseReminderBrokerEnabled: savedContact.license_reminder_broker_enabled ?? brokerContact.licenseReminderBrokerEnabled,
   };
 
   brokerContactFields.name.value = brokerContact.name;
@@ -2829,6 +2873,7 @@ async function restoreBrokerContactFromBackend() {
   brokerContactFields.phone.value = brokerContact.phone;
   brokerContactFields.profileImage.value = "";
   updateBrokerProfilePreview();
+  syncLicenseNotificationFields();
   renderAuthIdentity();
   saveBrokerContact();
   renderInbox();

@@ -4,6 +4,12 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": false,
+  "crons": [
+    {
+      "path": "/api/license-reminders",
+      "schedule": "0 15 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/q/:slug",

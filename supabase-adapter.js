@@ -518,13 +518,22 @@
       broker_email: contact.email,
       broker_phone: contact.phone,
       profile_image_src: contact.profileImageSrc || null,
+      license_reminder_days: Number(contact.licenseReminderDays || 60),
+      license_reminder_agent_enabled: contact.licenseReminderAgentEnabled !== false,
+      license_reminder_broker_enabled: contact.licenseReminderBrokerEnabled !== false,
       updated_at: new Date().toISOString(),
     };
 
     const { error } = await client.from("broker_contacts").upsert(payload);
 
-    if (error && /profile_image_src/i.test(error.message || "")) {
-      const { profile_image_src: _profileImageSrc, ...legacyPayload } = payload;
+    if (error && /profile_image_src|license_reminder_/i.test(error.message || "")) {
+      const {
+        profile_image_src: _profileImageSrc,
+        license_reminder_days: _licenseReminderDays,
+        license_reminder_agent_enabled: _licenseReminderAgentEnabled,
+        license_reminder_broker_enabled: _licenseReminderBrokerEnabled,
+        ...legacyPayload
+      } = payload;
       const { error: legacyError } = await client.from("broker_contacts").upsert(legacyPayload);
       if (legacyError) console.warn("Unable to save Supabase broker contact.", legacyError);
       return;

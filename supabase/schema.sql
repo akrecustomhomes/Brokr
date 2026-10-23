@@ -22,10 +22,16 @@ create table if not exists public.broker_contacts (
   broker_email text not null,
   broker_phone text not null,
   profile_image_src text,
+  license_reminder_days integer not null default 60 check (license_reminder_days between 1 and 365),
+  license_reminder_agent_enabled boolean not null default true,
+  license_reminder_broker_enabled boolean not null default true,
   updated_at timestamptz not null default now()
 );
 
 alter table public.broker_contacts add column if not exists profile_image_src text;
+alter table public.broker_contacts add column if not exists license_reminder_days integer not null default 60;
+alter table public.broker_contacts add column if not exists license_reminder_agent_enabled boolean not null default true;
+alter table public.broker_contacts add column if not exists license_reminder_broker_enabled boolean not null default true;
 
 create table if not exists public.archive_settings (
   id text primary key default 'default',

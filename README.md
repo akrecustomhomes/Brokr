@@ -26,6 +26,8 @@ Open `http://127.0.0.1:4173`.
    - `SUPABASE_SERVICE_ROLE_KEY` for broker/admin user invites. Keep this server-only in Vercel.
    - `SPARK_ACCESS_TOKEN` for the server-side Washington County BOR IDX feed.
    - `SPARK_OFFICE_NAME` set to `LUME REAL ESTATE` when the MLS office name needs an explicit filter.
+   - `RESEND_API_KEY` and `BROKR_FROM_EMAIL` for license-expiration emails.
+   - `CRON_SECRET` for the secured daily reminder job.
 4. Vercel will run `npm run build`.
 5. Output directory is `dist`.
 

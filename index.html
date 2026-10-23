@@ -560,6 +560,36 @@
               <p class="form-note">Deadline alerts and file upload review notices route to this broker contact.</p>
             </form>
 
+            <form class="broker-contact-panel license-notification-panel" id="license-notification-form" aria-label="License expiration notification settings">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Email reminders</p>
+                  <h3>License Expiration Notifications</h3>
+                </div>
+                <p class="panel-note">Runs daily</p>
+              </div>
+
+              <div class="form-grid broker-contact-grid">
+                <label>
+                  Notify this many days before expiration
+                  <span class="input-with-suffix">
+                    <input id="license-reminder-days" type="number" min="1" max="365" step="1" value="60" required />
+                    <span>days</span>
+                  </span>
+                </label>
+                <label class="checkbox-field">
+                  <input id="license-reminder-agent-enabled" type="checkbox" checked />
+                  Email the agent
+                </label>
+                <label class="checkbox-field">
+                  <input id="license-reminder-broker-enabled" type="checkbox" checked />
+                  Email the broker
+                </label>
+              </div>
+
+              <p class="form-note">Brokr checks license dates daily. Each reminder is sent once per expiration date to the agent email on file and the primary broker email above.</p>
+            </form>
+
             <form class="archive-storage-panel" id="archive-storage-form" aria-label="Archive storage settings">
               <div class="panel-header">
                 <div>
