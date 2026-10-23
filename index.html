@@ -9,7 +9,7 @@
     <title>Brokr | Lume Real Estate</title>
     <link id="app-favicon" rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23bdb8b2"/><text x="32" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="500" fill="%232a251f">B</text></svg>' />
     <link id="app-apple-touch-icon" rel="apple-touch-icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180"><rect width="180" height="180" fill="%23bdb8b2"/><text x="90" y="118" text-anchor="middle" font-family="Arial, sans-serif" font-size="84" font-weight="500" fill="%232a251f">B</text></svg>' />
-    <link rel="stylesheet" href="styles.css?v=20261022-full-listing-hero" />
+    <link rel="stylesheet" href="styles.css?v=20261022-agent-contract" />
   </head>
   <body class="overview-active" data-theme="light">
     <div class="app-shell">
@@ -653,6 +653,17 @@
               <input id="agent-last-name" name="lastName" type="text" required />
             </label>
             <label>
+              Role
+              <select id="agent-role-title" name="roleTitle">
+                <option value="Realtor">Realtor</option>
+                <option value="Principal Broker">Principal Broker</option>
+              </select>
+            </label>
+            <label>
+              Utah license number
+              <input id="agent-license-number" name="licenseNumber" type="text" />
+            </label>
+            <label>
               Email
               <input id="agent-email" name="email" type="email" required />
             </label>
@@ -683,6 +694,21 @@
             <label>
               License expires
               <input id="agent-license-expiration" name="licenseExpiration" type="date" required />
+            </label>
+            <label>
+              Contract effective date
+              <input id="agent-contract-effective-date" name="contractEffectiveDate" type="date" />
+            </label>
+            <label>
+              Compensation option
+              <select id="agent-compensation-option" name="compensationOption">
+                <option value="split">Commission split</option>
+                <option value="flat">Flat transaction fee</option>
+              </select>
+            </label>
+            <label>
+              Flat transaction fee
+              <input id="agent-flat-transaction-fee" name="flatTransactionFee" type="number" min="0" step="1" />
             </label>
           </div>
 
@@ -719,6 +745,10 @@
                 <span class="file-tile-name" id="agent-contract-file-name">No file uploaded</span>
               </div>
               <div class="file-tile-divider"></div>
+              <div class="agent-contract-actions">
+                <button class="secondary-action" id="preview-agent-contract-button" type="button">Preview Contract</button>
+                <button class="primary-action" id="send-agent-contract-button" type="button">Send with DocuSign</button>
+              </div>
               <label class="file-upload-action">
                 Upload File
                 <input id="agent-contract-file" name="contractFile" type="file" accept=".pdf,image/*,.doc,.docx" />
@@ -756,6 +786,23 @@
             </div>
           </div>
         </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="agent-contract-modal" hidden>
+      <section class="modal agent-contract-modal" role="dialog" aria-modal="true" aria-labelledby="agent-contract-modal-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Independent contractor agreement</p>
+            <h3 id="agent-contract-modal-title">Broker / Agent Contract</h3>
+          </div>
+          <button class="icon-button" id="close-agent-contract-modal" type="button" aria-label="Close contract preview">X</button>
+        </div>
+        <article class="agent-contract-document" id="agent-contract-document"></article>
+        <div class="modal-actions">
+          <button class="secondary-action" id="print-agent-contract-button" type="button">Print / Save PDF</button>
+          <button class="primary-action" id="contract-docusign-button" type="button">Send with DocuSign</button>
+        </div>
       </section>
     </div>
 
@@ -1366,6 +1413,6 @@
 
     <script src="config.js"></script>
     <script src="supabase-adapter.js"></script>
-    <script src="script.js?v=20261022-clean-start"></script>
+    <script src="script.js?v=20261022-agent-contract"></script>
   </body>
 </html>

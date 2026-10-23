@@ -330,6 +330,8 @@ const agentFields = {
   profileImage: document.querySelector("#agent-profile-image"),
   firstName: document.querySelector("#agent-first-name"),
   lastName: document.querySelector("#agent-last-name"),
+  roleTitle: document.querySelector("#agent-role-title"),
+  licenseNumber: document.querySelector("#agent-license-number"),
   email: document.querySelector("#agent-email"),
   phone: document.querySelector("#agent-phone"),
   calendarColor: document.querySelector("#agent-calendar-color"),
@@ -339,9 +341,19 @@ const agentFields = {
   zip: document.querySelector("#agent-zip"),
   licenseFile: document.querySelector("#agent-license-file"),
   licenseExpiration: document.querySelector("#agent-license-expiration"),
+  contractEffectiveDate: document.querySelector("#agent-contract-effective-date"),
+  compensationOption: document.querySelector("#agent-compensation-option"),
+  flatTransactionFee: document.querySelector("#agent-flat-transaction-fee"),
   contractFile: document.querySelector("#agent-contract-file"),
   otherFile: document.querySelector("#agent-other-file"),
 };
+const agentContractModal = document.querySelector("#agent-contract-modal");
+const agentContractDocument = document.querySelector("#agent-contract-document");
+const closeAgentContractModal = document.querySelector("#close-agent-contract-modal");
+const previewAgentContractButton = document.querySelector("#preview-agent-contract-button");
+const sendAgentContractButton = document.querySelector("#send-agent-contract-button");
+const printAgentContractButton = document.querySelector("#print-agent-contract-button");
+const contractDocusignButton = document.querySelector("#contract-docusign-button");
 
 menuItems.forEach((item) => {
   const label = item.querySelector("span:last-child")?.textContent?.trim() || pageTitles[item.dataset.page] || "Menu item";
@@ -493,6 +505,12 @@ let agents = [
     archived: false,
   },
 ];
+const savedAgents = JSON.parse(localStorage.getItem("brokr-agents") || "null");
+if (Array.isArray(savedAgents) && savedAgents.length) agents = savedAgents;
+
+function saveAgents() {
+  localStorage.setItem("brokr-agents", JSON.stringify(agents));
+}
 const cleanStartMigrationKey = "brokr-clean-start-idx-v1";
 if (!localStorage.getItem(cleanStartMigrationKey)) {
   [
@@ -1506,6 +1524,67 @@ function updateBrokerProfilePreview(src = brokerContact.profileImageSrc || "") {
   brokerProfilePreview.classList.toggle("has-image", Boolean(src));
 }
 
+function getAgentContractDraft() {
+  const savedAgent = agents.find((agent) => agent.id === editingAgentId);
+  return savedAgent || {
+    firstName: agentFields.firstName.value.trim(),
+    lastName: agentFields.lastName.value.trim(),
+    licenseNumber: agentFields.licenseNumber.value.trim(),
+    contractEffectiveDate: agentFields.contractEffectiveDate.value,
+    compensationOption: agentFields.compensationOption.value,
+    flatTransactionFee: Number(agentFields.flatTransactionFee.value) || 0,
+    commissionSplit: 70,
+  };
+}
+
+function renderAgentContract(agent) {
+  const name = `${agent.firstName || ""} ${agent.lastName || ""}`.trim() || "________________________";
+  const effectiveDate = agent.contractEffectiveDate ? formatDate(agent.contractEffectiveDate) : "________________";
+  const agentSplit = Number(agent.commissionSplit) || 0;
+  const brokerageSplit = 100 - agentSplit;
+  const splitSelected = (agent.compensationOption || "split") === "split";
+  const flatFee = Number(agent.flatTransactionFee) || 0;
+  const section = (title, body) => `<section><h4>${title}</h4>${body}</section>`;
+  const bullets = (items) => `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+
+  agentContractDocument.innerHTML = `
+    <header><p class="eyebrow">Lume Real Estate</p><h2>Independent Contractor Agreement</h2></header>
+    <p>This Independent Contractor Agreement ("Agreement") is entered into on <strong>${escapeLockboxText(effectiveDate)}</strong>, by and between:</p>
+    <div class="contract-party-grid"><div><span>Brokerage</span><strong>Lume Real Estate</strong><p>Principal Broker: Jared Alvey<br>212 E Blue Fields Ln.<br>Washington, UT 84780</p></div><div><span>Agent</span><strong>${escapeLockboxText(name)}</strong><p>License Number: ${escapeLockboxText(agent.licenseNumber || "________________")}</p></div></div>
+    <p>Collectively referred to as the "Parties."</p>
+    ${section("1. Independent Contractor Status", "<p>Agent shall perform services as an independent contractor and not as an employee of Brokerage. Agent shall be responsible for all taxes, insurance, licensing fees, continuing education requirements, and other expenses associated with Agent's business activities.</p>")}
+    ${section("2. Term", "<p>This Agreement shall commence on the effective date above and shall continue until terminated by either party upon written notice.</p>")}
+    ${section("3. Agent Responsibilities", bullets(["Maintain an active Utah real estate license in good standing.", "Conduct all business in accordance with Utah law, REALTOR® Code of Ethics, MLS rules, and Brokerage policies.", "Present a professional image and conduct all business ethically and honestly.", "Use Brokerage-approved forms and disclosures.", "Promptly communicate with clients, cooperating agents, lenders, title companies, and Brokerage staff.", "Maintain accurate transaction records.", "Protect confidential client information.", "Refrain from making unauthorized legal, tax, or financial representations."]))}
+    ${section("4. Broker Supervision and Document Review", `<p>Agent acknowledges that Brokerage is responsible for supervising licensed activity.</p>${bullets(["All listing agreements, buyer representation agreements, purchase contracts, addenda, disclosures, amendments, and other transaction documents shall be submitted to Brokerage for review and approval as required.", "No document requiring Broker approval shall be presented or distributed without such approval when required by Brokerage policy.", "All fully executed documents shall be submitted to Brokerage immediately upon execution and no later than twenty-four (24) hours after signing.", "Agent shall cooperate with all compliance reviews and requests for information.", "Brokerage may require corrections to any transaction file to maintain compliance."])}`)}
+    ${section("5. Transaction File Requirements", `<p>Agent shall provide complete transaction files including:</p>${bullets(["Listing agreements", "Buyer representation agreements", "Purchase contracts", "Addenda and amendments", "Agency disclosures", "Seller disclosures", "Inspection documents", "Closing statements", "Any other documents required by Brokerage"])}<p>Brokerage reserves the right to withhold commission payments until all required documents have been received and approved.</p>`)}
+    ${section("6. Commission Compensation", `<p>Agent shall select one compensation option below.</p><div class="contract-compensation ${splitSelected ? "selected" : ""}"><strong>Option A – Commission Split</strong><p>Brokerage Split: ${splitSelected ? brokerageSplit : "____"}% &nbsp; · &nbsp; Agent Split: ${splitSelected ? agentSplit : "____"}%</p><p>The Agent shall receive the agreed-upon percentage of commissions earned and collected by Brokerage from transactions originated or serviced by Agent.</p><p>Broker Initials: ______ &nbsp; Agent Initials: ______</p></div><div class="contract-compensation ${!splitSelected ? "selected" : ""}"><strong>Option B – Flat Transaction Fee</strong><p>Agent shall retain one hundred percent (100%) of earned commission, less the following transaction fee paid to Brokerage:</p><p>${!splitSelected && flatFee ? formatCurrency(flatFee) : "$________"} per closed transaction.</p><p>Broker Initials: ______ &nbsp; Agent Initials: ______</p></div><h5>Commission Modifications and Reductions</h5><p>Agent shall not independently negotiate, advertise, offer, agree to, or promise any reduction, rebate, credit, discount, concession, or modification of Brokerage commission or compensation without the prior written approval of the Principal Broker.</p><p>Any request by a buyer, seller, landlord, tenant, or other client to reduce Brokerage compensation must be submitted to the Principal Broker for review and approval before any agreement is made or documented.</p><p>Any commission reduction, listing fee discount, buyer rebate, closing cost credit paid from commission, referral fee adjustment, or other compensation modification must be approved in writing by the Principal Broker prior to execution of any agreement or amendment affecting Brokerage compensation.</p><p>The Principal Broker reserves the sole right to approve, deny, or modify any proposed commission reduction or compensation arrangement.</p><p>Any unauthorized commission reduction or compensation agreement entered into by Agent may constitute grounds for disciplinary action, withholding of commission payment, or termination of this Agreement.</p>`)}
+    ${section("7. Payment of Commissions", bullets(["Brokerage has received commission funds.", "Transaction file is complete.", "All required documentation has been submitted and approved.", "Brokerage may deduct transaction fees, MLS fees, E&O insurance fees, unpaid brokerage charges, and client-related expenses authorized by Agent.", "No commission shall be paid on transactions that fail to close."]))}
+    ${section("8. Advertising and Marketing", bullets(["All advertising shall comply with Utah law and Brokerage policy.", "Brokerage name shall appear on all advertising as required by law.", "Social media, websites, signs, flyers, and marketing materials shall clearly identify Brokerage.", "Brokerage may require review and approval of marketing materials."]))}
+    ${section("9. Earnest Money", "<p>Agent shall immediately deliver all earnest money and trust funds in accordance with Utah law and Brokerage policy to their client's Title Company and provide proof of Earnest Money deposits.</p>")}
+    ${section("10. Confidentiality", "<p>Agent shall maintain confidentiality regarding client information, brokerage operations, financial information, and proprietary systems both during and after the term of this Agreement.</p>")}
+    ${section("11. License Maintenance", bullets(["Maintain an active license.", "Complete continuing education requirements.", "Notify Brokerage immediately of any investigation, complaint, disciplinary action, or license status change."]))}
+    ${section("12. Termination", `<p>Either party may terminate this Agreement at any time upon written notice.</p>${bullets(["Agent shall immediately cease using Brokerage branding, signs, marketing materials, and systems.", "All transaction files remain property of Brokerage.", "Pending transactions shall be handled according to Brokerage policy and Utah law.", "Commission rights on pending transactions shall be determined by Brokerage and any separate written agreement."])}`)}
+    ${section("13. Indemnification", "<p>Agent agrees to indemnify and hold harmless Brokerage, Broker, employees, and affiliates from claims, damages, liabilities, or expenses arising from Agent's negligence, misconduct, or violation of law.</p>")}
+    ${section("14. Entire Agreement", "<p>This Agreement constitutes the entire understanding between the Parties and supersedes all prior agreements. Any modification must be in writing and signed by both Parties.</p>")}
+    ${section("15. Governing Law", "<p>This Agreement shall be governed by the laws of the State of Utah.</p>")}
+    <section><h4>Signatures</h4><div class="contract-signatures"><div><strong>Lume Real Estate</strong><p>By: ______________________________</p><p>Jared Alvey, Principal Broker</p><p>Date: ____________________________</p></div><div><strong>${escapeLockboxText(name)}</strong><p>Signature: _________________________</p><p>Date: ____________________________</p></div></div></section>
+  `;
+}
+
+function openAgentContract(agent = getAgentContractDraft()) {
+  renderAgentContract(agent);
+  agentContractModal.hidden = false;
+  closeAgentContractModal.focus();
+}
+
+function closeAgentContract() {
+  agentContractModal.hidden = true;
+}
+
+function promptDocusignConnection() {
+  window.alert("The contract is ready. Connect the Lume DocuSign account before sending so Brokr can create envelopes and track signatures.");
+}
+
 function renderAgents() {
   const activeAgents = agents.filter((agent) => !agent.archived);
   const archivedAgents = agents.filter((agent) => agent.archived);
@@ -1543,12 +1622,13 @@ function renderAgents() {
       <td data-label="Files">
         <div>${agent.licenseFileName || "No license uploaded"}</div>
         <div class="license-detail">Expires ${formatDate(agent.licenseExpiration)}</div>
-        <div class="license-detail">${agent.contractFileName ? `Contract: ${agent.contractFileName}` : "No agent/broker contract"}</div>
+        <div class="license-detail">Contract: ${agent.contractStatus || (agent.contractFileName ? "Completed" : "Draft")}</div>
         <div class="license-detail">${agent.otherFileName ? `Other: ${agent.otherFileName}` : "No other files"}</div>
       </td>
       <td data-label="Status"><span class="status-pill ${agent.archived ? "archived" : licenseStatus.type}">${agent.archived ? "Archived" : licenseStatus.label}</span></td>
       <td data-label="Actions">
         <div class="table-actions">
+          <button class="text-action" type="button" data-agent-contract="${agent.id}">Contract</button>
           <button class="text-action" type="button" data-agent-edit="${agent.id}">Edit</button>
           <button class="text-action ${agent.archived ? "" : "archive"}" type="button" data-agent-archive="${agent.id}">
             ${agent.archived ? "Restore" : "Archive"}
@@ -3428,6 +3508,8 @@ function openAgentModal(agentId = null) {
   agentFields.profileImage.value = "";
   agentFields.firstName.value = agent?.firstName || "";
   agentFields.lastName.value = agent?.lastName || "";
+  agentFields.roleTitle.value = agent?.roleTitle || "Realtor";
+  agentFields.licenseNumber.value = agent?.licenseNumber || "";
   agentFields.email.value = agent?.email || "";
   agentFields.phone.value = agent?.phone || "";
   agentFields.calendarColor.value = agent?.calendarColor || "#837a6d";
@@ -3437,6 +3519,9 @@ function openAgentModal(agentId = null) {
   agentFields.state.value = agent?.state || legacyAddress.state;
   agentFields.zip.value = agent?.zip || legacyAddress.zip;
   agentFields.licenseExpiration.value = agent?.licenseExpiration || "";
+  agentFields.contractEffectiveDate.value = agent?.contractEffectiveDate || toDateKey(new Date());
+  agentFields.compensationOption.value = agent?.compensationOption || "split";
+  agentFields.flatTransactionFee.value = agent?.flatTransactionFee || "";
   agentFields.licenseFile.value = "";
   agentFields.contractFile.value = "";
   agentFields.otherFile.value = "";
@@ -3459,6 +3544,7 @@ function archiveAgent(agentId) {
   if (!agent) return;
 
   agent.archived = !agent.archived;
+  saveAgents();
   renderAgents();
   renderAgentOptions();
   renderUsers();
@@ -3479,6 +3565,7 @@ function deleteAgent(agentId) {
   if (!window.confirm(`Delete ${agentName} from the roster? This cannot be undone.${warning}`)) return false;
 
   agents = agents.filter((item) => item.id !== agentId);
+  saveAgents();
   users = users.map((user) => (Number(user.agentId) === Number(agentId) ? { ...user, agentId: null } : user));
   renderAgents();
   renderAgentOptions();
@@ -3497,6 +3584,17 @@ cancelAgentButton.addEventListener("click", closeModal);
 agentModal.addEventListener("click", (event) => {
   if (event.target === agentModal) closeModal();
 });
+previewAgentContractButton.addEventListener("click", () => openAgentContract());
+sendAgentContractButton.addEventListener("click", () => {
+  openAgentContract();
+  promptDocusignConnection();
+});
+closeAgentContractModal.addEventListener("click", closeAgentContract);
+agentContractModal.addEventListener("click", (event) => {
+  if (event.target === agentContractModal) closeAgentContract();
+});
+printAgentContractButton.addEventListener("click", () => window.print());
+contractDocusignButton.addEventListener("click", promptDocusignConnection);
 
 rosterTabs.forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -3545,10 +3643,17 @@ agentSummaryItems.forEach((item) => {
 });
 
 agentTableBody.addEventListener("click", (event) => {
+  const contractButton = event.target.closest("[data-agent-contract]");
   const editButton = event.target.closest("[data-agent-edit]");
   const archiveButton = event.target.closest("[data-agent-archive]");
   const deleteButton = event.target.closest("[data-agent-delete]");
   const agentRow = event.target.closest("tr[data-agent-edit]");
+
+  if (contractButton) {
+    const agent = agents.find((item) => item.id === Number(contractButton.dataset.agentContract));
+    if (agent) openAgentContract(agent);
+    return;
+  }
 
   if (deleteButton) {
     deleteAgent(Number(deleteButton.dataset.agentDelete));
@@ -3626,6 +3731,8 @@ agentForm.addEventListener("submit", async (event) => {
     profileImageSrc,
     firstName: agentFields.firstName.value.trim(),
     lastName: agentFields.lastName.value.trim(),
+    roleTitle: agentFields.roleTitle.value,
+    licenseNumber: agentFields.licenseNumber.value.trim(),
     email: agentFields.email.value.trim(),
     phone: formatPhoneNumber(agentFields.phone.value),
     calendarColor: agentFields.calendarColor.value,
@@ -3634,6 +3741,10 @@ agentForm.addEventListener("submit", async (event) => {
     state: agentFields.state.value.trim().toUpperCase(),
     zip: agentFields.zip.value.trim(),
     commissionSplit: existingAgent?.commissionSplit ?? 70,
+    compensationOption: agentFields.compensationOption.value,
+    flatTransactionFee: Number(agentFields.flatTransactionFee.value) || 0,
+    contractEffectiveDate: agentFields.contractEffectiveDate.value,
+    contractStatus: existingAgent?.contractStatus || "Draft",
     licenseFileName,
     contractFileName,
     otherFileName,
@@ -3654,6 +3765,7 @@ agentForm.addEventListener("submit", async (event) => {
   }
 
   renderAgents();
+  saveAgents();
   renderAgentOptions();
   renderCommissionRules();
   renderCalendar();
@@ -4322,6 +4434,7 @@ commissionForm.addEventListener("submit", (event) => {
   agents = agents.map((agent) =>
     agent.id === editingCommissionAgentId ? { ...agent, commissionSplit: Number(commissionFields.agentSplit.value) } : agent,
   );
+  saveAgents();
 
   renderCommissionRules();
   renderOverviewMetrics();
