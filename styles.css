@@ -10429,7 +10429,7 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
 
 .office-listing-price {
   color: var(--ink);
-  font-size: clamp(1.7rem, 2.5vw, 2.25rem);
+  font-size: 1.55rem;
   font-weight: 760;
   letter-spacing: -0.035em;
   line-height: 1;
@@ -10463,6 +10463,41 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
   font-weight: 680;
 }
 
+.office-listing-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.office-listing-status i {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: #817a72;
+}
+
+.office-listing-status.status-active i {
+  background: #4f7b60;
+}
+
+.office-listing-status.status-pending i {
+  background: #b47a34;
+}
+
+.office-listing-status.status-closed i {
+  background: #536d88;
+}
+
+.office-listing-status.status-expired i {
+  background: #9a4b4b;
+}
+
 .office-listing-address {
   margin: 4px 0 0;
   color: var(--ink);
@@ -10489,6 +10524,6 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
   }
 
   .office-listing-price {
-    font-size: 2rem;
+    font-size: 1.65rem;
   }
 }

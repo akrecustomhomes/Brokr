@@ -2324,8 +2324,17 @@ function renderOfficeListings() {
         listing.bedrooms ? `<strong>${escapeLockboxText(listing.bedrooms)}</strong> bd` : "",
         listing.bathrooms ? `<strong>${escapeLockboxText(listing.bathrooms)}</strong> ba` : "",
         area ? `<strong>${escapeLockboxText(area.toLocaleString())}</strong> sqft` : "",
-        escapeLockboxText(listingStatus),
       ].filter(Boolean);
+      const normalizedStatus = String(listingStatus || "").toLowerCase();
+      const statusTone = normalizedStatus.includes("active")
+        ? "active"
+        : normalizedStatus.includes("pending")
+          ? "pending"
+          : normalizedStatus.includes("closed") || normalizedStatus.includes("sold")
+            ? "closed"
+            : normalizedStatus.includes("expired")
+              ? "expired"
+              : "neutral";
       const listingReference = listing.isIdxListing && listing.listingId ? `MLS #${listing.listingId}` : "Office listing";
       const photo = photoSrc
         ? `<img src="${escapeLockboxText(photoSrc)}" alt="${escapeLockboxText(title)}" />`
@@ -2340,6 +2349,7 @@ function renderOfficeListings() {
           <div class="office-listing-details">
             <strong class="office-listing-price">${escapeLockboxText(formatCurrency(price || 0))}</strong>
             <div class="office-listing-specs">${specs.map((spec) => `<span>${spec}</span>`).join("")}</div>
+            <p class="office-listing-status status-${statusTone}"><i aria-hidden="true"></i>${escapeLockboxText(listingStatus)}</p>
             <h4 class="office-listing-address">${escapeLockboxText(title)}</h4>
             <p class="office-listing-attribution">${escapeLockboxText(listingReference)} · ${escapeLockboxText(agentName || "Lume Real Estate")} · Listing provided by Lume Real Estate</p>
             ${listing.isIdxListing && listing.expirationDate ? `<p class="office-listing-expiration">Expires ${escapeLockboxText(formatDate(listing.expirationDate))}</p>` : ""}
