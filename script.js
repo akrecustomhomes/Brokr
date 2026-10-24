@@ -632,7 +632,7 @@ let calendarDate = new Date();
 calendarDate.setHours(0, 0, 0, 0);
 let overviewScheduleStartOffset = 0;
 const overviewScheduleWindowDays = 10;
-const officeListingsPreviewLimit = 8;
+const officeListingsPreviewLimit = 12;
 let showAllOfficeListings = false;
 let officeListingsFilter = "all";
 let editingUserId = null;
