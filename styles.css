@@ -1204,6 +1204,121 @@ body.overview-active .topbar > div:not(.overview-actions) {
   }
 }
 
+/* CRM foundation page. */
+.crm-page {
+  display: grid;
+  gap: 22px;
+}
+
+.crm-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.crm-summary article {
+  min-width: 0;
+  padding: 22px;
+  border-right: 1px solid var(--line);
+}
+
+.crm-summary article:last-child {
+  border-right: 0;
+}
+
+.crm-summary p,
+.crm-summary strong {
+  margin: 0;
+}
+
+.crm-summary p {
+  color: var(--muted);
+}
+
+.crm-summary strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--ink);
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
+.crm-foundation-panel {
+  display: grid;
+  gap: 24px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.crm-foundation-panel h4,
+.crm-foundation-panel p {
+  margin: 0;
+}
+
+.crm-foundation-panel h4 {
+  margin-top: 5px;
+  font-size: 1.25rem;
+}
+
+.crm-foundation-panel h4 + p {
+  max-width: 760px;
+  margin-top: 10px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.crm-pipeline-preview {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.crm-pipeline-preview span {
+  padding: 15px 12px;
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+  text-align: center;
+}
+
+.crm-pipeline-preview span:last-child {
+  border-right: 0;
+}
+
+@media (max-width: 900px) {
+  .crm-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-summary article:nth-child(2) {
+    border-right: 0;
+  }
+
+  .crm-summary article:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
+  }
+
+  .crm-pipeline-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .crm-pipeline-preview span,
+  .crm-pipeline-preview span:last-child {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .crm-pipeline-preview span:last-child {
+    border-bottom: 0;
+  }
+}
+
 .user-table {
   min-width: 940px;
 }

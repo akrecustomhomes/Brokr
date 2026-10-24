@@ -1,6 +1,7 @@
 const pageTitles = {
   overview: "Overview",
   agents: "Agents",
+  crm: "CRM",
   transactions: "Files & Transactions",
   schedule: "Schedule",
   inbox: "Inbox",

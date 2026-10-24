@@ -49,6 +49,12 @@
             </span>
             <span>Agents</span>
           </button>
+          <button class="menu-item" type="button" data-page="crm">
+            <span class="menu-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 8v-2.5C5 15.57 8.13 14 12 14s7 1.57 7 3.5V20H5Zm14-8a3 3 0 1 0-2.83-4H18a2 2 0 0 1 1 3.73V12Zm-14 0v-.27A2 2 0 0 1 6 8H7.83A3 3 0 1 0 5 12Z" /></svg>
+            </span>
+            <span>CRM</span>
+          </button>
           <button class="menu-item" type="button" data-page="transactions">
             <span class="menu-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4Zm2 2v12h12V6H6Zm2 3h8v2H8V9Zm0 4h8v2H8v-2Z" /></svg>
@@ -282,6 +288,39 @@
                 <p>Add an agent or switch roster views.</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section class="page" id="crm" aria-labelledby="crm-title">
+          <div class="crm-page">
+            <div class="section-toolbar">
+              <div>
+                <p class="eyebrow">Client relationships</p>
+                <h3 id="crm-title">CRM</h3>
+              </div>
+            </div>
+
+            <div class="crm-summary" aria-label="CRM summary">
+              <article><p>Contacts</p><strong>0</strong></article>
+              <article><p>Active Leads</p><strong>0</strong></article>
+              <article><p>Follow-ups Due</p><strong>0</strong></article>
+              <article><p>Active Clients</p><strong>0</strong></article>
+            </div>
+
+            <section class="crm-foundation-panel" aria-labelledby="crm-foundation-title">
+              <div>
+                <p class="eyebrow">Foundation</p>
+                <h4 id="crm-foundation-title">Client pipeline coming next</h4>
+                <p>This page is ready for contacts, lead sources, follow-up reminders, notes, communication history, and buyer or seller pipelines.</p>
+              </div>
+              <div class="crm-pipeline-preview" aria-label="Planned CRM pipeline stages">
+                <span>New Lead</span>
+                <span>Contacted</span>
+                <span>Nurturing</span>
+                <span>Appointment</span>
+                <span>Active Client</span>
+              </div>
+            </section>
           </div>
         </section>
 
