@@ -63,7 +63,7 @@ function normalizeListing(listing) {
     price: Number(listing.ListPrice) || 0,
     closePrice: Number(listing.ClosePrice) || 0,
     bedrooms: Number(listing.BedroomsTotal) || 0,
-    bathrooms: Number(listing.BathroomsTotalInteger) || 0,
+    bathrooms: Number(listing.BathroomsTotalDecimal ?? listing.BathroomsTotalInteger) || 0,
     livingArea: Number(listing.LivingArea) || 0,
     buildingArea: Number(listing.BuildingAreaTotal) || 0,
     propertyType: listing.PropertySubType || listing.PropertyType || "",
@@ -117,7 +117,7 @@ module.exports = async function idxListings(request, response) {
   const fields = [
     "ListingKey", "ListingId", "StandardStatus", "ListPrice", "ClosePrice", "UnparsedAddress", "StreetNumber",
     "StreetName", "StreetSuffix", "City", "StateOrProvince", "PostalCode", "BedroomsTotal",
-    "BathroomsTotalInteger", "PropertyType", "PropertySubType", "ListOfficeName",
+    "BathroomsTotalDecimal", "BathroomsTotalInteger", "PropertyType", "PropertySubType", "ListOfficeName",
     "ListAgentFullName", "ListingContractDate", "ExpirationDate", "CloseDate", "ModificationTimestamp", "PublicRemarks", "Latitude", "Longitude",
     "BuildingAreaTotal", "DaysOnMarket", "CumulativeDaysOnMarket", "Levels", "YearBuilt",
     "CountyOrParish", "SubdivisionName", "LotSizeAcres", "GarageSpaces", "PoolPrivateYN",

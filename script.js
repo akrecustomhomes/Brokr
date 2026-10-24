@@ -2319,10 +2319,14 @@ function renderOfficeListings() {
         : listingAgent
           ? `${listingAgent.firstName} ${listingAgent.lastName}`
           : "";
-      const listingByline = [agentName || "Lume Real Estate", `List price ${formatCurrency(price || 0)}`].join(" · ");
-      const listingReference = listing.isIdxListing && listing.listingId
-        ? `MLS # ${listing.listingId}`
-        : formatCurrency(price || 0);
+      const area = Number(listing.buildingArea || listing.livingArea || 0);
+      const specs = [
+        listing.bedrooms ? `<strong>${escapeLockboxText(listing.bedrooms)}</strong> bd` : "",
+        listing.bathrooms ? `<strong>${escapeLockboxText(listing.bathrooms)}</strong> ba` : "",
+        area ? `<strong>${escapeLockboxText(area.toLocaleString())}</strong> sqft` : "",
+        escapeLockboxText(listingStatus),
+      ].filter(Boolean);
+      const listingReference = listing.isIdxListing && listing.listingId ? `MLS #${listing.listingId}` : "Office listing";
       const photo = photoSrc
         ? `<img src="${escapeLockboxText(photoSrc)}" alt="${escapeLockboxText(title)}" />`
         : `<div class="listing-photo-placeholder"><span>${escapeLockboxText(title.slice(0, 1))}</span></div>`;
@@ -2333,14 +2337,12 @@ function renderOfficeListings() {
       return `
         <article class="office-listing-card" ${interactionAttributes}>
           <div class="office-listing-photo">${photo}</div>
-          <div class="office-listing-copy">
-            <h4>${escapeLockboxText(title)}</h4>
-            <p>${escapeLockboxText(listingByline)}</p>
-          </div>
-          ${listing.isIdxListing && listing.expirationDate ? `<p class="office-listing-expiration">Expires ${escapeLockboxText(formatDate(listing.expirationDate))}</p>` : ""}
-          <div class="office-listing-meta">
-            <span><i aria-hidden="true"></i>${escapeLockboxText(listingStatus)}</span>
-            <strong>${escapeLockboxText(listingReference)}</strong>
+          <div class="office-listing-details">
+            <strong class="office-listing-price">${escapeLockboxText(formatCurrency(price || 0))}</strong>
+            <div class="office-listing-specs">${specs.map((spec) => `<span>${spec}</span>`).join("")}</div>
+            <h4 class="office-listing-address">${escapeLockboxText(title)}</h4>
+            <p class="office-listing-attribution">${escapeLockboxText(listingReference)} · ${escapeLockboxText(agentName || "Lume Real Estate")} · Listing provided by Lume Real Estate</p>
+            ${listing.isIdxListing && listing.expirationDate ? `<p class="office-listing-expiration">Expires ${escapeLockboxText(formatDate(listing.expirationDate))}</p>` : ""}
           </div>
         </article>
       `;
