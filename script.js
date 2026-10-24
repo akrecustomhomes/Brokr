@@ -385,6 +385,7 @@ const agentFields = {
   commissionSplit: document.querySelector("#agent-commission-split"),
   flatTransactionFee: document.querySelector("#agent-flat-transaction-fee"),
   contractFile: document.querySelector("#agent-contract-file"),
+  w9File: document.querySelector("#agent-w9-file"),
   otherFile: document.querySelector("#agent-other-file"),
 };
 const agentContractModal = document.querySelector("#agent-contract-modal");
@@ -415,6 +416,9 @@ const agentLicenseFileName = document.querySelector("#agent-license-file-name");
 const agentContractTile = document.querySelector("#agent-contract-tile");
 const agentContractStatus = document.querySelector("#agent-contract-status");
 const agentContractFileName = document.querySelector("#agent-contract-file-name");
+const agentW9Tile = document.querySelector("#agent-w9-tile");
+const agentW9Status = document.querySelector("#agent-w9-status");
+const agentW9FileName = document.querySelector("#agent-w9-file-name");
 const agentOtherTile = document.querySelector("#agent-other-tile");
 const agentOtherStatus = document.querySelector("#agent-other-status");
 const agentOtherFileName = document.querySelector("#agent-other-file-name");
@@ -1709,6 +1713,7 @@ function updateAgentFileVault(agent = {}) {
     ? "Preview Signed Contract"
     : hasUploadedContract ? "Preview Uploaded Contract" : "Preview Contract";
   deleteAgentContractButton.hidden = !hasUploadedContract && !hasCreatedContract;
+  updateAgentFileTile(agentW9Tile, agentW9Status, agentW9FileName, agent.w9FileName || "");
   updateAgentFileTile(agentOtherTile, agentOtherStatus, agentOtherFileName, agent.otherFileName || "", "Optional");
 }
 
@@ -2106,6 +2111,7 @@ function renderAgents() {
         <div>${agent.licenseFileName || "No license uploaded"}</div>
         <div class="license-detail">Expires ${formatDate(agent.licenseExpiration)}</div>
         <div class="license-detail">Contract: ${agent.contractStatus || (agent.contractFileName ? "Completed" : "Draft")}</div>
+        <div class="license-detail">${agent.w9FileName ? `W-9: ${agent.w9FileName}` : "W-9 required"}</div>
         <div class="license-detail">${agent.otherFileName ? `Other: ${agent.otherFileName}` : "No other files"}</div>
       </td>
       <td data-label="Status"><span class="status-pill ${agent.archived ? "archived" : licenseStatus.type}">${agent.archived ? "Archived" : licenseStatus.label}</span></td>
@@ -4487,6 +4493,7 @@ function openAgentModal(agentId = null) {
   syncAgentCompensationFields();
   agentFields.licenseFile.value = "";
   agentFields.contractFile.value = "";
+  agentFields.w9File.value = "";
   agentFields.otherFile.value = "";
   updateAgentProfilePreview(agent?.profileImageSrc || "");
   updateAgentFileVault(agent);
@@ -4694,6 +4701,9 @@ agentFields.contractFile.addEventListener("change", () => {
     contractFileName: selectedFile?.name || savedAgent.contractFileName || "",
   });
 });
+agentFields.w9File.addEventListener("change", () => {
+  updateAgentFileTile(agentW9Tile, agentW9Status, agentW9FileName, agentFields.w9File.files[0]?.name || "");
+});
 agentFields.otherFile.addEventListener("change", () => {
   updateAgentFileTile(agentOtherTile, agentOtherStatus, agentOtherFileName, agentFields.otherFile.files[0]?.name || "", "Optional");
 });
@@ -4757,6 +4767,7 @@ agentForm.addEventListener("submit", async (event) => {
     ? await readImageDataUrl(selectedContractFile)
     : existingAgent?.contractFileData || "";
   const contractFileType = selectedContractFile?.type || existingAgent?.contractFileType || "";
+  const w9FileName = agentFields.w9File.files[0]?.name || existingAgent?.w9FileName || "";
   const otherFileName = agentFields.otherFile.files[0]?.name || existingAgent?.otherFileName || "";
   const profileImageSrc =
     (await readImageDataUrl(agentFields.profileImage.files[0])) || existingAgent?.profileImageSrc || "";
@@ -4784,6 +4795,7 @@ agentForm.addEventListener("submit", async (event) => {
     contractFileData,
     contractFileType,
     contractGenerated: selectedContractFile ? false : Boolean(existingAgent?.contractGenerated),
+    w9FileName,
     otherFileName,
     licenseExpiration: agentFields.licenseExpiration.value,
     archived: existingAgent?.archived || false,
