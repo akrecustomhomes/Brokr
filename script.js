@@ -2552,6 +2552,7 @@ function openMarketplacePreparation() {
   marketplaceTitleField.value = `${address} | ${formatCurrency(listing.price || 0)}`;
   marketplacePriceField.value = String(Math.round(Number(listing.price || 0)) || "");
   marketplaceDescriptionField.value = getMarketplaceListingDescription(listing);
+  marketplaceDescriptionField.scrollTop = 0;
   marketplacePhotoGrid.innerHTML = photos.length
     ? photos.slice(0, 24).map((photo, index) => `
       <article class="marketplace-photo-card">
@@ -2562,6 +2563,11 @@ function openMarketplacePreparation() {
     `).join("")
     : '<p class="empty-panel-copy">No MLS photos are available for this listing.</p>';
   marketplaceListingModal.hidden = false;
+  const modalPanel = marketplaceListingModal.querySelector(".marketplace-listing-modal");
+  if (modalPanel) modalPanel.scrollTop = 0;
+  window.requestAnimationFrame(() => {
+    marketplaceDescriptionField.scrollTop = 0;
+  });
   closeMarketplaceListingModal?.focus();
 }
 

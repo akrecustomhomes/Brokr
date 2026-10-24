@@ -10162,6 +10162,23 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
 /* Marketplace preparation keeps MLS content ready for a manual Facebook review. */
 .marketplace-listing-modal {
   width: min(1040px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.marketplace-listing-modal > .modal-header {
+  padding: 24px 28px;
+}
+
+.marketplace-listing-modal > .modal-header > div {
+  min-width: 0;
+}
+
+.marketplace-listing-modal > .modal-header h3 {
+  overflow-wrap: anywhere;
 }
 
 .marketplace-workflow-note {
@@ -10287,6 +10304,16 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
   text-decoration: none;
 }
 
+.marketplace-listing-modal > .modal-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding: 18px 28px;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 96%, transparent);
+  backdrop-filter: blur(8px);
+}
+
 @media (max-width: 720px) {
   .marketplace-prep-grid {
     grid-template-columns: 1fr;
@@ -10299,6 +10326,11 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
 
   .marketplace-workflow-note {
     margin-inline: 18px;
+  }
+
+  .marketplace-listing-modal > .modal-header,
+  .marketplace-listing-modal > .modal-actions {
+    padding-inline: 18px;
   }
 
   .marketplace-description-actions > button {
