@@ -10118,3 +10118,155 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
     grid-template-columns: 1fr;
   }
 }
+
+/* Marketplace preparation keeps MLS content ready for a manual Facebook review. */
+.marketplace-listing-modal {
+  width: min(1040px, calc(100vw - 32px));
+}
+
+.marketplace-workflow-note {
+  margin: 0 28px 24px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 92%, var(--accent) 8%);
+}
+
+.marketplace-workflow-note strong,
+.marketplace-workflow-note p,
+.marketplace-photo-section h4,
+.marketplace-photo-section p {
+  margin: 0;
+}
+
+.marketplace-workflow-note p,
+.marketplace-photo-section p {
+  margin-top: 5px;
+  color: var(--muted);
+}
+
+.marketplace-prep-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.35fr);
+  gap: 20px;
+  padding: 0 28px 28px;
+}
+
+.marketplace-prep-grid > label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.marketplace-prep-grid .wide-field {
+  grid-column: 1 / -1;
+}
+
+.marketplace-copy-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.marketplace-copy-field input,
+.marketplace-prep-grid textarea {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.marketplace-copy-field button {
+  min-width: 86px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  background: transparent;
+}
+
+.marketplace-prep-grid textarea {
+  border: 1px solid var(--line);
+  padding: 16px;
+  resize: vertical;
+}
+
+.marketplace-description-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0;
+}
+
+.marketplace-description-actions > button + button {
+  border-left-width: 0;
+}
+
+.marketplace-photo-section {
+  padding-top: 8px;
+}
+
+.marketplace-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.marketplace-photo-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel);
+}
+
+.marketplace-photo-card label,
+.marketplace-photo-card a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.marketplace-photo-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-block: 1px solid var(--line);
+}
+
+.marketplace-photo-card a {
+  justify-content: center;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 650;
+}
+
+.marketplace-modal-actions .primary-action {
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .marketplace-prep-grid {
+    grid-template-columns: 1fr;
+    padding-inline: 18px;
+  }
+
+  .marketplace-prep-grid .wide-field {
+    grid-column: auto;
+  }
+
+  .marketplace-workflow-note {
+    margin-inline: 18px;
+  }
+
+  .marketplace-description-actions > button {
+    flex: 1 1 100%;
+  }
+
+  .marketplace-description-actions > button + button {
+    border-top-width: 0;
+    border-left-width: 1px;
+  }
+}

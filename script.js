@@ -164,6 +164,17 @@ const idxListingModalStatus = document.querySelector("#idx-listing-status");
 const idxListingDetail = document.querySelector("#idx-listing-detail");
 const closeIdxListingModal = document.querySelector("#close-idx-listing-modal");
 const doneIdxListingModal = document.querySelector("#done-idx-listing-modal");
+const prepareMarketplaceListing = document.querySelector("#prepare-marketplace-listing");
+const marketplaceListingModal = document.querySelector("#marketplace-listing-modal");
+const marketplaceListingTitle = document.querySelector("#marketplace-listing-title");
+const marketplaceTitleField = document.querySelector("#marketplace-title-field");
+const marketplacePriceField = document.querySelector("#marketplace-price-field");
+const marketplaceDescriptionField = document.querySelector("#marketplace-description-field");
+const marketplacePhotoGrid = document.querySelector("#marketplace-photo-grid");
+const closeMarketplaceListingModal = document.querySelector("#close-marketplace-listing-modal");
+const cancelMarketplaceListing = document.querySelector("#cancel-marketplace-listing");
+const copyMarketplaceDescription = document.querySelector("#copy-marketplace-description");
+const copyMarketplaceAll = document.querySelector("#copy-marketplace-all");
 const idxGalleryLightbox = document.querySelector("#idx-gallery-lightbox");
 const idxLightboxImage = document.querySelector("#idx-lightbox-image");
 const idxLightboxCaption = document.querySelector("#idx-lightbox-caption");
@@ -178,6 +189,7 @@ let idxGalleryIndex = 0;
 let idxGalleryTargetIndex = 0;
 let idxGalleryLabel = "Listing photo";
 let idxGalleryTouchStartX = null;
+let activeIdxListing = null;
 let idxGalleryWheelLocked = false;
 let idxGalleryLoadRequest = 0;
 const idxGalleryPreloadCache = new Map();
@@ -2354,6 +2366,7 @@ async function openIdxListingPreview(listingKey) {
     console.warn("Using summary IDX data because full listing details are unavailable:", error.message);
   }
   if (idxListingModal.hidden) return;
+  activeIdxListing = listing;
   const area = listing.buildingArea || listing.livingArea || 0;
   const facts = [
     ["Bedrooms", listing.bedrooms || "—", "beds"],
@@ -2488,6 +2501,72 @@ function closeIdxGallery() {
 
 function closeIdxListingPreview() {
   if (idxListingModal) idxListingModal.hidden = true;
+}
+
+function getMarketplaceListingDescription(listing) {
+  const area = Number(listing.buildingArea || listing.livingArea || 0);
+  const highlights = [
+    listing.bedrooms ? `${listing.bedrooms} bedrooms` : "",
+    listing.bathrooms ? `${listing.bathrooms} bathrooms` : "",
+    area ? `${area.toLocaleString()} sq. ft.` : "",
+    listing.lotAcres ? `${listing.lotAcres} acres` : "",
+    listing.garageSpaces ? `${listing.garageSpaces}-car garage` : "",
+  ].filter(Boolean).join(" · ");
+  return [
+    listing.address || listing.title || "Lume Real Estate listing",
+    highlights,
+    listing.remarks || "",
+    `Offered at ${formatCurrency(listing.price || 0)} by Lume Real Estate.`,
+    listing.listingId ? `MLS #${listing.listingId}` : "",
+    "Message us for availability, showing information, and complete property details.",
+    "Equal Housing Opportunity.",
+  ].filter(Boolean).join("\n\n");
+}
+
+async function copyMarketplaceText(text, button) {
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (_error) {
+    const helper = document.createElement("textarea");
+    helper.value = text;
+    helper.style.position = "fixed";
+    helper.style.opacity = "0";
+    document.body.appendChild(helper);
+    helper.select();
+    document.execCommand("copy");
+    helper.remove();
+  }
+  if (!button) return;
+  const original = button.textContent;
+  button.textContent = "Copied";
+  window.setTimeout(() => { button.textContent = original; }, 1200);
+}
+
+function openMarketplacePreparation() {
+  const listing = activeIdxListing;
+  if (!listing || !marketplaceListingModal) return;
+  const address = listing.address || listing.title || "Lume Real Estate listing";
+  const photos = listing.photoUrls?.length ? listing.photoUrls : listing.photoUrl ? [listing.photoUrl] : [];
+  marketplaceListingTitle.textContent = address;
+  marketplaceTitleField.value = `${address} | ${formatCurrency(listing.price || 0)}`;
+  marketplacePriceField.value = String(Math.round(Number(listing.price || 0)) || "");
+  marketplaceDescriptionField.value = getMarketplaceListingDescription(listing);
+  marketplacePhotoGrid.innerHTML = photos.length
+    ? photos.slice(0, 24).map((photo, index) => `
+      <article class="marketplace-photo-card">
+        <label><input type="checkbox" checked /> <span>Photo ${index + 1}</span></label>
+        <img src="${escapeLockboxText(photo)}" alt="${escapeLockboxText(`${address} photo ${index + 1}`)}" />
+        <a href="${escapeLockboxText(photo)}" target="_blank" rel="noopener" download>Open / Save Photo</a>
+      </article>
+    `).join("")
+    : '<p class="empty-panel-copy">No MLS photos are available for this listing.</p>';
+  marketplaceListingModal.hidden = false;
+  closeMarketplaceListingModal?.focus();
+}
+
+function closeMarketplacePreparation() {
+  if (marketplaceListingModal) marketplaceListingModal.hidden = true;
 }
 
 async function loadOfficeListingsFromIdx() {
@@ -4859,8 +4938,30 @@ officeListingsGrid?.addEventListener("keydown", (event) => {
 
 closeIdxListingModal?.addEventListener("click", closeIdxListingPreview);
 doneIdxListingModal?.addEventListener("click", closeIdxListingPreview);
+prepareMarketplaceListing?.addEventListener("click", openMarketplacePreparation);
 idxListingModal?.addEventListener("click", (event) => {
   if (event.target === idxListingModal) closeIdxListingPreview();
+});
+closeMarketplaceListingModal?.addEventListener("click", closeMarketplacePreparation);
+cancelMarketplaceListing?.addEventListener("click", closeMarketplacePreparation);
+marketplaceListingModal?.addEventListener("click", (event) => {
+  if (event.target === marketplaceListingModal) closeMarketplacePreparation();
+});
+marketplaceListingModal?.addEventListener("click", (event) => {
+  const copyButton = event.target.closest("[data-marketplace-copy]");
+  if (!copyButton) return;
+  const value = copyButton.dataset.marketplaceCopy === "price" ? marketplacePriceField.value : marketplaceTitleField.value;
+  copyMarketplaceText(value, copyButton);
+});
+copyMarketplaceDescription?.addEventListener("click", () => {
+  copyMarketplaceText(marketplaceDescriptionField.value, copyMarketplaceDescription);
+});
+copyMarketplaceAll?.addEventListener("click", () => {
+  copyMarketplaceText([
+    marketplaceTitleField.value,
+    `Price: ${formatCurrency(Number(marketplacePriceField.value) || 0)}`,
+    marketplaceDescriptionField.value,
+  ].filter(Boolean).join("\n\n"), copyMarketplaceAll);
 });
 idxLightboxClose?.addEventListener("click", closeIdxGallery);
 idxLightboxPrevious?.addEventListener("click", () => showIdxGalleryPhoto(idxGalleryTargetIndex - 1));

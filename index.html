@@ -1329,7 +1329,53 @@
         </div>
         <div id="idx-listing-detail"></div>
         <div class="modal-actions">
+          <button class="secondary-action" id="prepare-marketplace-listing" type="button">Prepare for Marketplace</button>
           <button class="primary-action" id="done-idx-listing-modal" type="button">Done</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="marketplace-listing-modal" hidden>
+      <section class="modal marketplace-listing-modal" role="dialog" aria-modal="true" aria-labelledby="marketplace-listing-title">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Facebook Marketplace</p>
+            <h3 id="marketplace-listing-title">Prepare Listing</h3>
+          </div>
+          <button class="icon-button" id="close-marketplace-listing-modal" type="button" aria-label="Close Marketplace preparation">X</button>
+        </div>
+        <div class="marketplace-workflow-note">
+          <strong>Manual review required</strong>
+          <p>Brokr prepares the listing content and photos. Facebook requires you to review and publish the Marketplace listing yourself.</p>
+        </div>
+        <div class="marketplace-prep-grid">
+          <label>
+            Listing title
+            <div class="marketplace-copy-field"><input id="marketplace-title-field" type="text" /><button type="button" data-marketplace-copy="title">Copy</button></div>
+          </label>
+          <label>
+            Price
+            <div class="marketplace-copy-field"><input id="marketplace-price-field" type="text" /><button type="button" data-marketplace-copy="price">Copy</button></div>
+          </label>
+          <label class="wide-field">
+            Description
+            <textarea id="marketplace-description-field" rows="10"></textarea>
+          </label>
+          <div class="marketplace-description-actions wide-field">
+            <button class="secondary-action" id="copy-marketplace-description" type="button">Copy Description</button>
+            <button class="secondary-action" id="copy-marketplace-all" type="button">Copy Full Listing</button>
+          </div>
+          <section class="marketplace-photo-section wide-field" aria-labelledby="marketplace-photo-title">
+            <div>
+              <h4 id="marketplace-photo-title">Listing photos</h4>
+              <p>Select the photos you plan to upload. Open any photo to save it to your device.</p>
+            </div>
+            <div class="marketplace-photo-grid" id="marketplace-photo-grid"></div>
+          </section>
+        </div>
+        <div class="modal-actions marketplace-modal-actions">
+          <button class="secondary-action" id="cancel-marketplace-listing" type="button">Cancel</button>
+          <a class="primary-action" id="open-facebook-marketplace" href="https://www.facebook.com/marketplace/create/" target="_blank" rel="noopener">Open Facebook Marketplace</a>
         </div>
       </section>
     </div>
