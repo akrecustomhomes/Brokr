@@ -1204,46 +1204,6 @@ body.overview-active .topbar > div:not(.overview-actions) {
   }
 }
 
-/* Agent roster actions use one compact 2-by-2 minimal control. */
-#agents .agent-table .table-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(92px, 1fr));
-  gap: 0;
-  width: min(100%, 290px);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--panel);
-}
-
-#agents .agent-table .table-actions .text-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 0;
-  min-height: 42px;
-  margin: 0;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-#agents .agent-table .table-actions .text-action:nth-child(odd) {
-  border-right: 1px solid var(--line);
-}
-
-#agents .agent-table .table-actions .text-action:nth-child(n + 3) {
-  border-top: 1px solid var(--line);
-}
-
-#agents .agent-table .table-actions .text-action:hover {
-  background: var(--panel-soft);
-  transform: none;
-}
-
 .user-table {
   min-width: 940px;
 }
@@ -3118,6 +3078,58 @@ body.menu-open .sidebar {
 
   #idx-listing-detail {
     padding-inline: 16px;
+  }
+}
+
+/* Keep agent actions in the same compact 2-by-2 control at every width. */
+#agents .agent-table .table-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex-wrap: nowrap;
+  gap: 0;
+  width: min(100%, 290px);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+#agents .agent-table .table-actions .text-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#agents .agent-table .table-actions .text-action:nth-child(odd) {
+  border-right: 1px solid var(--line);
+}
+
+#agents .agent-table .table-actions .text-action:nth-child(n + 3) {
+  border-top: 1px solid var(--line);
+}
+
+#agents .agent-table .table-actions .text-action:hover {
+  background: var(--panel-soft);
+  transform: none;
+}
+
+@media (max-width: 640px) {
+  #agents .agent-table td[data-label="Actions"] {
+    grid-template-columns: minmax(72px, 0.25fr) minmax(0, 1fr);
+  }
+
+  #agents .agent-table .table-actions {
+    width: 100%;
   }
 }
 
@@ -10340,5 +10352,34 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
   .marketplace-description-actions > button + button {
     border-top-width: 0;
     border-left-width: 1px;
+  }
+}
+
+/* Final mobile override: two equal agent actions per row. */
+@media (max-width: 980px) {
+  #agents .agent-table .table-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-wrap: nowrap;
+    gap: 0;
+    width: 100%;
+  }
+
+  #agents .agent-table .table-actions .text-action {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  #agents .agent-table .table-actions .text-action:nth-child(odd) {
+    border-right: 1px solid var(--line);
+  }
+
+  #agents .agent-table .table-actions .text-action:nth-child(n + 3) {
+    border-top: 1px solid var(--line);
   }
 }
