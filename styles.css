@@ -10598,15 +10598,15 @@ body.sidebar-collapsed .brand .sidebar-toggle::before {
 }
 
 .office-listing-status.status-active i {
-  background: #4f7b60;
+  background: #3f7d55;
 }
 
 .office-listing-status.status-pending i {
-  background: #b47a34;
+  background: #c56f24;
 }
 
 .office-listing-status.status-closed i {
-  background: #536d88;
+  background: #a33e3e;
 }
 
 .office-listing-status.status-expired i {
