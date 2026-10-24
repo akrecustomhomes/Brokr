@@ -1204,6 +1204,46 @@ body.overview-active .topbar > div:not(.overview-actions) {
   }
 }
 
+/* Agent roster actions use one compact 2-by-2 minimal control. */
+#agents .agent-table .table-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(92px, 1fr));
+  gap: 0;
+  width: min(100%, 290px);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+#agents .agent-table .table-actions .text-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 42px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#agents .agent-table .table-actions .text-action:nth-child(odd) {
+  border-right: 1px solid var(--line);
+}
+
+#agents .agent-table .table-actions .text-action:nth-child(n + 3) {
+  border-top: 1px solid var(--line);
+}
+
+#agents .agent-table .table-actions .text-action:hover {
+  background: var(--panel-soft);
+  transform: none;
+}
+
 .user-table {
   min-width: 940px;
 }
