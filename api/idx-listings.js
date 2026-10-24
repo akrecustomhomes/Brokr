@@ -10,7 +10,7 @@ function sparkHeaders(accessToken) {
   };
 }
 
-async function getOfficeKey(accessToken, officeName) {
+async function getOfficeKeys(accessToken, officeName) {
   const query = new URLSearchParams({
     "$top": "1000",
     "$select": "OfficeKey,OfficeName",
@@ -19,11 +19,12 @@ async function getOfficeKey(accessToken, officeName) {
     headers: sparkHeaders(accessToken),
   });
   const officePayload = await officeResponse.json().catch(() => ({}));
-  if (!officeResponse.ok) return "";
+  if (!officeResponse.ok) return [];
   const normalizedName = officeName.trim().toLowerCase();
-  return (officePayload.value || []).find(
-    (office) => String(office.OfficeName || "").trim().toLowerCase() === normalizedName,
-  )?.OfficeKey || "";
+  return [...new Set((officePayload.value || [])
+    .filter((office) => String(office.OfficeName || "").trim().toLowerCase() === normalizedName)
+    .map((office) => String(office.OfficeKey || "").trim())
+    .filter(Boolean))];
 }
 
 function getPrimaryPhoto(media = []) {
@@ -152,17 +153,19 @@ module.exports = async function idxListings(request, response) {
       return response.status(200).json({ listing: normalizeListing(detailPayload), source: "Spark IDX" });
     }
 
-    const officeKey = await getOfficeKey(accessToken, officeName);
+    const officeKeys = await getOfficeKeys(accessToken, officeName);
     let sparkResponse;
     let payload;
     const selectedFields = [...fields];
     for (let attempt = 0; attempt < fields.length; attempt += 1) {
       const query = new URLSearchParams({
-        "$top": officeKey ? "100" : "1000",
+        "$top": "1000",
         "$select": selectedFields.join(","),
         "$expand": "Media($top=1)",
-        "$filter": officeKey
-          ? `ListOfficeKey eq '${String(officeKey).replaceAll("'", "''")}'`
+        "$filter": officeKeys.length
+          ? officeKeys
+            .map((officeKey) => `ListOfficeKey eq '${officeKey.replaceAll("'", "''")}'`)
+            .join(" or ")
           : "StandardStatus in ('Active','Coming Soon','Active Under Contract','Pending','Closed','Expired')",
         "$orderby": "ModificationTimestamp desc",
       });
