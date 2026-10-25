@@ -106,6 +106,9 @@ function normalizeListing(listing) {
 }
 
 module.exports = async function idxListings(request, response) {
+  // Office listing data is public IDX content. Allow the separate public Lume
+  // website to consume this read-only endpoint without exposing Spark secrets.
+  response.setHeader("Access-Control-Allow-Origin", "*");
   if (request.method !== "GET") {
     response.setHeader("Allow", "GET");
     return response.status(405).json({ error: "Method not allowed." });
