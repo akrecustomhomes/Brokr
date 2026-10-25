@@ -156,7 +156,8 @@ module.exports = async function idxListings(request, response) {
       return response.status(200).json({ listing: normalizeListing(detailPayload), source: "Spark IDX" });
     }
 
-    const officeKeys = await getOfficeKeys(accessToken, officeName);
+    const includeAllListings = String(request.query?.scope || "").trim().toLowerCase() === "all";
+    const officeKeys = includeAllListings ? [] : await getOfficeKeys(accessToken, officeName);
     let sparkResponse;
     let payload;
     const selectedFields = [...fields];
@@ -165,7 +166,9 @@ module.exports = async function idxListings(request, response) {
         "$top": "1000",
         "$select": selectedFields.join(","),
         "$expand": "Media($top=1)",
-        "$filter": officeKeys.length
+        "$filter": includeAllListings
+          ? "StandardStatus eq 'Active' or StandardStatus eq 'Coming Soon' or StandardStatus eq 'Active Under Contract'"
+          : officeKeys.length
           ? officeKeys
             .map((officeKey) => `ListOfficeKey eq '${officeKey.replaceAll("'", "''")}'`)
             .join(" or ")
@@ -195,11 +198,12 @@ module.exports = async function idxListings(request, response) {
 
     const normalizedOfficeName = officeName.trim().toLowerCase();
     const listings = (payload.value || [])
-      .filter((listing) => String(listing.ListOfficeName || "").trim().toLowerCase() === normalizedOfficeName)
+      .filter((listing) => includeAllListings
+        || String(listing.ListOfficeName || "").trim().toLowerCase() === normalizedOfficeName)
       .filter((listing) => DASHBOARD_STATUSES.has(listing.StandardStatus))
       .map(normalizeListing);
     response.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=900");
-    return response.status(200).json({ listings, officeName, source: "Spark IDX" });
+    return response.status(200).json({ listings, officeName, scope: includeAllListings ? "all" : "lume", source: "Spark IDX" });
   } catch (error) {
     console.error("Spark IDX connection error", error.message);
     return response.status(502).json({ error: "The IDX feed could not be reached." });
