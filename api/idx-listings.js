@@ -1,6 +1,12 @@
 const SPARK_PROPERTY_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Property";
 const SPARK_OFFICE_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Office";
 const DASHBOARD_STATUSES = new Set(["Active", "Coming Soon", "Active Under Contract", "Pending", "Closed", "Expired"]);
+const PUBLIC_PROPERTY_TYPES = new Set([
+  "business", "commercial", "condominium", "duplex", "fourplex", "industrial", "land",
+  "lots and land", "manufactured home", "manufactured on land", "mobile home", "multi-family",
+  "multifamily", "office", "park model", "residential income", "single family residence",
+  "subdivided lot", "townhouse", "triplex", "unimproved land",
+]);
 
 function sparkHeaders(accessToken) {
   return {
@@ -201,6 +207,7 @@ module.exports = async function idxListings(request, response) {
       .filter((listing) => includeAllListings
         || String(listing.ListOfficeName || "").trim().toLowerCase() === normalizedOfficeName)
       .filter((listing) => DASHBOARD_STATUSES.has(listing.StandardStatus))
+      .filter((listing) => PUBLIC_PROPERTY_TYPES.has(String(listing.PropertySubType || listing.PropertyType || "").trim().toLowerCase()))
       .map(normalizeListing);
     response.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=900");
     return response.status(200).json({ listings, officeName, scope: includeAllListings ? "all" : "lume", source: "Spark IDX" });
