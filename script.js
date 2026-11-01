@@ -5865,9 +5865,9 @@ function readImageDataUrl(file) {
 }
 
 function updateFavicon(src = "") {
-  if (appFavicon) appFavicon.href = src || defaultFaviconHref;
-
-  if (appAppleTouchIcon) appAppleTouchIcon.href = src || defaultFaviconHref;
+  // Keep the installed app identity stable even when brokerage branding changes.
+  if (appFavicon) appFavicon.href = defaultFaviconHref;
+  if (appAppleTouchIcon) appAppleTouchIcon.href = "/apple-touch-icon.png?v=20261101-square";
 }
 
 function syncBrandText() {
