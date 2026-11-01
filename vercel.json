@@ -12,6 +12,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/public-agents",
+      "destination": "/api/idx-listings?resource=agents"
+    },
+    {
       "source": "/q/:slug",
       "destination": "/api/scan/:slug"
     }

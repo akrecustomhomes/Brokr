@@ -1,5 +1,6 @@
 const SPARK_PROPERTY_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Property";
 const SPARK_OFFICE_ENDPOINT = "https://replication.sparkapi.com/Version/3/Reso/OData/Office";
+const { getAdminClient } = require("./_admin");
 const DASHBOARD_STATUSES = new Set(["Active", "Coming Soon", "Active Under Contract", "Pending", "Closed", "Expired"]);
 const PUBLIC_PROPERTY_TYPES = new Set([
   "business", "commercial", "condominium", "duplex", "fourplex", "industrial", "land",
@@ -118,6 +119,32 @@ module.exports = async function idxListings(request, response) {
   if (request.method !== "GET") {
     response.setHeader("Allow", "GET");
     return response.status(405).json({ error: "Method not allowed." });
+  }
+
+  if (String(request.query?.resource || "").trim().toLowerCase() === "agents") {
+    try {
+      const adminClient = getAdminClient();
+      if (!adminClient) return response.status(503).json({ error: "Agent profiles are not configured." });
+      const { data, error } = await adminClient
+        .from("agents")
+        .select("id, first_name, last_name, phone, profile_image_url, archived")
+        .eq("archived", false)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      const agents = (data || []).map((agent) => ({
+        id: agent.id,
+        firstName: agent.first_name || "",
+        lastName: agent.last_name || "",
+        phone: agent.phone || "",
+        profileImageUrl: agent.profile_image_url || "",
+      }));
+      response.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=900");
+      return response.status(200).json({ agents });
+    } catch (error) {
+      console.error("Unable to load public agent profiles", error.message);
+      return response.status(500).json({ error: "Agent profiles could not be loaded." });
+    }
   }
 
   const accessToken = process.env.SPARK_ACCESS_TOKEN;
